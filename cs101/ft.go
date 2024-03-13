@@ -4,14 +4,14 @@
 
 package cs101
 
-// 采用FT1.2帧格式
+// FT1.2 frame format
 const (
 	startVarFrame byte = 0x68 // 长度可变帧启动字符
 	startFixFrame byte = 0x10 // 长度固定帧启动字符
 	endFrame      byte = 0x16
 )
 
-// 控制域定义
+// Control field definition
 const (
 
 	// 启动站到从动站特有

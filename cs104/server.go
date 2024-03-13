@@ -16,13 +16,13 @@ import (
 )
 
 // timeoutResolution is seconds according to companion standard 104,
-// subclass 6.9, caption "Definition of time outs". However, then
+// subclass 6.9, caption "Definition of time outs". However, ten
 // of a second make this system much more responsive i.c.w. S-frames.
 const timeoutResolution = 100 * time.Millisecond
 
-// Server the common server
+// Server struct type for the common server
 type Server struct {
-	config         Config
+	config         *Config
 	params         asdu.Params
 	handler        ServerHandlerInterface
 	TLSConfig      *tls.Config
@@ -35,23 +35,27 @@ type Server struct {
 	wg sync.WaitGroup
 }
 
-// NewServer new a server, default config and default asdu.ParamsWide params
-func NewServer(handler ServerHandlerInterface) *Server {
-	return &Server{
-		config:   DefaultConfig(),
+// NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
+func NewServer(handler ServerHandlerInterface, cfg Config) *Server {
+	cfg.ValidConfigServer()
+	server104 := &Server{
+		config:   &cfg,
 		params:   *asdu.ParamsWide,
 		handler:  handler,
 		sessions: make(map[*SrvSession]struct{}),
 		Clog:     clog.NewLogger("cs104 server => "),
 	}
+
+	return server104
 }
 
 // SetConfig set config if config is valid it will use DefaultConfig()
 func (sf *Server) SetConfig(cfg Config) *Server {
-	if err := cfg.Valid(); err != nil {
-		sf.config = DefaultConfig()
+	if err := cfg.ValidConfigServer(); err != nil {
+		defaultCfg := DefaultConfig()
+		sf.config = &defaultCfg
 	} else {
-		sf.config = cfg
+		sf.config = &cfg
 	}
 	return sf
 }
@@ -94,7 +98,7 @@ func (sf *Server) ListenAndServer(addr string) {
 		sf.wg.Add(1)
 		go func() {
 			sess := &SrvSession{
-				config:   &sf.config,
+				config:   sf.config,
 				params:   &sf.params,
 				handler:  sf.handler,
 				conn:     conn,

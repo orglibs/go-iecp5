@@ -37,7 +37,7 @@ func NewOption() *ClientOption {
 
 // SetConfig set config if config is valid it will use DefaultConfig()
 func (sf *ClientOption) SetConfig(cfg Config) *ClientOption {
-	if err := cfg.Valid(); err != nil {
+	if err := cfg.ValidConfigServer(); err != nil {
 		sf.config = DefaultConfig()
 	} else {
 		sf.config = cfg
