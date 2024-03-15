@@ -8,7 +8,7 @@ import (
 	"errors"
 )
 
-// error defined
+// errors definition
 var (
 	ErrUseClosedConnection = errors.New("use of closed connection")
 	ErrBufferFulled        = errors.New("buffer is full")

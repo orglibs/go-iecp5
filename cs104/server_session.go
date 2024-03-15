@@ -77,7 +77,7 @@ func (sf *SrvSession) recvLoop() {
 					sf.Error("receive failed, %v", err)
 					return
 				}
-
+				// TODO:take out all the temporary errors ( is deprecated and should not be used)
 				if e, ok := err.(net.Error); ok && !e.Temporary() {
 					sf.Error("receive failed, %v", err)
 					return
@@ -174,8 +174,8 @@ func (sf *SrvSession) run(ctx context.Context) {
 	var willNotTimeout = time.Now().Add(time.Hour * 24 * 365 * 100)
 
 	var unAckRcvSince = willNotTimeout
-	var idleTimeout3Sine = time.Now()         // 空闲间隔发起testFrAlive
-	var testFrAliveSendSince = willNotTimeout // 当发起testFrAlive时,等待确认回复的超时间隔
+	var idleTimeout3Sine = time.Now()         // Idle interval to initiate testFrAlive
+	var testFrAliveSendSince = willNotTimeout // The timeout interval to wait for an acknowledgement when initiating a testFrAlive.
 	// 对于server端，无需对应的U-Frame 无需判断
 	// var startDtActiveSendSince = willNotTimeout
 	// var stopDtActiveSendSince = willNotTimeout

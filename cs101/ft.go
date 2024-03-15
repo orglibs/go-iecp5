@@ -6,9 +6,9 @@ package cs101
 
 // FT1.2 frame format
 const (
-	startVarFrame byte = 0x68 // 长度可变帧启动字符
-	startFixFrame byte = 0x10 // 长度固定帧启动字符
-	endFrame      byte = 0x16
+	StartVarFrame byte = 0x68 // Variable length frame start characters
+	StartFixFrame byte = 0x10 // Fixed length frame startup characters
+	EndFrame      byte = 0x16
 )
 
 // Control field definition
@@ -63,10 +63,10 @@ const (
 
 // Ft12 ...
 type Ft12 struct {
-	start        byte
-	apduFiledLen byte
-	ctrl         byte
-	address      uint16
-	checksum     byte
-	end          byte
+	Start        byte
+	ApduFiledLen byte
+	Ctrl         byte
+	Address      uint16
+	Checksum     byte
+	End          byte
 }

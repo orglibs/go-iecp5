@@ -36,7 +36,7 @@ type Client struct {
 	rcvRaw   chan []byte // for recvLoop raw cs104 frame
 	sendRaw  chan []byte // for sendLoop raw cs104 frame
 
-	// I帧的发送与接收序号
+	// Transmit and Receive Serial Numbers for I-Frames
 	seqNoSend uint16 // sequence number of next outbound I-frame
 	ackNoSend uint16 // outbound sequence number yet to be confirmed
 	seqNoRcv  uint16 // sequence number of next inbound I-frame
@@ -45,15 +45,15 @@ type Client struct {
 	// maps sendTime I-frames to their respective sequence number
 	pending []seqPending
 
-	startDtActiveSendSince atomic.Value // 当发送startDtActive时,等待确认回复的超时间隔
-	stopDtActiveSendSince  atomic.Value // 当发起stopDtActive时,等待确认回复的超时
+	startDtActiveSendSince atomic.Value // The timeout interval to wait for an acknowledgement when sending startDtActive.
+	stopDtActiveSendSince  atomic.Value // When stopDtActive is initiated, the timeout to wait for an acknowledgement of a reply is set.
 
-	// 连接状态
+	// connection status
 	status   uint32
 	rwMux    sync.RWMutex
 	isActive uint32
 
-	// 其他
+	// clog logger
 	clog.Clog
 
 	wg          sync.WaitGroup
@@ -106,7 +106,7 @@ func (sf *Client) Start() error {
 	return nil
 }
 
-// Connect is
+// run the client connection
 func (sf *Client) running() {
 	var ctx context.Context
 
@@ -145,7 +145,7 @@ func (sf *Client) running() {
 		case <-ctx.Done():
 			return
 		default:
-			// 随机500ms-1s的重试，避免快速重试造成服务器许多无效连接
+			// Random value in the range of 500ms-1s avoid fast retries that can cause invalid connections to the server.
 			time.Sleep(time.Millisecond * time.Duration(500+rand.Intn(500)))
 		}
 	}
@@ -261,8 +261,8 @@ func (sf *Client) run(ctx context.Context) {
 	var willNotTimeout = time.Now().Add(time.Hour * 24 * 365 * 100)
 
 	var unAckRcvSince = willNotTimeout
-	var idleTimeout3Sine = time.Now()         // 空闲间隔发起testFrAlive
-	var testFrAliveSendSince = willNotTimeout // 当发起testFrAlive时,等待确认回复的超时间隔
+	var idleTimeout3Sine = time.Now()         // Idle interval initiates testFrAlive
+	var testFrAliveSendSince = willNotTimeout // The timeout interval to wait for an acknowledgement when initiating a testFrAlive.
 
 	sf.startDtActiveSendSince.Store(willNotTimeout)
 	sf.stopDtActiveSendSince.Store(willNotTimeout)
@@ -288,7 +288,7 @@ func (sf *Client) run(ctx context.Context) {
 	}
 
 	defer func() {
-		// default: STOPDT, when connected establish and not enable "data transfer" yet
+		// default: STOPDT, when a connection is established and "data transfer" is not enabled.
 		atomic.StoreUint32(&sf.isActive, inactive)
 		sf.setConnectStatus(disconnected)
 		checkTicker.Stop()
@@ -582,7 +582,7 @@ func (sf *Client) SendStopDt() {
 	sf.sendUFrame(uStopDtActive)
 }
 
-//InterrogationCmd wrap asdu.InterrogationCmd
+// InterrogationCmd wrap asdu.InterrogationCmd
 func (sf *Client) InterrogationCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, qoi asdu.QualifierOfInterrogation) error {
 	return asdu.InterrogationCmd(sf, coa, ca, qoi)
 }

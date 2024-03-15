@@ -127,7 +127,7 @@ func (sf *Config) ValidConfigServer() error {
 	return nil
 }
 
-// DefaultConfig applies the default configuration to the server.
+// DefaultConfig will apply the default configuration to the server.
 func DefaultConfig() Config {
 	return Config{
 		ConnectTimeout0:   30 * time.Second,

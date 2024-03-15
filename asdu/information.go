@@ -4,12 +4,12 @@
 
 package asdu
 
-// about information object 应用服务数据单元 - 信息对象
+// Application Service Data Units - Information Objects
 
 // InfoObjAddr is the information object address.
 // See companion standard 101, subclass 7.2.5.
 // The width is controlled by Params.InfoObjAddrSize.
-// <0>: 无关的信息对象地址
+// <0>: Address of irrelevant information objects
 // - width 1: <1..255>
 // - width 2: <1..65535>
 // - width 3: <1..16777215>
@@ -24,8 +24,8 @@ type SinglePoint byte
 
 // SinglePoint defined
 const (
-	SPIOff SinglePoint = iota // 关
-	SPIOn                     // 开
+	SPIOff SinglePoint = iota
+	SPIOn
 )
 
 // Value single point to byte
@@ -76,7 +76,7 @@ const (
 	QDSGood QualityDescriptor = 0
 )
 
-//QualityDescriptorProtection  Quality descriptor Protection Equipment flags attribute.
+// QualityDescriptorProtection  Quality descriptor Protection Equipment flags attribute.
 // See companion standard 101, subclass 7.2.6.4.
 type QualityDescriptorProtection byte
 
@@ -257,7 +257,8 @@ const (
 // CauseOfInitial cause of initial
 // Cause:  see COICause
 // IsLocalChange: false - 未改变当地参数的初始化
-//                true - 改变当地参数后的初始化
+//
+//	true - 改变当地参数后的初始化
 type CauseOfInitial struct {
 	Cause         COICause
 	IsLocalChange bool
@@ -493,6 +494,7 @@ TODO: file 文件相关未定义
 
 // QOSQual is the qualifier of a set-point command qual.
 // See companion standard 101, subclass 7.2.6.39.
+//
 //	0: default
 //	0‥63: reserved for standard definitions of sf companion standard (compatible range)
 //	64‥127: reserved for special use (private range)
