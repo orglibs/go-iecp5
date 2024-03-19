@@ -4,31 +4,30 @@
 
 package asdu
 
-// 在控制方向参数的应用服务数据单元
+// Application service data unit in the control direction parameter
 
-// ParameterNormalInfo 测量值参数,归一化值 信息体
+// ParameterNormalInfo: Measured value parameter, normalised value Information body.
 type ParameterNormalInfo struct {
 	Ioa   InfoObjAddr
 	Value Normalize
 	Qpm   QualifierOfParameterMV
 }
 
-// ParameterNormal 测量值参数,规一化值, 只有单个信息对象(SQ = 0)
+// ParameterNormal Measured value parameter, normalised value, only single information object (SQ = 0)
 // [P_ME_NA_1], See companion standard 101, subclass 7.3.5.1
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// 监视方向：
-// <7> := 激活确认
-// <20> := 响应站召唤
-// <21> := 响应第 1 组召唤
-// <22> := 响应第 2 组召唤
-// 至
-// <36> := 响应第 16 组召唤
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// Cause of transmission (coa) for:
+// Control direction
+// <6> := Activate
+// Surveillance direction:
+// <7> := Activation Confirmation
+// <20> := Responding to station calls
+// <21> := Responding to Group 1 calls
+// <22> := Responding to Group 2 calls
+// <36> := Responding to Group 16 calls
+// <44> := Unknown type identification
+// <45> := Unknown reason for transmission
+// <46> := Unknown application service data unit public address
+// <47> := Unknown information object address
 func ParameterNormal(c Connect, coa CauseOfTransmission, ca CommonAddr, p ParameterNormalInfo) error {
 	if coa.Cause != Activation {
 		return ErrCmdCause
@@ -52,29 +51,28 @@ func ParameterNormal(c Connect, coa CauseOfTransmission, ca CommonAddr, p Parame
 	return c.Send(u)
 }
 
-// ParameterScaledInfo 测量值参数,标度化值 信息体
+// ParameterScaledInfo Measured value parameter, scaled value Infobody
 type ParameterScaledInfo struct {
 	Ioa   InfoObjAddr
 	Value int16
 	Qpm   QualifierOfParameterMV
 }
 
-// ParameterScaled 测量值参数,标度化值, 只有单个信息对象(SQ = 0)
+// ParameterScaled Measured value parameter, Scaled value, Single information object only(SQ = 0)
 // [P_ME_NB_1], See companion standard 101, subclass 7.3.5.2
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// 监视方向：
-// <7> := 激活确认
-// <20> := 响应站召唤
-// <21> := 响应第 1 组召唤
-// <22> := 响应第 2 组召唤
-// 至
-// <36> := 响应第 16 组召唤
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// Cause of transmission (coa) for:
+// Control direction:
+// <6> := activate
+// Surveillance direction:
+// <7> := Activation Confirmation
+// <20> := Answering station call
+// <21> := Answering group 1 call-outs
+// <22> := Answering group 2 call-outs
+// <36> := Answering group 16 call-outs
+// <44> := Unknown type identification
+// <45> := Unknown reason for transmission
+// <46> := Unknown application service data unit public address
+// <47> := Unknown information object address
 func ParameterScaled(c Connect, coa CauseOfTransmission, ca CommonAddr, p ParameterScaledInfo) error {
 	if coa.Cause != Activation {
 		return ErrCmdCause
@@ -97,29 +95,30 @@ func ParameterScaled(c Connect, coa CauseOfTransmission, ca CommonAddr, p Parame
 	return c.Send(u)
 }
 
-// ParameterFloatInfo 测量参数,短浮点数 信息体
+// ParameterFloatInfo Measured parameters, short floating-point numbers InfoBody
 type ParameterFloatInfo struct {
 	Ioa   InfoObjAddr
 	Value float32
 	Qpm   QualifierOfParameterMV
 }
 
-// ParameterFloat 测量值参数,短浮点数, 只有单个信息对象(SQ = 0)
+// ParameterFloat Measured value parameter, short floating-point number, only single information object(SQ = 0)
 // [P_ME_NC_1], See companion standard 101, subclass 7.3.5.3
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// 监视方向：
-// <7> := 激活确认
-// <20> := 响应站召唤
-// <21> := 响应第 1 组召唤
-// <22> := 响应第 2 组召唤
-// 至
-// <36> := 响应第 16 组召唤
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// Cause of transmission (coa) for
+// Control direction:
+// <6> := activate
+//
+//	Surveillance direction:
+//
+// <7> := Activation Confirmation
+// <20> := Answering to the call of the station
+// <21> := Answering group 1 call-outs
+// <22> := Answering group 2 call-outs
+// <36> := Answering group 16 call-outs
+// <44> := Unknown type identification
+// <45> := Unknown reason for transmission
+// <46> := Unknown application service data unit public address
+// <47> := Unknown information object address
 func ParameterFloat(c Connect, coa CauseOfTransmission, ca CommonAddr, p ParameterFloatInfo) error {
 	if coa.Cause != Activation {
 		return ErrCmdCause
@@ -142,25 +141,25 @@ func ParameterFloat(c Connect, coa CauseOfTransmission, ca CommonAddr, p Paramet
 	return c.Send(u)
 }
 
-// ParameterActivationInfo 参数激活 信息体
+// ParameterActivationInfo: Parameter activation format
 type ParameterActivationInfo struct {
 	Ioa InfoObjAddr
 	Qpa QualifierOfParameterAct
 }
 
-// ParameterActivation 参数激活, 只有单个信息对象(SQ = 0)
+// ParameterActivation parameter activation, only for a single information objec(SQ = 0)
 // [P_AC_NA_1], See companion standard 101, subclass 7.3.5.4
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// <8> := 停止激活
-// 监视方向：
-// <7> := 激活确认
-// <9> := 停止激活确认
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// Cause of transmission (coa) for
+// Control direction:
+// <6> := activate
+// <8> := deactivate
+// Surveillance direction:
+// <7> := Activation Confirmation
+// <9> := Stop Activation Confirmation
+// <44> := Unknown type identification
+// <45> := Unknown reason for transmission
+// <46> := Unknown application service
+// <47> := Unknown information object address
 func ParameterActivation(c Connect, coa CauseOfTransmission, ca CommonAddr, p ParameterActivationInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
@@ -183,7 +182,7 @@ func ParameterActivation(c Connect, coa CauseOfTransmission, ca CommonAddr, p Pa
 	return c.Send(u)
 }
 
-// GetParameterNormal [P_ME_NA_1]，获取 测量值参数,标度化值 信息体
+// GetParameterNormal [P_ME_NA_1]，Get the measured value parameter,standard value InfoBody
 func (sf *ASDU) GetParameterNormal() ParameterNormalInfo {
 	return ParameterNormalInfo{
 		sf.DecodeInfoObjAddr(),
@@ -192,7 +191,7 @@ func (sf *ASDU) GetParameterNormal() ParameterNormalInfo {
 	}
 }
 
-// GetParameterScaled [P_ME_NB_1]，获取 测量值参数,归一化值 信息体
+// GetParameterScaled [P_ME_NB_1]，Get the measured value parameter, scaled value InfoBody
 func (sf *ASDU) GetParameterScaled() ParameterScaledInfo {
 	return ParameterScaledInfo{
 		sf.DecodeInfoObjAddr(),
@@ -201,7 +200,7 @@ func (sf *ASDU) GetParameterScaled() ParameterScaledInfo {
 	}
 }
 
-// GetParameterFloat [P_ME_NC_1]，获取 测量值参数,短浮点数 信息体
+// GetParameterFloat [P_ME_NC_1]，Get measured value parameter, short floating point number Information body
 func (sf *ASDU) GetParameterFloat() ParameterFloatInfo {
 	return ParameterFloatInfo{
 		sf.DecodeInfoObjAddr(),
@@ -210,7 +209,7 @@ func (sf *ASDU) GetParameterFloat() ParameterFloatInfo {
 	}
 }
 
-// GetParameterActivation [P_AC_NA_1]，获取 参数激活 信息体
+// GetParameterActivation [P_AC_NA_1]，Get Parameter Activation value
 func (sf *ASDU) GetParameterActivation() ParameterActivationInfo {
 	return ParameterActivationInfo{
 		sf.DecodeInfoObjAddr(),

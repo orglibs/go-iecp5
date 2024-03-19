@@ -121,7 +121,7 @@ func (sf *ASDU) DecodeFloat32() float32 {
 	return f
 }
 
-// AppendBinaryCounterReading append binary couter reading value to info object
+// AppendBinaryCounterReading append binary counter reading value to info object
 // See companion standard 101, subclass 7.2.6.9.
 func (sf *ASDU) AppendBinaryCounterReading(v BinaryCounterReading) *ASDU {
 	value := v.SeqNumber & 0x1f
