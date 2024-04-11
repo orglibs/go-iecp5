@@ -8,22 +8,22 @@ import (
 	"time"
 )
 
-// 在控制方向系统信息的应用服务数据单元
+// Application service data unit in control direction system information
 
-// InterrogationCmd send a new interrogation command [C_IC_NA_1]. 总召唤命令, 只有单个信息对象(SQ = 0)
-// [C_IC_NA_1] See companion standard 101, subclass 7.3.4.1
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// <8> := 停止激活
-// 监视方向：
-// <7> := 激活确认
-// <9> := 停止激活确认
-// <10> := 激活终止
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// InterrogationCmd send a new interrogation command [C_IC_NA_1].  single information object (SQ = 0)
+// [C_IC_NA_1] See Companion Standard 101, Subclass 7.3.4.1
+// The reason for transmission (coa) is used for it
+// control direction:
+// <6>: = Activate
+// <8>: = Stop activation
+// Monitoring direction:
+// <7>: = Activate confirmation
+// <9>: = Stop activation confirmation
+// <10>: = Activate termination
+// <44>: = Unknown type logo
+// <45>: = Unknown reasons for transmission
+// <46>: = Unknown application service data unit public address
+// <47>: = Unknown information object address
 func InterrogationCmd(c Connect, coa CauseOfTransmission, ca CommonAddr, qoi QualifierOfInterrogation) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
@@ -58,6 +58,19 @@ func InterrogationCmd(c Connect, coa CauseOfTransmission, ca CommonAddr, qoi Qua
 // <45> := 未知的传送原因
 // <46> := 未知的应用服务数据单元公共地址
 // <47> := 未知的信息对象地址
+
+// Countrinterrogationcmd Send Counter Interrogation Command [C_CI_NA_1], the number of summoning commands, only a single information object (SQ = 0) 
+ // [C_CI_NA_1] See Companion Standard 101, Subclass 7.3.4.2 
+ // The reason for transmission (coa) is used for it 
+ // control direction: 
+ // <6>: = Activate 
+ // Monitoring direction: 
+ // <7>: = Activate confirmation 
+ // <10>: = Activate termination 
+ // <44>: = Unknown type logo 
+ // <45>: = Unknown reasons for transmission 
+ // <46>: = Unknown application service data unit public address 
+ // <47>: = Unknown information object address
 func CounterInterrogationCmd(c Connect, coa CauseOfTransmission, ca CommonAddr, qcc QualifierCountCall) error {
 	if err := c.Params().Valid(); err != nil {
 		return err

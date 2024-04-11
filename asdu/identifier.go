@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-// about data unit identification 应用服务数据单元 - 数据单元标识符
+//data unit identification: Application service data unit -data unit identifier
 
 // TypeID is the ASDU type identification.
 // See companion standard 101, subclass 7.2.1.
@@ -20,9 +20,9 @@ type TypeID uint8
 // C for control information
 // P for parameter
 // F for file transfer.
-// <0> 未用
-// <1..127> 标准定义 - 兼容
-// <128..135> 为路由报文保留 - 专用
+// <0> unused
+// <1..127> Standard Definition - Compatible
+// <128..135> Reserved for routed messages - dedicated
 // <136..255> 特殊应用 - 专用
 // NOTE: 信息对象带或不带时标由标识符类型的不同序列来区别
 const (
@@ -511,13 +511,16 @@ func (sf CauseOfTransmission) String() string {
 // CommonAddr is a station address.
 // The width is controlled by Params.CommonAddrSize.
 // width 1:
-//      <0>: 未用
-//      <1..254>: 站地址
-//      <255>: 全局地址
+//
+//	<0>: 未用
+//	<1..254>: 站地址
+//	<255>: 全局地址
+//
 // width 2:
-//      <0>: 未用
-//      <1..65534>: 站地址
-//      <65535>: 全局地址
+//
+//	<0>: 未用
+//	<1..65534>: 站地址
+//	<65535>: 全局地址
 type CommonAddr uint16
 
 // special commonAddr
