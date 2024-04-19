@@ -39,10 +39,10 @@ type DoublePoint byte
 
 // DoublePoint defined
 const (
-	DPIIndeterminateOrIntermediate DoublePoint = iota // 不确定或中间状态
-	DPIDeterminedOff                                  // 确定状态开
-	DPIDeterminedOn                                   // 确定状态关
-	DPIIndeterminate                                  // 不确定或中间状态
+	DPIIndeterminateOrIntermediate DoublePoint = iota
+	DPIDeterminedOff
+	DPIDeterminedOn
+	DPIIndeterminate
 )
 
 // Value double point to byte
@@ -103,12 +103,12 @@ const (
 )
 
 // StepPosition is a measured value with transient state indication.
-// 带瞬变状态指示的测量值，用于变压器步位置或其它步位置的值
+// Measured values with transient status indication for transformer step positions or other step positions
 // See companion standard 101, subclass 7.2.6.5.
 // Val range <-64..63>
 // bit[0-5]: <-64..63>
-// NOTE: bit6 为符号位
-// bit7: 0: 设备未在瞬变状态 1： 设备处于瞬变状态
+// NOTE: bit6 is a sign bit
+// bit7: 0: Device is not in transient state 1: Device is in transient state
 type StepPosition struct {
 	Val          int
 	HasTransient bool
