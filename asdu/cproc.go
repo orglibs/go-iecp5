@@ -129,21 +129,22 @@ type StepCommandInfo struct {
 	Time  time.Time
 }
 
-// StepCmd sends a type [C_RC_NA_1] or [C_RC_TA_1]. 步调节命令, 只有单个信息对象(SQ = 0)
-// [C_RC_NA_1] See companion standard 101, subclass 7.3.2.3
-// [C_RC_TA_1] See companion standard 101,
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// <8> := 停止激活
-// 监视方向：
-// <7> := 激活确认
-// <9> := 停止激活确认
-// <10> := 激活终止
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// StepCmd sends a type [C_RC_NA_1] or [C_RC_TA_1]. StepCmd sends a type [C_RC_NA_1] or [C_RC_TA_1]. StepCmd commands, only a single information object (SQ = 0).
+// [C_RC_NA_1] See companion standard 101, subclass 7.3.2.3.
+// [C_RC_TA_1] See companion standard 101, subclass 7.3.2.3.
+// The reason for transmission (coa) is used for the
+// control direction:
+// <6> := activate
+// <8> := deactivate
+// Monitoring direction:
+// <7> := Activation confirmation
+// <9> := Deactivation confirmation
+// <10> := Activation terminated
+// <44> := Unknown type identification
+// <45> := Unknown reason for transmission
+// <46> := Unknown public address of application service data unit
+// <47> := Unknown address of information object
+
 func StepCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd StepCommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
