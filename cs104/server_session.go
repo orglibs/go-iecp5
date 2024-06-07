@@ -78,7 +78,7 @@ func (sf *SrvSession) recvLoop() {
 					return
 				}
 				// TODO:take out all the temporary errors ( is deprecated and should not be used)
-				if e, ok := err.(net.Error); ok && !e.Temporary() {
+				if e, ok := err.(net.Error); ok && !e.Timeout() {
 					sf.Error("receive failed, %v", err)
 					return
 				}
@@ -141,7 +141,7 @@ func (sf *SrvSession) sendLoop() {
 						sf.Error("sendRaw failed, %v", err)
 						return
 					}
-					if e, ok := err.(net.Error); !ok || !e.Temporary() {
+					if e, ok := err.(net.Error); !ok || !e.Timeout() {
 						sf.Error("sendRaw failed, %v", err)
 						return
 					}

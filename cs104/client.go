@@ -170,7 +170,7 @@ func (sf *Client) recvLoop() {
 					sf.Error("receive failed, %v", err)
 					return
 				}
-				if e, ok := err.(net.Error); ok && !e.Temporary() {
+				if e, ok := err.(net.Error); ok && !e.Timeout() {
 					sf.Error("receive failed, %v", err)
 					return
 				}
@@ -230,7 +230,7 @@ func (sf *Client) sendLoop() {
 						sf.Error("sendRaw failed, %v", err)
 						return
 					}
-					if e, ok := err.(net.Error); !ok || !e.Temporary() {
+					if e, ok := err.(net.Error); !ok || !e.Timeout() {
 						sf.Error("sendRaw failed, %v", err)
 						return
 					}
