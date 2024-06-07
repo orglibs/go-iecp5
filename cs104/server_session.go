@@ -176,7 +176,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 	var unAckRcvSince = willNotTimeout
 	var idleTimeout3Sine = time.Now()         // Idle interval to initiate testFrAlive
 	var testFrAliveSendSince = willNotTimeout // The timeout interval to wait for an acknowledgement when initiating a testFrAlive.
-	// 对于server端，无需对应的U-Frame 无需判断
+	// For server side, no corresponding U-Frame is required No judgement required
 	// var startDtActiveSendSince = willNotTimeout
 	// var stopDtActiveSendSince = willNotTimeout
 
@@ -209,7 +209,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 	defer func() {
 		sf.setConnectStatus(disconnected)
 		checkTicker.Stop()
-		_ = sf.conn.Close() // 连锁引发cancel
+		_ = sf.conn.Close() // Chain trigger cancel
 		sf.wg.Wait()
 		if sf.connectionLost != nil {
 			sf.connectionLost(sf)
@@ -249,7 +249,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 				return
 			}
 
-			// 确定最早发送的i-Frame是否超时,超时则回复sFrame
+			// Determine if the earliest i-Frame sent timed out, and reply to the sFrame if it did.
 			if sf.ackNoRcv != sf.seqNoRcv &&
 				(now.Sub(unAckRcvSince) >= sf.config.RecvUnAckTimeout2 ||
 					now.Sub(idleTimeout3Sine) >= timeoutResolution) {
@@ -257,7 +257,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 				sf.ackNoRcv = sf.seqNoRcv
 			}
 
-			// 空闲时间到，发送TestFrActive帧,保活
+			// Send TestFrActive frame when idle time is up.
 			if now.Sub(idleTimeout3Sine) >= sf.config.IdleTimeout3 {
 				sendUFrame(uTestFrActive)
 				testFrAliveSendSince = time.Now()
@@ -265,7 +265,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 			}
 
 		case apdu := <-sf.rcvRaw:
-			idleTimeout3Sine = time.Now() // 每收到一个i帧,S帧,U帧, 重置空闲定时器, t3
+			idleTimeout3Sine = time.Now() // Every i-frame, S-frame, U-frame received, reset idle timer, t3
 			apci, asduVal := parse(apdu)
 			switch head := apci.(type) {
 			case sAPCI:
@@ -383,7 +383,7 @@ loop:
 	}
 }
 
-// 回绕机制
+// Wrap-around mechanism
 func seqNoCount(nextAckNo, nextSeqNo uint16) uint16 {
 	if nextAckNo > nextSeqNo {
 		nextSeqNo += 32768
@@ -395,7 +395,7 @@ func (sf *SrvSession) updateAckNoOut(ackNo uint16) (ok bool) {
 	if ackNo == sf.ackNoSend {
 		return true
 	}
-	// new acks validate， ack 不能在 req seq 前面,出错
+	// new acks validate， ack cannot precede req seq, error.
 	if seqNoCount(sf.ackNoSend, sf.seqNoSend) < seqNoCount(ackNo, sf.seqNoSend) {
 		return false
 	}

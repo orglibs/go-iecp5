@@ -37,7 +37,10 @@ type Server struct {
 
 // NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
 func NewServer(handler ServerHandlerInterface, cfg Config) *Server {
-	_ = cfg.ValidConfigServer()
+	err := cfg.ValidConfigServer()
+	if err != nil {
+		cfg = DefaultConfig()
+	}
 	server104 := &Server{
 		config:   &cfg,
 		params:   *asdu.ParamsWide,
