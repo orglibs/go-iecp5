@@ -1,0 +1,40 @@
+default:
+    tags:
+        - linux
+
+
+
+before_script:
+    - echo "List files:" && ls -l
+    - echo "User:" && whoami
+    - echo "IDs:" && id
+    - echo "Hostname:" && hostname
+    - echo "Current directory:" && pwd
+    - echo "Go version:" && go version
+
+
+
+
+stages:         
+  - test
+  - lint
+
+lint:
+    stage: lint
+    needs: []
+    image: 'circutor/golang:1.21'
+    script:
+        - echo "Linter"
+        - golangci-lint version
+        - golangci-lint linters
+        - golangci-lint run
+
+test:
+    stage: test
+    needs: []
+    image: 'circutor/golang:1.21'
+    script:
+        - make test
+    coverage: /total:.+\(statements\).+\d+.\d+%/
+
+
