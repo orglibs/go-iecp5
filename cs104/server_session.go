@@ -13,8 +13,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/thinkgos/go-iecp5/asdu"
-	"github.com/thinkgos/go-iecp5/clog"
+	"github.com/circutor-library/go-iecp5/asdu"
+	"github.com/circutor-library/go-iecp5/clog"
 )
 
 const (

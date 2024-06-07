@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/thinkgos/go-iecp5/asdu"
+	"github.com/circutor-library/go-iecp5/asdu"
 )
 
 // ClientOption Configuration
