@@ -13,8 +13,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/circutor-library/go-iecp5/asdu"
-	"github.com/circutor-library/go-iecp5/clog"
+	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"gitlab.com/circutor-library/go-iecp5/clog"
 )
 
 const (
@@ -422,6 +422,17 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 	sf.Debug("ASDU %+v", asduPack)
 
 	switch asduPack.Identifier.Type {
+	case asdu.C_SE_NA_1:
+		if asduPack.Identifier.Coa.Cause != asdu.Activation {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+		}
+		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+		}
+		cmd := asduPack.GetSetpointNormalCmd()
+
+		return sf.handler.SetPointCommandNormalHandler(sf, asduPack, cmd)
+
 	case asdu.C_IC_NA_1: // InterrogationCmd
 		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
 			asduPack.Identifier.Coa.Cause == asdu.Deactivation) {

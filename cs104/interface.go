@@ -7,7 +7,7 @@ package cs104
 import (
 	"time"
 
-	"github.com/circutor-library/go-iecp5/asdu"
+	"gitlab.com/circutor-library/go-iecp5/asdu"
 )
 
 // ServerHandlerInterface is the interface of server handler
@@ -19,6 +19,7 @@ type ServerHandlerInterface interface {
 	ResetProcessHandler(asdu.Connect, *asdu.ASDU, asdu.QualifierOfResetProcessCmd) error
 	DelayAcquisitionHandler(asdu.Connect, *asdu.ASDU, uint16) error
 	ASDUHandler(asdu.Connect, *asdu.ASDU) error
+	SetPointCommandNormalHandler(asdu.Connect, *asdu.ASDU, asdu.SetpointCommandNormalInfo) error
 }
 
 // ClientHandlerInterface  is the interface of client handler

@@ -15,8 +15,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/circutor-library/go-iecp5/asdu"
-	"github.com/circutor-library/go-iecp5/clog"
+	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"gitlab.com/circutor-library/go-iecp5/clog"
 )
 
 const (
@@ -505,7 +505,6 @@ func (sf *Client) clientHandler(asduPack *asdu.ASDU) error {
 	sf.Debug("ASDU %+v", asduPack)
 
 	switch asduPack.Identifier.Type {
-	case asdu.C_SE_NA_1:
 	case asdu.C_IC_NA_1: // InterrogationCmd
 		return sf.handler.InterrogationHandler(sf, asduPack)
 
@@ -529,9 +528,6 @@ func (sf *Client) clientHandler(asduPack *asdu.ASDU) error {
 	default:
 		return sf.handler.ASDUHandler(sf, asduPack)
 	}
-
-	return nil
-
 }
 
 // Params returns params of client
