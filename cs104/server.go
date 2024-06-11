@@ -22,7 +22,7 @@ const timeoutResolution = 100 * time.Millisecond
 
 // Server struct type for the common server
 type Server struct {
-	config         *Config
+	config         Config
 	params         asdu.Params
 	handler        ServerHandlerInterface
 	TLSConfig      *tls.Config
@@ -36,13 +36,9 @@ type Server struct {
 }
 
 // NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
-func NewServer(handler ServerHandlerInterface, cfg Config) *Server {
-	err := cfg.ValidConfigServer()
-	if err != nil {
-		cfg = DefaultConfig()
-	}
+func NewServer(handler ServerHandlerInterface) *Server {
 	server104 := &Server{
-		config:   &cfg,
+		config:   DefaultConfig(),
 		params:   *asdu.ParamsWide,
 		handler:  handler,
 		sessions: make(map[*SrvSession]struct{}),
@@ -55,10 +51,9 @@ func NewServer(handler ServerHandlerInterface, cfg Config) *Server {
 // SetConfig set the server configuration. If configuration is not valid it will use DefaultConfig() values for the server
 func (sf *Server) SetConfig(cfg Config) *Server {
 	if err := cfg.ValidConfigServer(); err != nil {
-		defaultCfg := DefaultConfig()
-		sf.config = &defaultCfg
+		sf.config = DefaultConfig()
 	} else {
-		sf.config = &cfg
+		sf.config = cfg
 	}
 	return sf
 }
@@ -101,7 +96,7 @@ func (sf *Server) ListenAndServer(addr string) {
 		sf.wg.Add(1)
 		go func() {
 			sess := &SrvSession{
-				config:   sf.config,
+				config:   &sf.config,
 				params:   &sf.params,
 				handler:  sf.handler,
 				conn:     conn,

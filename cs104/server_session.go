@@ -277,7 +277,6 @@ func (sf *SrvSession) run(ctx context.Context) {
 
 			case iAPCI:
 				sf.Debug("RX iFrame %v", head)
-				isActive = true
 				if !isActive {
 					sf.Warn("station not active")
 					break // not active, discard apdu
