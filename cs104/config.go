@@ -6,7 +6,6 @@ package cs104
 
 import (
 	"errors"
-	"fmt"
 	"time"
 )
 
@@ -83,15 +82,12 @@ type Config struct {
 
 // ValidConfigServer check if the configuration is valid, if not returns an error.
 func (sf *Config) ValidConfigServer() error {
-	var err error
 	if sf == nil {
 		return errors.New("invalid pointer to server configuration")
 	}
 
 	if sf.ConnectTimeout0 < ConnectTimeout0Min || sf.ConnectTimeout0 > ConnectTimeout0Max {
-		err = errors.New(`ConnectTimeout0 "t0" is not in the correct range [1, 255]s`)
-
-		return fmt.Errorf("validation error, %w, t0 value= %d", err, sf.ConnectTimeout0)
+		return errors.New(`ConnectTimeout0 "t0" is not in the correct range [1, 255]s`)
 	}
 
 	if sf.SendUnAckLimitK == 0 {
