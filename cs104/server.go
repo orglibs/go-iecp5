@@ -11,16 +11,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/thinkgos/go-iecp5/asdu"
-	"github.com/thinkgos/go-iecp5/clog"
+	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"gitlab.com/circutor-library/go-iecp5/clog"
 )
 
 // timeoutResolution is seconds according to companion standard 104,
-// subclass 6.9, caption "Definition of time outs". However, then
+// subclass 6.9, caption "Definition of time outs". However, ten
 // of a second make this system much more responsive i.c.w. S-frames.
 const timeoutResolution = 100 * time.Millisecond
 
-// Server the common server
+// Server struct type for the common server
 type Server struct {
 	config         Config
 	params         asdu.Params
@@ -35,20 +35,22 @@ type Server struct {
 	wg sync.WaitGroup
 }
 
-// NewServer new a server, default config and default asdu.ParamsWide params
+// NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
 func NewServer(handler ServerHandlerInterface) *Server {
-	return &Server{
+	server104 := &Server{
 		config:   DefaultConfig(),
 		params:   *asdu.ParamsWide,
 		handler:  handler,
 		sessions: make(map[*SrvSession]struct{}),
 		Clog:     clog.NewLogger("cs104 server => "),
 	}
+
+	return server104
 }
 
-// SetConfig set config if config is valid it will use DefaultConfig()
+// SetConfig set the server configuration. If configuration is not valid it will use DefaultConfig() values for the server
 func (sf *Server) SetConfig(cfg Config) *Server {
-	if err := cfg.Valid(); err != nil {
+	if err := cfg.ValidConfigServer(); err != nil {
 		sf.config = DefaultConfig()
 	} else {
 		sf.config = cfg

@@ -10,34 +10,34 @@ import (
 	"strings"
 	"time"
 
-	"github.com/thinkgos/go-iecp5/asdu"
+	"gitlab.com/circutor-library/go-iecp5/asdu"
 )
 
-// ClientOption 客户端配置
+// ClientOption Configuration
 type ClientOption struct {
 	config            Config
 	params            asdu.Params
-	server            *url.URL      // 连接的服务器端
-	autoReconnect     bool          // 是否启动重连
-	reconnectInterval time.Duration // 重连间隔时间
-	TLSConfig         *tls.Config   // tls配置
+	server            *url.URL      // Connected server side
+	autoReconnect     bool          // if true, reconnection automatically
+	reconnectInterval time.Duration // Reconnection interval
+	TLSConfig         *tls.Config   // tls configuration
 }
 
 // NewOption with default config and default asdu.ParamsWide params
 func NewOption() *ClientOption {
 	return &ClientOption{
-		DefaultConfig(),
-		*asdu.ParamsWide,
-		nil,
-		true,
-		DefaultReconnectInterval,
-		nil,
+		config:            DefaultConfig(),
+		params:            *asdu.ParamsWide,
+		server:            nil,
+		autoReconnect:     true,
+		reconnectInterval: DefaultReconnectInterval,
+		TLSConfig:         nil,
 	}
 }
 
-// SetConfig set config if config is valid it will use DefaultConfig()
+// SetConfig sets the config if config is not valid it will use DefaultConfig()
 func (sf *ClientOption) SetConfig(cfg Config) *ClientOption {
-	if err := cfg.Valid(); err != nil {
+	if err := cfg.ValidConfigServer(); err != nil {
 		sf.config = DefaultConfig()
 	} else {
 		sf.config = cfg
@@ -45,7 +45,7 @@ func (sf *ClientOption) SetConfig(cfg Config) *ClientOption {
 	return sf
 }
 
-// SetParams set asdu params if params is valid it will use asdu.ParamsWide
+// SetParams set asdu params if params is not valid it will use asdu.ParamsWide
 func (sf *ClientOption) SetParams(p *asdu.Params) *ClientOption {
 	if err := p.Valid(); err != nil {
 		sf.params = *asdu.ParamsWide

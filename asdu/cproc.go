@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-// 在控制方向过程信息的应用服务数据单元
+// Application service data unit for process information in the control direction
 
-// SingleCommandInfo 单命令 信息体
+// SingleCommandInfo, Single command Message body
 type SingleCommandInfo struct {
 	Ioa   InfoObjAddr
 	Value bool
@@ -18,21 +18,21 @@ type SingleCommandInfo struct {
 	Time  time.Time
 }
 
-// SingleCmd sends a type identification [C_SC_NA_1] or [C_SC_TA_1]. 单命令, 只有单个信息对象(SQ = 0)
+// SingleCmd sends a type identification [C_SC_NA_1] or [C_SC_TA_1]. Single command, only a single information object(SQ = 0)
 // [C_SC_NA_1] See companion standard 101, subclass 7.3.2.1
 // [C_SC_TA_1] See companion standard 101,
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// <8> := 停止激活
-// 监视方向：
-// <7> := 激活确认
-// <9> := 停止激活确认
-// <10> := 激活终止
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// Causes of transmission (coa) for
+// Control direction：
+// <6> := activate
+// <8> := deactivate
+// surveillance direction：
+// <7> := Confirmation of activation
+// <9> := Deactivation Confirmation
+// <10> := Termination of activation
+// <44> := Unknown type identification
+// <45> := Unknown cause of transmission
+// <46> := Unknown application service data unit public address
+// <47> := Unknown information object address
 func SingleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd SingleCommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
@@ -67,7 +67,7 @@ func SingleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
 	return c.Send(u)
 }
 
-// DoubleCommandInfo 单命令 信息体
+// DoubleCommandInfo
 type DoubleCommandInfo struct {
 	Ioa   InfoObjAddr
 	Value DoubleCommand
@@ -75,21 +75,21 @@ type DoubleCommandInfo struct {
 	Time  time.Time
 }
 
-// DoubleCmd sends a type identification [C_DC_NA_1] or [C_DC_TA_1]. 双命令, 只有单个信息对象(SQ = 0)
+// DoubleCmd sends a type identification [C_DC_NA_1] or [C_DC_TA_1]. Dual command, only a single information object(SQ = 0)
 // [C_DC_NA_1] See companion standard 101, subclass 7.3.2.2
 // [C_DC_TA_1] See companion standard 101,
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// <8> := 停止激活
-// 监视方向：
-// <7> := 激活确认
-// <9> := 停止激活确认
-// <10> := 激活终止
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// Cause of transmission (coa) for
+// Control direction：
+// <6> := activate
+// <8> := deactivate
+// surveillance direction：
+// <7> := Activation Confirmation
+// <9> := Deactivation Confirmation
+// <10> := Activation terminated
+// <44> := Unknown Type Identifier
+// <45> := Unknown cause of transmission
+// <46> := Unknown application service data unit public address
+// <47> := Unknown information object address
 func DoubleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
 	cmd DoubleCommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
@@ -121,7 +121,7 @@ func DoubleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
 	return c.Send(u)
 }
 
-// StepCommandInfo 步调节 信息体
+// StepCommandInfo
 type StepCommandInfo struct {
 	Ioa   InfoObjAddr
 	Value StepCommand
@@ -129,21 +129,22 @@ type StepCommandInfo struct {
 	Time  time.Time
 }
 
-// StepCmd sends a type [C_RC_NA_1] or [C_RC_TA_1]. 步调节命令, 只有单个信息对象(SQ = 0)
-// [C_RC_NA_1] See companion standard 101, subclass 7.3.2.3
-// [C_RC_TA_1] See companion standard 101,
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// <8> := 停止激活
-// 监视方向：
-// <7> := 激活确认
-// <9> := 停止激活确认
-// <10> := 激活终止
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// StepCmd sends a type [C_RC_NA_1] or [C_RC_TA_1]. StepCmd sends a type [C_RC_NA_1] or [C_RC_TA_1]. StepCmd commands, only a single information object (SQ = 0).
+// [C_RC_NA_1] See companion standard 101, subclass 7.3.2.3.
+// [C_RC_TA_1] See companion standard 101, subclass 7.3.2.3.
+// The reason for transmission (coa) is used for the
+// control direction:
+// <6> := activate
+// <8> := deactivate
+// Monitoring direction:
+// <7> := Activation confirmation
+// <9> := Deactivation confirmation
+// <10> := Activation terminated
+// <44> := Unknown type identification
+// <45> := Unknown reason for transmission
+// <46> := Unknown public address of application service data unit
+// <47> := Unknown address of information object
+
 func StepCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd StepCommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
@@ -174,7 +175,7 @@ func StepCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, c
 	return c.Send(u)
 }
 
-// SetpointCommandNormalInfo 设置命令，规一化值 信息体
+// SetpointCommandNormalInfo Setup command, normalised values InfoBody
 type SetpointCommandNormalInfo struct {
 	Ioa   InfoObjAddr
 	Value Normalize
@@ -182,21 +183,21 @@ type SetpointCommandNormalInfo struct {
 	Time  time.Time
 }
 
-// SetpointCmdNormal sends a type [C_SE_NA_1] or [C_SE_TA_1]. 设定命令,规一化值, 只有单个信息对象(SQ = 0)
+// SetpointCmdNormal sends a type [C_SE_NA_1] or [C_SE_TA_1]. Setting commands, normalised values, single information objects only(SQ = 0)
 // [C_SE_NA_1] See companion standard 101, subclass 7.3.2.4
 // [C_SE_TA_1] See companion standard 101,
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// <8> := 停止激活
-// 监视方向：
-// <7> := 激活确认
-// <9> := 停止激活确认
-// <10> := 激活终止
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// Cause of transmission (coa) for
+// control direction：
+// <6>: = Activate
+// <8>: = Stop activation
+// Monitoring direction:
+// <7>: = Activate confirmation
+// <9>: = Stop activation confirmation
+// <10>: = Activate termination
+// <44>: = Unknown type logo
+// <45>: = Unknown reasons for transmission
+// <46>: = Unknown application service data unit public address
+// <47>: = Unknown information object address
 func SetpointCmdNormal(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd SetpointCommandNormalInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
@@ -226,7 +227,7 @@ func SetpointCmdNormal(c Connect, typeID TypeID, coa CauseOfTransmission, ca Com
 	return c.Send(u)
 }
 
-// SetpointCommandScaledInfo 设定命令,标度化值 信息体
+// SetpointCommandScaledInfo
 type SetpointCommandScaledInfo struct {
 	Ioa   InfoObjAddr
 	Value int16
@@ -234,21 +235,22 @@ type SetpointCommandScaledInfo struct {
 	Time  time.Time
 }
 
-// SetpointCmdScaled sends a type [C_SE_NB_1] or [C_SE_TB_1]. 设定命令,标度化值,只有单个信息对象(SQ = 0)
-// [C_SE_NB_1] See companion standard 101, subclass 7.3.2.5
-// [C_SE_TB_1] See companion standard 101,
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// <8> := 停止激活
-// 监视方向：
-// <7> := 激活确认
-// <9> := 停止激活确认
-// <10> := 激活终止
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// SetpointCmdScaled sends a type [C_SE_NB_1] or [C_SE_TB_1]. Set command, standardization value, only single information object (SQ = 0)
+// [c_se_nb_1] See Companion Standard 101, Subclass 7.3.2.5
+// [c_se_tb_1] See Companion Standard 101,
+// The reason for transmission (coa) is used for it
+// control direction:
+// <6>: = Activate
+// <8>: = Stop activation
+// Monitoring direction:
+// <7>: = Activate confirmation
+// <9>: = Stop activation confirmation
+// <10>: = Activate termination
+// <44>: = Unknown type logo
+// <45>: = Unknown reasons for transmission
+// <46>: = Unknown application service data unit public address
+// <47>: = Unknown information object address
+
 func SetpointCmdScaled(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd SetpointCommandScaledInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
@@ -278,7 +280,7 @@ func SetpointCmdScaled(c Connect, typeID TypeID, coa CauseOfTransmission, ca Com
 	return c.Send(u)
 }
 
-// SetpointCommandFloatInfo 设定命令, 短浮点数 信息体
+// SetpointCommandFloatInfo Set command, short -floating point digital information body
 type SetpointCommandFloatInfo struct {
 	Ioa   InfoObjAddr
 	Value float32
@@ -286,21 +288,21 @@ type SetpointCommandFloatInfo struct {
 	Time  time.Time
 }
 
-// SetpointCmdFloat sends a type [C_SE_NC_1] or [C_SE_TC_1].设定命令,短浮点数,只有单个信息对象(SQ = 0)
-// [C_SE_NC_1] See companion standard 101, subclass 7.3.2.6
-// [C_SE_TC_1] See companion standard 101,
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// <8> := 停止激活
-// 监视方向：
-// <7> := 激活确认
-// <9> := 停止激活确认
-// <10> := 激活终止
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// SetpointCmdFloat sends a type [C_SE_NC_1] or [C_SE_TC_1].Set command, short floating point number, only a single information object (SQ = 0)
+// [C_SE_NC_1] See Companion Standard 101, Subclass 7.3.2.6
+// [c_se_tc_1] See Companion Standard 101,
+// The reason for transmission (coa) is used for it
+// control direction:
+// <6>: = Activate
+// <8>: = Stop activation
+// Monitoring direction:
+// <7>: = Activate confirmation
+// <9>: = Stop activation confirmation
+// <10>: = Activate termination
+// <44>: = Unknown type logo
+// <45>: = Unknown reasons for transmission
+// <46>: = Unknown application service data unit public address
+// <47>: = Unknown information object address
 func SetpointCmdFloat(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd SetpointCommandFloatInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
@@ -332,28 +334,28 @@ func SetpointCmdFloat(c Connect, typeID TypeID, coa CauseOfTransmission, ca Comm
 	return c.Send(u)
 }
 
-// BitsString32CommandInfo 比特串命令 信息体
+// BitsString32CommandInfo Bit strings command information body
 type BitsString32CommandInfo struct {
 	Ioa   InfoObjAddr
 	Value uint32
 	Time  time.Time
 }
 
-// BitsString32Cmd sends a type [C_BO_NA_1] or [C_BO_TA_1]. 比特串命令,只有单个信息对象(SQ = 0)
-// [C_BO_NA_1] See companion standard 101, subclass 7.3.2.7
-// [C_BO_TA_1] See companion standard 101,
-// 传送原因(coa)用于
-// 控制方向：
-// <6> := 激活
-// <8> := 停止激活
-// 监视方向：
-// <7> := 激活确认
-// <9> := 停止激活确认
-// <10> := 激活终止
-// <44> := 未知的类型标识
-// <45> := 未知的传送原因
-// <46> := 未知的应用服务数据单元公共地址
-// <47> := 未知的信息对象地址
+// BitsString32Cmd sends a type [C_BO_NA_1] or [C_BO_TA_1]. Bit string command, only a single information object (SQ = 0)
+// [C_BO_NA_1] See Companion Standard 101, Subclass 7.3.2.7
+// [C_BO_TA_1] See Companion Standard 101,
+// The reason for transmission (coa) is used for it
+// control direction:
+// <6>: = Activate
+// <8>: = Stop activation
+// Monitoring direction:
+// <7>: = Activate confirmation
+// <9>: = Stop activation confirmation
+// <10>: = Activate termination
+// <44>: = Unknown type logo
+// <45>: = Unknown reasons for transmission
+// <46>: = Unknown application service data unit public address
+// <47>: = Unknown information object address
 func BitsString32Cmd(c Connect, typeID TypeID, coa CauseOfTransmission, commonAddr CommonAddr,
 	cmd BitsString32CommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
@@ -386,7 +388,7 @@ func BitsString32Cmd(c Connect, typeID TypeID, coa CauseOfTransmission, commonAd
 	return c.Send(u)
 }
 
-// GetSingleCmd [C_SC_NA_1] or [C_SC_TA_1] 获取单命令信息体
+// GetSingleCmd [C_SC_NA_1] or [C_SC_TA_1] Get the order command information body
 func (sf *ASDU) GetSingleCmd() SingleCommandInfo {
 	var s SingleCommandInfo
 
@@ -406,7 +408,7 @@ func (sf *ASDU) GetSingleCmd() SingleCommandInfo {
 	return s
 }
 
-// GetDoubleCmd [C_DC_NA_1] or [C_DC_TA_1] 获取双命令信息体
+// GetDoubleCmd [C_DC_NA_1] or [C_DC_TA_1] Get double command information body
 func (sf *ASDU) GetDoubleCmd() DoubleCommandInfo {
 	var cmd DoubleCommandInfo
 
@@ -426,7 +428,7 @@ func (sf *ASDU) GetDoubleCmd() DoubleCommandInfo {
 	return cmd
 }
 
-// GetStepCmd [C_RC_NA_1] or [C_RC_TA_1] 获取步调节命令信息体
+// GetStepCmd [C_RC_NA_1] or [C_RC_TA_1] Get step adjustment command information body
 func (sf *ASDU) GetStepCmd() StepCommandInfo {
 	var cmd StepCommandInfo
 
@@ -446,7 +448,7 @@ func (sf *ASDU) GetStepCmd() StepCommandInfo {
 	return cmd
 }
 
-// GetSetpointNormalCmd [C_SE_NA_1] or [C_SE_TA_1] 获取设定命令,规一化值信息体
+// GetSetpointNormalCmd [C_SE_NA_1] or [C_SE_TA_1] Get the setting command, the one -time value information body
 func (sf *ASDU) GetSetpointNormalCmd() SetpointCommandNormalInfo {
 	var cmd SetpointCommandNormalInfo
 
@@ -465,7 +467,7 @@ func (sf *ASDU) GetSetpointNormalCmd() SetpointCommandNormalInfo {
 	return cmd
 }
 
-// GetSetpointCmdScaled [C_SE_NB_1] or [C_SE_TB_1] 获取设定命令,标度化值信息体
+// GetSetpointCmdScaled [C_SE_NB_1] or [C_SE_TB_1] Get the setting command, standardized value information body
 func (sf *ASDU) GetSetpointCmdScaled() SetpointCommandScaledInfo {
 	var cmd SetpointCommandScaledInfo
 
@@ -484,7 +486,7 @@ func (sf *ASDU) GetSetpointCmdScaled() SetpointCommandScaledInfo {
 	return cmd
 }
 
-// GetSetpointFloatCmd [C_SE_NC_1] or [C_SE_TC_1] 获取设定命令，短浮点数信息体
+// GetSetpointFloatCmd [C_SE_NC_1] or [C_SE_TC_1] Get the setting command, short -floating -point number information body
 func (sf *ASDU) GetSetpointFloatCmd() SetpointCommandFloatInfo {
 	var cmd SetpointCommandFloatInfo
 
@@ -503,7 +505,7 @@ func (sf *ASDU) GetSetpointFloatCmd() SetpointCommandFloatInfo {
 	return cmd
 }
 
-// GetBitsString32Cmd [C_BO_NA_1] or [C_BO_TA_1] 获取比特串命令信息体
+// GetBitsString32Cmd [C_BO_NA_1] or [C_BO_TA_1] Get Bitstring Command Message Body
 func (sf *ASDU) GetBitsString32Cmd() BitsString32CommandInfo {
 	var cmd BitsString32CommandInfo
 

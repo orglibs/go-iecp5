@@ -15,8 +15,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/thinkgos/go-iecp5/asdu"
-	"github.com/thinkgos/go-iecp5/clog"
+	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"gitlab.com/circutor-library/go-iecp5/clog"
 )
 
 const (
@@ -36,7 +36,7 @@ type Client struct {
 	rcvRaw   chan []byte // for recvLoop raw cs104 frame
 	sendRaw  chan []byte // for sendLoop raw cs104 frame
 
-	// I帧的发送与接收序号
+	// Transmit and Receive Serial Numbers for I-Frames
 	seqNoSend uint16 // sequence number of next outbound I-frame
 	ackNoSend uint16 // outbound sequence number yet to be confirmed
 	seqNoRcv  uint16 // sequence number of next inbound I-frame
@@ -45,15 +45,15 @@ type Client struct {
 	// maps sendTime I-frames to their respective sequence number
 	pending []seqPending
 
-	startDtActiveSendSince atomic.Value // 当发送startDtActive时,等待确认回复的超时间隔
-	stopDtActiveSendSince  atomic.Value // 当发起stopDtActive时,等待确认回复的超时
+	startDtActiveSendSince atomic.Value // The timeout interval to wait for an acknowledgement when sending startDtActive.
+	stopDtActiveSendSince  atomic.Value // When stopDtActive is initiated, the timeout to wait for an acknowledgement of a reply is set.
 
-	// 连接状态
+	// connection status
 	status   uint32
 	rwMux    sync.RWMutex
 	isActive uint32
 
-	// 其他
+	// clog logger
 	clog.Clog
 
 	wg          sync.WaitGroup
@@ -106,7 +106,7 @@ func (sf *Client) Start() error {
 	return nil
 }
 
-// Connect is
+// run the client connection
 func (sf *Client) running() {
 	var ctx context.Context
 
@@ -145,7 +145,7 @@ func (sf *Client) running() {
 		case <-ctx.Done():
 			return
 		default:
-			// 随机500ms-1s的重试，避免快速重试造成服务器许多无效连接
+			// Random value in the range of 500ms-1s avoid fast retries that can cause invalid connections to the server.
 			time.Sleep(time.Millisecond * time.Duration(500+rand.Intn(500)))
 		}
 	}
@@ -170,7 +170,7 @@ func (sf *Client) recvLoop() {
 					sf.Error("receive failed, %v", err)
 					return
 				}
-				if e, ok := err.(net.Error); ok && !e.Temporary() {
+				if e, ok := err.(net.Error); ok && !e.Timeout() {
 					sf.Error("receive failed, %v", err)
 					return
 				}
@@ -230,7 +230,7 @@ func (sf *Client) sendLoop() {
 						sf.Error("sendRaw failed, %v", err)
 						return
 					}
-					if e, ok := err.(net.Error); !ok || !e.Temporary() {
+					if e, ok := err.(net.Error); !ok || !e.Timeout() {
 						sf.Error("sendRaw failed, %v", err)
 						return
 					}
@@ -261,8 +261,8 @@ func (sf *Client) run(ctx context.Context) {
 	var willNotTimeout = time.Now().Add(time.Hour * 24 * 365 * 100)
 
 	var unAckRcvSince = willNotTimeout
-	var idleTimeout3Sine = time.Now()         // 空闲间隔发起testFrAlive
-	var testFrAliveSendSince = willNotTimeout // 当发起testFrAlive时,等待确认回复的超时间隔
+	var idleTimeout3Sine = time.Now()         // Idle interval initiates testFrAlive
+	var testFrAliveSendSince = willNotTimeout // The timeout interval to wait for an acknowledgement when initiating a testFrAlive.
 
 	sf.startDtActiveSendSince.Store(willNotTimeout)
 	sf.stopDtActiveSendSince.Store(willNotTimeout)
@@ -288,11 +288,11 @@ func (sf *Client) run(ctx context.Context) {
 	}
 
 	defer func() {
-		// default: STOPDT, when connected establish and not enable "data transfer" yet
+		// default: STOPDT, when a connection is established and "data transfer" is not enabled.
 		atomic.StoreUint32(&sf.isActive, inactive)
 		sf.setConnectStatus(disconnected)
 		checkTicker.Stop()
-		_ = sf.conn.Close() // 连锁引发cancel
+		_ = sf.conn.Close() // Chain trigger cancel
 		sf.wg.Wait()
 		sf.onConnectionLost(sf)
 		sf.Debug("run stopped!")
@@ -331,7 +331,7 @@ func (sf *Client) run(ctx context.Context) {
 				return
 			}
 
-			// 确定最早发送的i-Frame是否超时,超时则回复sFrame
+			// Determine if the earliest i-Frame sent timed out, and reply to the sFrame if it did.
 			if sf.ackNoRcv != sf.seqNoRcv &&
 				(now.Sub(unAckRcvSince) >= sf.option.config.RecvUnAckTimeout2 ||
 					now.Sub(idleTimeout3Sine) >= timeoutResolution) {
@@ -339,7 +339,7 @@ func (sf *Client) run(ctx context.Context) {
 				sf.ackNoRcv = sf.seqNoRcv
 			}
 
-			// 空闲时间到，发送TestFrActive帧,保活
+			// Send TestFrActive frame when idle time is up.
 			if now.Sub(idleTimeout3Sine) >= sf.option.config.IdleTimeout3 {
 				sf.sendUFrame(uTestFrActive)
 				testFrAliveSendSince = time.Now()
@@ -347,7 +347,7 @@ func (sf *Client) run(ctx context.Context) {
 			}
 
 		case apdu := <-sf.rcvRaw:
-			idleTimeout3Sine = time.Now() // 每收到一个i帧,S帧,U帧, 重置空闲定时器, t3
+			idleTimeout3Sine = time.Now() // Every i-frame, S-frame, U-frame received, reset idle timer, t3
 			apci, asduVal := parse(apdu)
 			switch head := apci.(type) {
 			case sAPCI:
@@ -472,7 +472,7 @@ func (sf *Client) updateAckNoOut(ackNo uint16) (ok bool) {
 	if ackNo == sf.ackNoSend {
 		return true
 	}
-	// new acks validate， ack 不能在 req seq 前面,出错
+	// new acks validate， ack cannot precede req seq, error.
 	if seqNoCount(sf.ackNoSend, sf.seqNoSend) < seqNoCount(ackNo, sf.seqNoSend) {
 		return false
 	}
@@ -525,9 +525,9 @@ func (sf *Client) clientHandler(asduPack *asdu.ASDU) error {
 
 	case asdu.C_CD_NA_1: // DelayAcquireCommand
 		return sf.handler.DelayAcquisitionHandler(sf, asduPack)
+	default:
+		return sf.handler.ASDUHandler(sf, asduPack)
 	}
-
-	return sf.handler.ASDUHandler(sf, asduPack)
 }
 
 // Params returns params of client
@@ -582,7 +582,7 @@ func (sf *Client) SendStopDt() {
 	sf.sendUFrame(uStopDtActive)
 }
 
-//InterrogationCmd wrap asdu.InterrogationCmd
+// InterrogationCmd wrap asdu.InterrogationCmd
 func (sf *Client) InterrogationCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, qoi asdu.QualifierOfInterrogation) error {
 	return asdu.InterrogationCmd(sf, coa, ca, qoi)
 }

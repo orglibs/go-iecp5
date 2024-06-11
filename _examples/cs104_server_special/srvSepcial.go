@@ -7,8 +7,8 @@ import (
 
 	_ "net/http/pprof"
 
-	"github.com/thinkgos/go-iecp5/asdu"
-	"github.com/thinkgos/go-iecp5/cs104"
+	"github.com/circutor-library/go-iecp5/asdu"
+	"github.com/circutor-library/go-iecp5/cs104"
 )
 
 func main() {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/thinkgos/go-iecp5/asdu"
-	"github.com/thinkgos/go-iecp5/cs104"
+	"github.com/circutor-library/go-iecp5/asdu"
+	"github.com/circutor-library/go-iecp5/cs104"
 )
 
 type myClient struct{}
@@ -25,11 +25,11 @@ func main() {
 	client.LogMode(true)
 
 	client.SetOnConnectHandler(func(c *cs104.Client) {
-		c.SendStartDt() // 发送startDt激活指令
+		c.SendStartDt() // Send startDt activation command
 	})
 	err = client.Start()
 	if err != nil {
-		panic(fmt.Errorf("Failed to connect. error:%v\n", err))
+		panic(fmt.Errorf("failed to connect, error:%w", err))
 	}
 
 	for {
