@@ -432,6 +432,17 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		return sf.handler.SetPointCommandNormalHandler(sf, asduPack, cmd)
 
+	case asdu.C_SE_NB_1:
+		if asduPack.Identifier.Coa.Cause != asdu.Activation {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+		}
+		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+		}
+		cmd := asduPack.GetSetpointCmdScaled()
+
+		return sf.handler.SetPointCommandScaledHandler(sf, asduPack, cmd)
+
 	case asdu.C_IC_NA_1: // InterrogationCmd
 		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
 			asduPack.Identifier.Coa.Cause == asdu.Deactivation) {
