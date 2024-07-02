@@ -20,6 +20,7 @@ type ServerHandlerInterface interface {
 	DelayAcquisitionHandler(asdu.Connect, *asdu.ASDU, uint16) error
 	ASDUHandler(asdu.Connect, *asdu.ASDU) error
 	SetPointCommandNormalHandler(asdu.Connect, *asdu.ASDU, asdu.SetpointCommandNormalInfo) error
+	SetPointCommandScaledHandler(asdu.Connect, *asdu.ASDU, asdu.SetpointCommandScaledInfo) error
 }
 
 // ClientHandlerInterface  is the interface of client handler
