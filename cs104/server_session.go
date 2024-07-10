@@ -421,7 +421,48 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 	sf.Debug("ASDU %+v", asduPack)
 
 	switch asduPack.Identifier.Type {
-	case asdu.C_SE_NA_1:
+	case asdu.C_DC_NA_1: // DoubleCommand without timeStamp
+		if asduPack.Identifier.Coa.Cause != asdu.Activation {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+		}
+		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+		}
+
+		cmd := asduPack.GetDoubleCmd()
+		return sf.handler.DoubleCommandHandler(sf, asduPack, cmd)
+
+	case asdu.C_DC_TA_1: // DoubleCommand with timeStamp
+		if asduPack.Identifier.Coa.Cause != asdu.Activation {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+		}
+		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+		}
+
+		cmd := asduPack.GetDoubleCmd()
+		return sf.handler.DoubleCommandHandler(sf, asduPack, cmd)
+	case asdu.C_SC_NA_1: // SingleCommand without timeStamp
+		if asduPack.Identifier.Coa.Cause != asdu.Activation {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+		}
+		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+		}
+
+		cmd := asduPack.GetSingleCmd()
+		return sf.handler.SingleCommandHandler(sf, asduPack, cmd)
+	case asdu.C_SC_TA_1: // SingleCommand with timeStamp
+		if asduPack.Identifier.Coa.Cause != asdu.Activation {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+		}
+		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+		}
+
+		cmd := asduPack.GetSingleCmd()
+		return sf.handler.SingleCommandHandler(sf, asduPack, cmd)
+	case asdu.C_SE_NA_1: //SetPointCommandNormalized
 		if asduPack.Identifier.Coa.Cause != asdu.Activation {
 			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
 		}
@@ -432,7 +473,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		return sf.handler.SetPointCommandNormalHandler(sf, asduPack, cmd)
 
-	case asdu.C_SE_NB_1:
+	case asdu.C_SE_NB_1: // SetPointCommandScaled
 		if asduPack.Identifier.Coa.Cause != asdu.Activation {
 			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
 		}

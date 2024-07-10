@@ -19,6 +19,8 @@ type ServerHandlerInterface interface {
 	ResetProcessHandler(asdu.Connect, *asdu.ASDU, asdu.QualifierOfResetProcessCmd) error
 	DelayAcquisitionHandler(asdu.Connect, *asdu.ASDU, uint16) error
 	ASDUHandler(asdu.Connect, *asdu.ASDU) error
+	DoubleCommandHandler(asdu.Connect, *asdu.ASDU, asdu.DoubleCommandInfo) error
+	SingleCommandHandler(asdu.Connect, *asdu.ASDU, asdu.SingleCommandInfo) error
 	SetPointCommandNormalHandler(asdu.Connect, *asdu.ASDU, asdu.SetpointCommandNormalInfo) error
 	SetPointCommandScaledHandler(asdu.Connect, *asdu.ASDU, asdu.SetpointCommandScaledInfo) error
 }
