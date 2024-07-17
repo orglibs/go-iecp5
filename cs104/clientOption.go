@@ -6,6 +6,7 @@ package cs104
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -88,7 +89,7 @@ func (sf *ClientOption) AddRemoteServer(server string) error {
 	}
 	remoteURL, err := url.Parse(server)
 	if err != nil {
-		return err
+		return fmt.Errorf("parse error:%w", err)
 	}
 	sf.server = remoteURL
 	return nil

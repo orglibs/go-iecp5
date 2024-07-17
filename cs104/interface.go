@@ -12,27 +12,27 @@ import (
 
 // ServerHandlerInterface is the interface of server handler
 type ServerHandlerInterface interface {
-	InterrogationHandler(asdu.Connect, *asdu.ASDU, asdu.QualifierOfInterrogation) error
-	CounterInterrogationHandler(asdu.Connect, *asdu.ASDU, asdu.QualifierCountCall) error
-	ReadHandler(asdu.Connect, *asdu.ASDU, asdu.InfoObjAddr) error
-	ClockSyncHandler(asdu.Connect, *asdu.ASDU, time.Time) error
-	ResetProcessHandler(asdu.Connect, *asdu.ASDU, asdu.QualifierOfResetProcessCmd) error
-	DelayAcquisitionHandler(asdu.Connect, *asdu.ASDU, uint16) error
-	ASDUHandler(asdu.Connect, *asdu.ASDU) error
-	DoubleCommandHandler(asdu.Connect, *asdu.ASDU, asdu.DoubleCommandInfo) error
-	SingleCommandHandler(asdu.Connect, *asdu.ASDU, asdu.SingleCommandInfo) error
-	SetPointCommandNormalHandler(asdu.Connect, *asdu.ASDU, asdu.SetpointCommandNormalInfo) error
-	SetPointCommandScaledHandler(asdu.Connect, *asdu.ASDU, asdu.SetpointCommandScaledInfo) error
+	InterrogationHandler(con asdu.Connect, asdu *asdu.ASDU, qualifierInt asdu.QualifierOfInterrogation) error
+	CounterInterrogationHandler(con asdu.Connect, asdu *asdu.ASDU, counterInt asdu.QualifierCountCall) error
+	ReadHandler(con asdu.Connect, asdu *asdu.ASDU, readInfo asdu.InfoObjAddr) error
+	ClockSyncHandler(con asdu.Connect, asdu *asdu.ASDU, time time.Time) error
+	ResetProcessHandler(con asdu.Connect, asdu *asdu.ASDU, resetQuaifier asdu.QualifierOfResetProcessCmd) error
+	DelayAcquisitionHandler(con asdu.Connect, asdu *asdu.ASDU, delay uint16) error
+	ASDUHandler(con asdu.Connect, asdu *asdu.ASDU) error
+	DoubleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, doubleCom asdu.DoubleCommandInfo) error
+	SingleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, singleCom asdu.SingleCommandInfo) error
+	SetPointCommandNormalHandler(con asdu.Connect, asdu *asdu.ASDU, setNormal asdu.SetpointCommandNormalInfo) error
+	SetPointCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.SetpointCommandScaledInfo) error
 }
 
 // ClientHandlerInterface  is the interface of client handler
 type ClientHandlerInterface interface {
-	InterrogationHandler(asdu.Connect, *asdu.ASDU) error
-	CounterInterrogationHandler(asdu.Connect, *asdu.ASDU) error
-	ReadHandler(asdu.Connect, *asdu.ASDU) error
-	TestCommandHandler(asdu.Connect, *asdu.ASDU) error
-	ClockSyncHandler(asdu.Connect, *asdu.ASDU) error
-	ResetProcessHandler(asdu.Connect, *asdu.ASDU) error
-	DelayAcquisitionHandler(asdu.Connect, *asdu.ASDU) error
-	ASDUHandler(asdu.Connect, *asdu.ASDU) error
+	InterrogationHandler(con asdu.Connect, asdu *asdu.ASDU) error
+	CounterInterrogationHandler(con asdu.Connect, asdu *asdu.ASDU) error
+	ReadHandler(con asdu.Connect, asdu *asdu.ASDU) error
+	TestCommandHandler(con asdu.Connect, asdu *asdu.ASDU) error
+	ClockSyncHandler(con asdu.Connect, asdu *asdu.ASDU) error
+	ResetProcessHandler(con asdu.Connect, asdu *asdu.ASDU) error
+	DelayAcquisitionHandler(con asdu.Connect, asdu *asdu.ASDU) error
+	ASDUHandler(con asdu.Connect, asdu *asdu.ASDU) error
 }

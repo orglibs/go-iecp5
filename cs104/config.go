@@ -32,8 +32,8 @@ const (
 	RecvUnAckTimeout2Max = 255 * time.Second
 
 	// "t3" range[1 second, 48 hours] default value 20 s, See IEC 60870-5-104, subclass 5.2.
-	IdleTimeout3Min = 1 * time.Second
-	IdleTimeout3Max = 48 * time.Hour
+	IdleTimeout3Minimum = 1 * time.Second
+	IdleTimeout3Maximum = 48 * time.Hour
 
 	// "k" range[1, 32767] default value 12. See IEC 60870-5-104, subclass 5.5.
 	SendUnAckLimitKMin = 1
@@ -116,7 +116,7 @@ func (sf *Config) ValidConfigServer() error {
 
 	if sf.IdleTimeout3 == 0 {
 		sf.IdleTimeout3 = 20 * time.Second
-	} else if sf.IdleTimeout3 < IdleTimeout3Min || sf.IdleTimeout3 > IdleTimeout3Max {
+	} else if sf.IdleTimeout3 < IdleTimeout3Minimum || sf.IdleTimeout3 > IdleTimeout3Maximum {
 		return errors.New(`IdleTimeout3 "t₃" not in [1 second, 48 hours]`)
 	}
 

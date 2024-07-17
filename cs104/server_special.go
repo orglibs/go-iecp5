@@ -7,6 +7,7 @@ package cs104
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"math/rand"
 	"sync/atomic"
 	"time"
@@ -26,9 +27,6 @@ type ServerSpecial interface {
 
 	SetOnConnectHandler(f func(c asdu.Connect))
 	SetConnectionLostHandler(f func(c asdu.Connect))
-
-	LogMode(enable bool)
-	SetLogProvider(p clog.LogProvider)
 }
 
 type serverSpec struct {
@@ -39,6 +37,7 @@ type serverSpec struct {
 
 // NewServerSpecial new special server
 func NewServerSpecial(handler ServerHandlerInterface, o *ClientOption) ServerSpecial {
+	clog.NewLogger()
 	return &serverSpec{
 		SrvSession: SrvSession{
 			config:  &o.config,
@@ -50,7 +49,6 @@ func NewServerSpecial(handler ServerHandlerInterface, o *ClientOption) ServerSpe
 			rcvRaw:   make(chan []byte, 1024),
 			sendRaw:  make(chan []byte, 1024), // may not block!
 
-			Clog: clog.NewLogger("cs104 serverSpec => "),
 		},
 		option: *o,
 	}
@@ -96,20 +94,20 @@ func (sf *serverSpec) running() {
 		default:
 		}
 
-		sf.Debug("connecting server %+v", sf.option.server)
+		slog.Debug("connecting server", "server", sf.option.server)
 		conn, err := openConnection(sf.option.server, sf.option.TLSConfig, sf.config.ConnectTimeout0)
 		if err != nil {
-			sf.Error("connect failed, %v", err)
+			slog.Error("connect failed", "error", err)
 			if !sf.option.autoReconnect {
 				return
 			}
 			time.Sleep(sf.option.reconnectInterval)
 			continue
 		}
-		sf.Debug("connect success")
+		slog.Debug("connect success")
 		sf.conn = conn
 		sf.run(ctx)
-		sf.Debug("disconnected server %+v", sf.option.server)
+		slog.Debug("disconnected server", "server", sf.option.server)
 		select {
 		case <-ctx.Done():
 			return

@@ -7,6 +7,7 @@ package cs104
 import (
 	"context"
 	"crypto/tls"
+	"log/slog"
 	"net"
 	"sync"
 	"time"
@@ -31,18 +32,18 @@ type Server struct {
 	listen         net.Listener
 	onConnection   func(asdu.Connect)
 	connectionLost func(asdu.Connect)
-	clog.Clog
+
 	wg sync.WaitGroup
 }
 
 // NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
 func NewServer(handler ServerHandlerInterface) *Server {
+	clog.NewLogger()
 	server104 := &Server{
 		config:   DefaultConfig(),
 		params:   *asdu.ParamsWide,
 		handler:  handler,
 		sessions: make(map[*SrvSession]struct{}),
-		Clog:     clog.NewLogger("cs104 server => "),
 	}
 
 	return server104
@@ -72,7 +73,7 @@ func (sf *Server) SetParams(p *asdu.Params) *Server {
 func (sf *Server) ListenAndServer(addr string) {
 	listen, err := net.Listen("tcp", addr)
 	if err != nil {
-		sf.Error("server run failed, %v", err)
+		slog.Error("server run failed", "error", err)
 		return
 	}
 	sf.mux.Lock()
@@ -83,17 +84,20 @@ func (sf *Server) ListenAndServer(addr string) {
 	defer func() {
 		cancel()
 		_ = sf.Close()
-		sf.Debug("server stop")
+
+		slog.Debug("server stop")
 	}()
-	sf.Debug("server run")
+	slog.Debug("server run")
+
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
-			sf.Error("server run failed, %v", err)
+			slog.Error("server run failed", "error", err)
 			return
 		}
 
 		sf.wg.Add(1)
+
 		go func() {
 			sess := &SrvSession{
 				config:   &sf.config,
@@ -107,7 +111,6 @@ func (sf *Server) ListenAndServer(addr string) {
 
 				onConnection:   sf.onConnection,
 				connectionLost: sf.connectionLost,
-				Clog:           sf.Clog,
 			}
 			sf.mux.Lock()
 			sf.sessions[sess] = struct{}{}
