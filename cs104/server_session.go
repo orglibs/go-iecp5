@@ -90,20 +90,24 @@ func (sf *SrvSession) recvLoop() {
 
 			rdCnt += byteCount
 			if rdCnt == 0 {
+
 				continue
 			} else if rdCnt == 1 {
-				if rawData[0] != startFrame {
+				if rawData[0] != StartFrame {
 					rdCnt = 0
+
 					continue
 				}
 			} else {
-				if rawData[0] != startFrame {
+				if rawData[0] != StartFrame {
 					rdCnt, length = 0, 2
+
 					continue
 				}
 				length = int(rawData[1]) + 2
 				if length < APCICtlFiledSize+2 || length > APDUSizeMax {
 					rdCnt, length = 0, 2
+
 					continue
 				}
 				if rdCnt == length {
@@ -180,18 +184,18 @@ func (sf *SrvSession) run(ctx context.Context) {
 	// var stopDtActiveSendSince = willNotTimeout
 
 	sendSFrame := func(rcvSN uint16) {
-		slog.Debug("TX sFrame", "tx sFrame", sAPCI{rcvSN})
-		sf.sendRaw <- newSFrame(rcvSN)
+		slog.Debug("TX sFrame", "tx sFrame", SAPCI{rcvSN})
+		sf.sendRaw <- NewSFrame(rcvSN)
 	}
 	sendUFrame := func(which byte) {
-		slog.Debug("TX uFrame", "tx uFrame", uAPCI{which})
-		sf.sendRaw <- newUFrame(which)
+		slog.Debug("TX uFrame", "tx uFrame", UAPCI{which})
+		sf.sendRaw <- NewUFrame(which)
 	}
 
 	sendIFrame := func(asdu1 []byte) {
 		seqNo := sf.seqNoSend
 
-		iframe, err := newIFrame(seqNo, sf.seqNoRcv, asdu1)
+		iframe, err := NewIFrame(seqNo, sf.seqNoRcv, asdu1)
 		if err != nil {
 			return
 		}
@@ -199,7 +203,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 		sf.seqNoSend = (seqNo + 1) & 32767
 		sf.pending = append(sf.pending, seqPending{seqNo & 32767, time.Now()})
 
-		slog.Debug("TX iFrame", "tx iFrame", iAPCI{seqNo, sf.seqNoRcv})
+		slog.Debug("TX iFrame", "tx iFrame", IAPCI{seqNo, sf.seqNoRcv})
 		sf.sendRaw <- iframe
 	}
 	if sf.onConnection != nil {
@@ -258,30 +262,30 @@ func (sf *SrvSession) run(ctx context.Context) {
 
 			// Send TestFrActive frame when idle time is up.
 			if now.Sub(idleTimeout3Sine) >= sf.config.IdleTimeout3 {
-				sendUFrame(uTestFrActive)
+				sendUFrame(UTestFrActive)
 				testFrAliveSendSince = time.Now()
 				idleTimeout3Sine = testFrAliveSendSince
 			}
 
 		case apdu := <-sf.rcvRaw:
 			idleTimeout3Sine = time.Now() // Every i-frame, S-frame, U-frame received, reset idle timer, t3
-			apci, asduVal := parse(apdu)
+			apci, asduVal := Parse(apdu)
 			switch head := apci.(type) {
-			case sAPCI:
+			case SAPCI:
 				slog.Debug("RX sFrame", "rx sFrame", head)
-				if !sf.updateAckNoOut(head.rcvSN) {
+				if !sf.updateAckNoOut(head.RcvSN) {
 					slog.Error("fatal incoming acknowledge either earlier than previous or later than sendTime")
 					return
 				}
 
-			case iAPCI:
+			case IAPCI:
 				slog.Debug("RX iFrame", "rx iFrame", head)
 				if !isActive {
 					slog.Warn("station not active")
 
 					break // not active, discard apdu
 				}
-				if !sf.updateAckNoOut(head.rcvSN) || head.sendSN != sf.seqNoRcv {
+				if !sf.updateAckNoOut(head.RcvSN) || head.SendSN != sf.seqNoRcv {
 					slog.Error("fatal incoming acknowledge either earlier than previous or later than sendTime")
 					return
 				}
@@ -297,27 +301,27 @@ func (sf *SrvSession) run(ctx context.Context) {
 					sf.ackNoRcv = sf.seqNoRcv
 				}
 
-			case uAPCI:
+			case UAPCI:
 				slog.Debug("RX uFrame", "rx uFrame", head)
-				switch head.function {
-				case uStartDtActive:
-					sendUFrame(uStartDtConfirm)
+				switch head.Function {
+				case UStartDtActive:
+					sendUFrame(UStartDtConfirm)
 					isActive = true
 				// case uStartDtConfirm:
 				// 	isActive = true
 				// 	startDtActiveSendSince = willNotTimeout
-				case uStopDtActive:
-					sendUFrame(uStopDtConfirm)
+				case UStopDtActive:
+					sendUFrame(UStopDtConfirm)
 					isActive = false
 				// case uStopDtConfirm:
 				// 	isActive = false
 				// 	stopDtActiveSendSince = willNotTimeout
-				case uTestFrActive:
-					sendUFrame(uTestFrConfirm)
-				case uTestFrConfirm:
+				case UTestFrActive:
+					sendUFrame(UTestFrConfirm)
+				case UTestFrConfirm:
 					testFrAliveSendSince = willNotTimeout
 				default:
-					slog.Error("illegal U-Frame functions ignored", "illegal frame", head.function)
+					slog.Error("illegal U-Frame functions ignored", "illegal frame", head.Function)
 				}
 			}
 		}
@@ -486,14 +490,17 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 	case asdu.C_IC_NA_1: // InterrogationCmd
 		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
 			asduPack.Identifier.Coa.Cause == asdu.Deactivation) {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
 		}
 		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
 		}
 		ioa, qoi := asduPack.GetInterrogationCmd()
 		if ioa != asdu.InfoObjAddrIrrelevant {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
 		}
 
 		err := sf.handler.InterrogationHandler(sf, asduPack, qoi)
@@ -502,14 +509,17 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 	case asdu.C_CI_NA_1: // CounterInterrogationCmd
 		if asduPack.Identifier.Coa.Cause != asdu.Activation {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
 		}
 		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
 		}
 		ioa, qcc := asduPack.GetCounterInterrogationCmd()
 		if ioa != asdu.InfoObjAddrIrrelevant {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			return fmt.Errorf("error with %s type, %w", asdu.C_CI_NA_1, err)
 		}
 		err := sf.handler.CounterInterrogationHandler(sf, asduPack, qcc)
 
@@ -517,10 +527,12 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 	case asdu.C_RD_NA_1: // ReadCmd
 		if asduPack.Identifier.Coa.Cause != asdu.Request {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
 		}
 		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
 		}
 		err := sf.handler.ReadHandler(sf, asduPack, asduPack.GetReadCmd())
 
@@ -528,15 +540,18 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 	case asdu.C_CS_NA_1: // ClockSynchronizationCmd
 		if asduPack.Identifier.Coa.Cause != asdu.Activation {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
 		}
 		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
 		}
 
 		ioa, tm := asduPack.GetClockSynchronizationCmd()
 		if ioa != asdu.InfoObjAddrIrrelevant {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			return fmt.Errorf("error with %s type, %w", asdu.C_CS_NA_1, err)
 		}
 		err := sf.handler.ClockSyncHandler(sf, asduPack, tm)
 
@@ -544,14 +559,17 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 	case asdu.C_TS_NA_1: // TestCommand
 		if asduPack.Identifier.Coa.Cause != asdu.Activation {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
 		}
 		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
 		}
 		ioa, _ := asduPack.GetTestCommand()
 		if ioa != asdu.InfoObjAddrIrrelevant {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			return fmt.Errorf("error with %s type, %w", asdu.C_TS_NA_1, err)
 		}
 
 		err := asduPack.SendReplyMirror(sf, asdu.ActivationCon)
@@ -560,14 +578,19 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 	case asdu.C_RP_NA_1: // ResetProcessCmd
 		if asduPack.Identifier.Coa.Cause != asdu.Activation {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
 		}
 		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+
+			return fmt.Errorf("error with %s type, %w", asdu.C_RP_NA_1, err)
 		}
 		ioa, qrp := asduPack.GetResetProcessCmd()
 		if ioa != asdu.InfoObjAddrIrrelevant {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+
+			return fmt.Errorf("error with %s type, %w", asdu.C_RP_NA_1, err)
 		}
 		err := sf.handler.ResetProcessHandler(sf, asduPack, qrp)
 
@@ -575,14 +598,17 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 	case asdu.C_CD_NA_1: // DelayAcquireCommand
 		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
 			asduPack.Identifier.Coa.Cause == asdu.Spontaneous) {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
 		}
 		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
 		}
 		ioa, msec := asduPack.GetDelayAcquireCommand()
 		if ioa != asdu.InfoObjAddrIrrelevant {
-			return asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
+			return fmt.Errorf("error with %s type, %w", asdu.C_CD_NA_1, err)
 		}
 
 		err := sf.handler.DelayAcquisitionHandler(sf, asduPack, msec)
@@ -591,7 +617,8 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 	}
 
 	if err := sf.handler.ASDUHandler(sf, asduPack); err != nil {
-		return asduPack.SendReplyMirror(sf, asdu.UnknownTypeID)
+		err := asduPack.SendReplyMirror(sf, asdu.UnknownTypeID)
+		return fmt.Errorf("error with %s type, %w", asduPack.Identifier.Type, err)
 	}
 
 	return nil

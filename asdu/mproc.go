@@ -5,13 +5,14 @@
 package asdu
 
 import (
+	"fmt"
 	"time"
 )
 
 // Application service data unit for process information in the monitoring direction
 
 // checkValid check common parameter of request is valid
-func checkValid(c Connect, typeID TypeID, isSequence bool, infosLen int) error {
+func CheckValid(c Connect, typeID TypeID, isSequence bool, infosLen int) error {
 	if infosLen == 0 {
 		return ErrNotAnyObjInfo
 	}
@@ -53,7 +54,7 @@ type SinglePointInfo struct {
 // [M_SP_TA_1] See companion standard 101,subclass 7.3.1.2
 // [M_SP_TB_1] See companion standard 101,subclass 7.3.1.22
 func single(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...SinglePointInfo) error {
-	if err := checkValid(c, typeID, isSequence, len(infos)); err != nil {
+	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
 
@@ -163,7 +164,7 @@ type DoublePointInfo struct {
 // [M_DP_TA_1] See companion standard 101,subclass 7.3.1.4
 // [M_DP_TB_1] See companion standard 101,subclass 7.3.1.23
 func double(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...DoublePointInfo) error {
-	if err := checkValid(c, typeID, isSequence, len(infos)); err != nil {
+	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
 
@@ -269,7 +270,7 @@ type StepPositionInfo struct {
 // [M_ST_TA_1] See companion standard 101, subclass 7.3.1.6
 // [M_ST_TB_1] See companion standard 101, subclass 7.3.1.24
 func step(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...StepPositionInfo) error {
-	if err := checkValid(c, typeID, isSequence, len(infos)); err != nil {
+	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
 
@@ -375,7 +376,7 @@ type BitString32Info struct {
 // [M_ST_TA_1] See companion standard 101, subclass 7.3.1.8
 // [M_ST_TB_1] See companion standard 101, subclass 7.3.1.25
 func bitString32(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...BitString32Info) error {
-	if err := checkValid(c, typeID, isSequence, len(infos)); err != nil {
+	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
 
@@ -473,7 +474,7 @@ type MeasuredValueNormalInfo struct {
 // [M_ME_TD_1] See companion standard 101, subclass 7.3.1.26
 // [M_ME_ND_1] See companion standard 101, subclass 7.3.1.21， The quality descriptor must default to asdu.GOOD
 func measuredValueNormal(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, attrs ...MeasuredValueNormalInfo) error {
-	if err := checkValid(c, typeID, isSequence, len(attrs)); err != nil {
+	if err := CheckValid(c, typeID, isSequence, len(attrs)); err != nil {
 		return err
 	}
 
@@ -596,7 +597,7 @@ type MeasuredValueScaledInfo struct {
 // [M_ME_TB_1] See companion standard 101, subclass 7.3.1.12.
 // [M_ME_TE_1] See companion standard 101, subclass 7.3.1.27
 func measuredValueScaled(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...MeasuredValueScaledInfo) error {
-	if err := checkValid(c, typeID, isSequence, len(infos)); err != nil {
+	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
 
@@ -694,7 +695,7 @@ type MeasuredValueFloatInfo struct {
 // [M_ME_TC_1] See companion standard 101, subclass 7.3.1.14
 // [M_ME_TF_1] See companion standard 101, subclass 7.3.1.28
 func measuredValueFloat(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...MeasuredValueFloatInfo) error {
-	if err := checkValid(c, typeID, isSequence, len(infos)); err != nil {
+	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
 
@@ -786,12 +787,12 @@ type BinaryCounterReadingInfo struct {
 	Time time.Time
 }
 
-// integratedTotals sends a type identification [M_IT_NA_1], [M_IT_TA_1] or [M_IT_TB_1]. 累计量
+// integratedTotals sends a type identification [M_IT_NA_1], [M_IT_TA_1] or [M_IT_TB_1].
 // [M_IT_NA_1] See companion standard 101, subclass 7.3.1.15
 // [M_IT_TA_1] See companion standard 101, subclass 7.3.1.16
 // [M_IT_TB_1] See companion standard 101, subclass 7.3.1.29
 func integratedTotals(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...BinaryCounterReadingInfo) error {
-	if err := checkValid(c, typeID, isSequence, len(infos)); err != nil {
+	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
 
@@ -895,7 +896,7 @@ func eventOfProtectionEquipment(c Connect, typeID TypeID, coa CauseOfTransmissio
 	if coa.Cause != Spontaneous {
 		return ErrCmdCause
 	}
-	if err := checkValid(c, typeID, false, len(infos)); err != nil {
+	if err := CheckValid(c, typeID, false, len(infos)); err != nil {
 		return err
 	}
 
@@ -962,7 +963,7 @@ func packedStartEventsOfProtectionEquipment(c Connect, typeID TypeID, coa CauseO
 	if coa.Cause != Spontaneous {
 		return ErrCmdCause
 	}
-	if err := checkValid(c, typeID, false, 1); err != nil {
+	if err := CheckValid(c, typeID, false, 1); err != nil {
 		return err
 	}
 
@@ -987,8 +988,12 @@ func packedStartEventsOfProtectionEquipment(c Connect, typeID TypeID, coa CauseO
 	default:
 		return ErrTypeIDNotMatch
 	}
+	err := c.Send(u)
+	if err != nil {
+		return fmt.Errorf("send error:%w", err)
+	}
 
-	return c.Send(u)
+	return nil
 }
 
 // PackedStartEventsOfProtectionEquipmentCP24Time2a Send type identification [M_EP_TB_1]. Relay protection equipment events
@@ -1026,7 +1031,7 @@ func packedOutputCircuitInfo(c Connect, typeID TypeID, coa CauseOfTransmission, 
 	if coa.Cause != Spontaneous {
 		return ErrCmdCause
 	}
-	if err := checkValid(c, typeID, false, 1); err != nil {
+	if err := CheckValid(c, typeID, false, 1); err != nil {
 		return err
 	}
 
@@ -1052,7 +1057,11 @@ func packedOutputCircuitInfo(c Connect, typeID TypeID, coa CauseOfTransmission, 
 		return ErrTypeIDNotMatch
 	}
 
-	return c.Send(u)
+	if err := c.Send(u); err != nil {
+		return fmt.Errorf("send error:%w", err)
+	}
+
+	return nil
 }
 
 // PackedOutputCircuitInfoCP24Time2a sends a type identification [M_EP_TC_1]. Packed Output CircuitInfoCP24Time2a sends a type identification [M_EP_TC_1].
@@ -1099,7 +1108,7 @@ func PackedSinglePointWithSCD(c Connect, isSequence bool, coa CauseOfTransmissio
 		(coa.Cause >= InterrogatedByStation && coa.Cause <= InterrogatedByGroup16)) {
 		return ErrCmdCause
 	}
-	if err := checkValid(c, M_PS_NA_1, isSequence, len(infos)); err != nil {
+	if err := CheckValid(c, M_PS_NA_1, isSequence, len(infos)); err != nil {
 		return err
 	}
 

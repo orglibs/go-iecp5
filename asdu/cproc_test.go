@@ -1,4 +1,4 @@
-package asdu
+package asdu_test
 
 import (
 	"math"
@@ -14,7 +14,7 @@ type conn struct {
 	t    *testing.T
 }
 
-func newConn(want []byte, t *testing.T) *conn {
+func newConn(t *testing.T, want []byte) *conn {
 	return &conn{ParamsWide, want, t}
 }
 
@@ -49,7 +49,7 @@ func TestSingleCmd(t *testing.T) {
 		{
 			"invalid type id",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				0,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -58,7 +58,7 @@ func TestSingleCmd(t *testing.T) {
 		{
 			"cause not Activation and Deactivation",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				C_SC_NA_1,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -67,8 +67,8 @@ func TestSingleCmd(t *testing.T) {
 		{
 			"C_SC_NA_1",
 			args{
-				newConn([]byte{byte(C_SC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x05}, t),
+				newConn(t, []byte{byte(C_SC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x05}),
 				C_SC_NA_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -81,8 +81,8 @@ func TestSingleCmd(t *testing.T) {
 		{
 			"C_SC_TA_1 CP56Time2a",
 			args{
-				newConn(append([]byte{byte(C_SC_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x04}, tm0CP56Time2aBytes...), t),
+				newConn(t, append([]byte{byte(C_SC_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x04}, tm0CP56Time2aBytes...)),
 				C_SC_TA_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -117,7 +117,7 @@ func TestDoubleCmd(t *testing.T) {
 		{
 			"invalid type id",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				0,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -126,7 +126,7 @@ func TestDoubleCmd(t *testing.T) {
 		{
 			"cause not Activation and Deactivation",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				C_DC_NA_1,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -135,8 +135,8 @@ func TestDoubleCmd(t *testing.T) {
 		{
 			"C_DC_NA_1",
 			args{
-				newConn([]byte{byte(C_DC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x05}, t),
+				newConn(t, []byte{byte(C_DC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x05}),
 				C_DC_NA_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -149,8 +149,8 @@ func TestDoubleCmd(t *testing.T) {
 		{
 			"C_DC_TA_1 CP56Time2a",
 			args{
-				newConn(append([]byte{byte(C_DC_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x06}, tm0CP56Time2aBytes...), t),
+				newConn(t, append([]byte{byte(C_DC_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x06}, tm0CP56Time2aBytes...)),
 				C_DC_TA_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -186,7 +186,7 @@ func TestStepCmd(t *testing.T) {
 		{
 			"invalid type id",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				0,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -194,7 +194,7 @@ func TestStepCmd(t *testing.T) {
 			true},
 		{
 			"cause not Activation and Deactivation", args{
-				newConn(nil, t),
+				newConn(t, nil),
 				C_RC_NA_1,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -203,8 +203,8 @@ func TestStepCmd(t *testing.T) {
 		{
 			"C_RC_NA_1",
 			args{
-				newConn([]byte{byte(C_RC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x05}, t),
+				newConn(t, []byte{byte(C_RC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x05}),
 				C_RC_NA_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -217,8 +217,8 @@ func TestStepCmd(t *testing.T) {
 		{
 			"C_RC_TA_1 CP56Time2a",
 			args{
-				newConn(append([]byte{byte(C_RC_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x06}, tm0CP56Time2aBytes...), t),
+				newConn(t, append([]byte{byte(C_RC_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x06}, tm0CP56Time2aBytes...)),
 				C_RC_TA_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -254,7 +254,7 @@ func TestSetpointCmdNormal(t *testing.T) {
 		{
 			"invalid type id",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				0,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -263,7 +263,7 @@ func TestSetpointCmdNormal(t *testing.T) {
 		{
 			"cause not Activation and Deactivation",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				C_SE_NA_1,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -272,8 +272,8 @@ func TestSetpointCmdNormal(t *testing.T) {
 		{
 			"C_SE_NA_1",
 			args{
-				newConn([]byte{byte(C_SE_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, t),
+				newConn(t, []byte{byte(C_SE_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}),
 				C_SE_NA_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -286,8 +286,8 @@ func TestSetpointCmdNormal(t *testing.T) {
 		{
 			"C_SE_TA_1 CP56Time2a",
 			args{
-				newConn(append([]byte{byte(C_SE_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, tm0CP56Time2aBytes...), t),
+				newConn(t, append([]byte{byte(C_SE_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, tm0CP56Time2aBytes...)),
 				C_SE_TA_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -322,7 +322,7 @@ func TestSetpointCmdScaled(t *testing.T) {
 		{
 			"invalid type id",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				0,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -331,7 +331,7 @@ func TestSetpointCmdScaled(t *testing.T) {
 		{
 			"cause not Activation and Deactivation",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				C_SE_NB_1,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -340,8 +340,8 @@ func TestSetpointCmdScaled(t *testing.T) {
 		{
 			"C_SE_NB_1",
 			args{
-				newConn([]byte{byte(C_SE_NB_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, t),
+				newConn(t, []byte{byte(C_SE_NB_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}),
 				C_SE_NB_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -354,8 +354,8 @@ func TestSetpointCmdScaled(t *testing.T) {
 		{
 			"C_SE_TB_1 CP56Time2a",
 			args{
-				newConn(append([]byte{byte(C_SE_TB_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, tm0CP56Time2aBytes...), t),
+				newConn(t, append([]byte{byte(C_SE_TB_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, tm0CP56Time2aBytes...)),
 				C_SE_TB_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -392,7 +392,7 @@ func TestSetpointCmdFloat(t *testing.T) {
 		{
 			"invalid type id",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				0,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -401,7 +401,7 @@ func TestSetpointCmdFloat(t *testing.T) {
 		{
 			"cause not Activation and Deactivation",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				C_SE_NC_1,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -410,8 +410,8 @@ func TestSetpointCmdFloat(t *testing.T) {
 		{
 			"C_SE_NC_1",
 			args{
-				newConn([]byte{byte(C_SE_NC_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}, t),
+				newConn(t, []byte{byte(C_SE_NC_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}),
 				C_SE_NC_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -424,9 +424,8 @@ func TestSetpointCmdFloat(t *testing.T) {
 		{
 			"C_SE_TC_1 CP56Time2a",
 			args{
-				newConn(
-					append([]byte{byte(C_SE_TC_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-						0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}, tm0CP56Time2aBytes...), t),
+				newConn(t, append([]byte{byte(C_SE_TC_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}, tm0CP56Time2aBytes...)),
 				C_SE_TC_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -461,7 +460,7 @@ func TestBitsString32Cmd(t *testing.T) {
 		{
 			"invalid type id",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				0,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -470,7 +469,7 @@ func TestBitsString32Cmd(t *testing.T) {
 		{
 			"cause not Activation and Deactivation",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				C_BO_NA_1,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -479,8 +478,8 @@ func TestBitsString32Cmd(t *testing.T) {
 		{
 			"C_BO_NA_1",
 			args{
-				newConn([]byte{byte(C_BO_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x64, 0x00, 0x00, 0x00}, t),
+				newConn(t, []byte{byte(C_BO_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x64, 0x00, 0x00, 0x00}),
 				C_BO_NA_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
@@ -492,8 +491,8 @@ func TestBitsString32Cmd(t *testing.T) {
 		{
 			"C_BO_TA_1 CP56Time2a",
 			args{
-				newConn(append([]byte{byte(C_BO_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x64, 0x00, 0x00, 0x00}, tm0CP56Time2aBytes...), t),
+				newConn(t, append([]byte{byte(C_BO_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x64, 0x00, 0x00, 0x00}, tm0CP56Time2aBytes...)),
 				C_BO_TA_1,
 				CauseOfTransmission{Cause: Activation},
 				0x1234,

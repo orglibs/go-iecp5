@@ -1,4 +1,4 @@
-package asdu
+package asdu_test
 
 import (
 	"reflect"
@@ -21,8 +21,8 @@ func TestEndOfInitialization(t *testing.T) {
 		{
 			"M_EI_NA_1",
 			args{
-				newConn([]byte{byte(M_EI_NA_1), 0x01, 0x04, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x01}, t),
+				newConn(t, []byte{byte(M_EI_NA_1), 0x01, 0x04, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x01}),
 				CauseOfTransmission{Cause: Initialized},
 				0x1234,
 				0x567890,

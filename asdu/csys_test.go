@@ -1,4 +1,4 @@
-package asdu
+package asdu_test
 
 import (
 	"reflect"
@@ -21,7 +21,7 @@ func TestInterrogationCmd(t *testing.T) {
 		{
 			"cause not Activation and Deactivation",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				QOIGroup1},
@@ -30,8 +30,8 @@ func TestInterrogationCmd(t *testing.T) {
 		{
 			"C_IC_NA_1",
 			args{
-				newConn([]byte{byte(C_IC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x00, 0x00, 0x00, 21}, t),
+				newConn(t, []byte{byte(C_IC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x00, 0x00, 0x00, 21}),
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
 				QOIGroup1},
@@ -62,8 +62,8 @@ func TestCounterInterrogationCmd(t *testing.T) {
 		{
 			"C_CI_NA_1",
 			args{
-				newConn([]byte{byte(C_CI_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x00, 0x00, 0x00, 0x01}, t),
+				newConn(t, []byte{byte(C_CI_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x00, 0x00, 0x00, 0x01}),
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
 				QualifierCountCall{QCCGroup1, QCCFrzRead}},
@@ -94,8 +94,8 @@ func TestReadCmd(t *testing.T) {
 		{
 			"C_RD_NA_1",
 			args{
-				newConn([]byte{byte(C_RD_NA_1), 0x01, 0x05, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56}, t),
+				newConn(t, []byte{byte(C_RD_NA_1), 0x01, 0x05, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56}),
 				CauseOfTransmission{Cause: Request},
 				0x1234,
 				0x567890},
@@ -126,8 +126,8 @@ func TestClockSynchronizationCmd(t *testing.T) {
 		{
 			"C_CS_NA_1",
 			args{
-				newConn(append([]byte{byte(C_CS_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x00, 0x00, 0x00}, tm0CP56Time2aBytes...), t),
+				newConn(t, append([]byte{byte(C_CS_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x00, 0x00, 0x00}, tm0CP56Time2aBytes...)),
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
 				tm0},
@@ -157,8 +157,8 @@ func TestTestCommand(t *testing.T) {
 		{
 			"C_TS_NA_1",
 			args{
-				newConn([]byte{byte(C_TS_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x00, 0x00, 0x00, 0xaa, 0x55}, t),
+				newConn(t, []byte{byte(C_TS_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x00, 0x00, 0x00, 0xaa, 0x55}),
 				CauseOfTransmission{Cause: Activation},
 				0x1234},
 			false,
@@ -188,8 +188,8 @@ func TestResetProcessCmd(t *testing.T) {
 		{
 			"C_RP_NA_1",
 			args{
-				newConn([]byte{byte(C_RP_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x00, 0x00, 0x00, 0x01}, t),
+				newConn(t, []byte{byte(C_RP_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x00, 0x00, 0x00, 0x01}),
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
 				QPRGeneralRest},
@@ -220,7 +220,7 @@ func TestDelayAcquireCommand(t *testing.T) {
 		{
 			"cause not act and spont",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				10000},
@@ -229,8 +229,8 @@ func TestDelayAcquireCommand(t *testing.T) {
 		{
 			"C_CD_NA_1",
 			args{
-				newConn([]byte{byte(C_CD_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x00, 0x00, 0x00, 0x10, 0x27}, t),
+				newConn(t, []byte{byte(C_CD_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x00, 0x00, 0x00, 0x10, 0x27}),
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
 				10000},
@@ -261,8 +261,8 @@ func TestTestCommandCP56Time2a(t *testing.T) {
 		{
 			"C_TS_TA_1",
 			args{
-				newConn(append([]byte{byte(C_TS_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x00, 0x00, 0x00, 0xaa, 0x55}, tm0CP56Time2aBytes...), t),
+				newConn(t, append([]byte{byte(C_TS_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x00, 0x00, 0x00, 0xaa, 0x55}, tm0CP56Time2aBytes...)),
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
 				tm0},

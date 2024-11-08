@@ -1,4 +1,4 @@
-package asdu
+package asdu_test
 
 import (
 	"math"
@@ -21,7 +21,7 @@ func TestParameterNormal(t *testing.T) {
 		{
 			"cause not act",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				ParameterNormalInfo{
@@ -33,8 +33,8 @@ func TestParameterNormal(t *testing.T) {
 		{
 			"P_ME_NA_1",
 			args{
-				newConn([]byte{byte(P_ME_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x44, 0x33, 0x01}, t),
+				newConn(t, []byte{byte(P_ME_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x44, 0x33, 0x01}),
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
 				ParameterNormalInfo{
@@ -71,7 +71,7 @@ func TestParameterScaled(t *testing.T) {
 		{
 			"cause not act",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				ParameterScaledInfo{
@@ -83,8 +83,8 @@ func TestParameterScaled(t *testing.T) {
 		{
 			"P_ME_NB_1",
 			args{
-				newConn([]byte{byte(P_ME_NB_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x44, 0x33, 0x01}, t),
+				newConn(t, []byte{byte(P_ME_NB_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x44, 0x33, 0x01}),
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
 				ParameterScaledInfo{
@@ -123,7 +123,7 @@ func TestParameterFloat(t *testing.T) {
 		{
 			"cause not act",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				ParameterFloatInfo{
@@ -135,8 +135,8 @@ func TestParameterFloat(t *testing.T) {
 		{
 			"P_ME_NC_1",
 			args{
-				newConn([]byte{byte(P_ME_NC_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}, t),
+				newConn(t, []byte{byte(P_ME_NC_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}),
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
 				ParameterFloatInfo{
@@ -173,7 +173,7 @@ func TestParameterActivation(t *testing.T) {
 		{
 			"cause not act and deact",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				ParameterActivationInfo{
@@ -184,8 +184,8 @@ func TestParameterActivation(t *testing.T) {
 		{
 			"P_AC_NA_1",
 			args{
-				newConn([]byte{byte(P_AC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x00}, t),
+				newConn(t, []byte{byte(P_AC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+					0x90, 0x78, 0x56, 0x00}),
 				CauseOfTransmission{Cause: Activation},
 				0x1234,
 				ParameterActivationInfo{

@@ -186,13 +186,13 @@ func (sf *Client) recvLoop() {
 			if rdCnt == 0 {
 				continue
 			} else if rdCnt == 1 {
-				if rawData[0] != startFrame {
+				if rawData[0] != StartFrame {
 					rdCnt = 0
 
 					continue
 				}
 			} else {
-				if rawData[0] != startFrame {
+				if rawData[0] != StartFrame {
 					rdCnt, length = 0, 2
 
 					continue
@@ -276,14 +276,14 @@ func (sf *Client) run(ctx context.Context) {
 	sf.stopDtActiveSendSince.Store(willNotTimeout)
 
 	sendSFrame := func(rcvSN uint16) {
-		slog.Debug("TX sFrame", "tx sFrame", sAPCI{rcvSN})
-		sf.sendRaw <- newSFrame(rcvSN)
+		slog.Debug("TX sFrame", "tx sFrame", SAPCI{rcvSN})
+		sf.sendRaw <- NewSFrame(rcvSN)
 	}
 
 	sendIFrame := func(asdu1 []byte) {
 		seqNo := sf.seqNoSend
 
-		iframe, err := newIFrame(seqNo, sf.seqNoRcv, asdu1)
+		iframe, err := NewIFrame(seqNo, sf.seqNoRcv, asdu1)
 		if err != nil {
 			return
 		}
@@ -291,7 +291,7 @@ func (sf *Client) run(ctx context.Context) {
 		sf.seqNoSend = (seqNo + 1) & 32767
 		sf.pending = append(sf.pending, seqPending{seqNo & 32767, time.Now()})
 
-		slog.Debug("TX iFrame", "tx iFrame", iAPCI{seqNo, sf.seqNoRcv})
+		slog.Debug("TX iFrame", "tx iFrame", IAPCI{seqNo, sf.seqNoRcv})
 		sf.sendRaw <- iframe
 	}
 
@@ -324,10 +324,21 @@ func (sf *Client) run(ctx context.Context) {
 		case <-sf.ctx.Done():
 			return
 		case now := <-checkTicker.C:
+			// define timeOuts
+			timeOut1 := now.Sub(testFrAliveSendSince)
+			timeOut2, ok := sf.startDtActiveSendSince.Load().(time.Time)
+			if !ok {
+				slog.Warn("startDt is not a time.Time type", "startDt", sf.startDtActiveSendSince)
+			}
+			timeOut3, ok := sf.stopDtActiveSendSince.Load().(time.Time)
+			if !ok {
+				slog.Warn("stopDt is not a time.Time type", "stopDt", sf.stopDtActiveSendSince)
+			}
+
 			// check all timeouts
-			if now.Sub(testFrAliveSendSince) >= sf.option.config.SendUnAckTimeout1 ||
-				now.Sub(sf.startDtActiveSendSince.Load().(time.Time)) >= sf.option.config.SendUnAckTimeout1 ||
-				now.Sub(sf.stopDtActiveSendSince.Load().(time.Time)) >= sf.option.config.SendUnAckTimeout1 {
+			if timeOut1 >= sf.option.config.SendUnAckTimeout1 ||
+				now.Sub(timeOut2) >= sf.option.config.SendUnAckTimeout1 ||
+				now.Sub(timeOut3) >= sf.option.config.SendUnAckTimeout1 {
 				slog.Error("test frame alive confirm timeout t₁")
 				return
 			}
@@ -352,30 +363,30 @@ func (sf *Client) run(ctx context.Context) {
 
 			// Send TestFrActive frame when idle time is up.
 			if now.Sub(idleTimeout3Sine) >= sf.option.config.IdleTimeout3 {
-				sf.sendUFrame(uTestFrActive)
+				sf.sendUFrame(UTestFrActive)
 				testFrAliveSendSince = time.Now()
 				idleTimeout3Sine = testFrAliveSendSince
 			}
 
 		case apdu := <-sf.rcvRaw:
 			idleTimeout3Sine = time.Now() // Every i-frame, S-frame, U-frame received, reset idle timer, t3
-			apci, asduVal := parse(apdu)
+			apci, asduVal := Parse(apdu)
 			switch head := apci.(type) {
-			case sAPCI:
+			case SAPCI:
 				slog.Debug("RX sFrame", "rx sFrame", head)
-				if !sf.updateAckNoOut(head.rcvSN) {
+				if !sf.updateAckNoOut(head.RcvSN) {
 					slog.Error("fatal incoming acknowledge either earlier than previous or later than sendTime")
 					return
 				}
 
-			case iAPCI:
+			case IAPCI:
 				slog.Debug("RX iFrame", "rx iFrame", head)
 				if atomic.LoadUint32(&sf.isActive) == inactive {
 					slog.Warn("station not active")
 
 					break // not active, discard apdu
 				}
-				if !sf.updateAckNoOut(head.rcvSN) || head.sendSN != sf.seqNoRcv {
+				if !sf.updateAckNoOut(head.RcvSN) || head.SendSN != sf.seqNoRcv {
 					slog.Error("fatal incoming acknowledge either earlier than previous or later than sendTime")
 					return
 				}
@@ -391,27 +402,27 @@ func (sf *Client) run(ctx context.Context) {
 					sf.ackNoRcv = sf.seqNoRcv
 				}
 
-			case uAPCI:
+			case UAPCI:
 				slog.Debug("RX uFrame", "rx", head)
-				switch head.function {
+				switch head.Function {
 				//case uStartDtActive:
 				//	sf.sendUFrame(uStartDtConfirm)
 				//	atomic.StoreUint32(&sf.isActive, active)
-				case uStartDtConfirm:
+				case UStartDtConfirm:
 					atomic.StoreUint32(&sf.isActive, active)
 					sf.startDtActiveSendSince.Store(willNotTimeout)
 				//case uStopDtActive:
 				//	sf.sendUFrame(uStopDtConfirm)
 				//	atomic.StoreUint32(&sf.isActive, inactive)
-				case uStopDtConfirm:
+				case UStopDtConfirm:
 					atomic.StoreUint32(&sf.isActive, inactive)
 					sf.stopDtActiveSendSince.Store(willNotTimeout)
-				case uTestFrActive:
-					sf.sendUFrame(uTestFrConfirm)
-				case uTestFrConfirm:
+				case UTestFrActive:
+					sf.sendUFrame(UTestFrConfirm)
+				case UTestFrConfirm:
 					testFrAliveSendSince = willNotTimeout
 				default:
-					slog.Error("illegal U-Frame functions ignored", "illegal uFrame", head.function)
+					slog.Error("illegal U-Frame functions ignored", "illegal uFrame", head.Function)
 				}
 			}
 		}
@@ -477,8 +488,8 @@ loop:
 }
 
 func (sf *Client) sendUFrame(which byte) {
-	slog.Debug("TX uFrame", "tx uFrame", uAPCI{which})
-	sf.sendRaw <- newUFrame(which)
+	slog.Debug("TX uFrame", "tx uFrame", UAPCI{which})
+	sf.sendRaw <- NewUFrame(which)
 }
 
 func (sf *Client) updateAckNoOut(ackNo uint16) (ok bool) {
@@ -520,27 +531,35 @@ func (sf *Client) clientHandler(asduPack *asdu.ASDU) error {
 
 	switch asduPack.Identifier.Type {
 	case asdu.C_IC_NA_1: // InterrogationCmd
-		return sf.handler.InterrogationHandler(sf, asduPack)
+		err := sf.handler.InterrogationHandler(sf, asduPack)
+		return fmt.Errorf("interrogation command error: %w", err)
 
 	case asdu.C_CI_NA_1: // CounterInterrogationCmd
-		return sf.handler.CounterInterrogationHandler(sf, asduPack)
+		err := sf.handler.CounterInterrogationHandler(sf, asduPack)
+		return fmt.Errorf("counter interrogation command error: %w", err)
 
 	case asdu.C_RD_NA_1: // ReadCmd
-		return sf.handler.ReadHandler(sf, asduPack)
+		err := sf.handler.ReadHandler(sf, asduPack)
+		return fmt.Errorf("read command error: %w", err)
 
 	case asdu.C_CS_NA_1: // ClockSynchronizationCmd
-		return sf.handler.ClockSyncHandler(sf, asduPack)
+		err := sf.handler.ClockSyncHandler(sf, asduPack)
+		return fmt.Errorf("clock synchronization command error: %w", err)
 
 	case asdu.C_TS_NA_1: // TestCommand
-		return sf.handler.TestCommandHandler(sf, asduPack)
+		err := sf.handler.TestCommandHandler(sf, asduPack)
+		return fmt.Errorf("test command error: %w", err)
 
 	case asdu.C_RP_NA_1: // ResetProcessCmd
-		return sf.handler.ResetProcessHandler(sf, asduPack)
+		err := sf.handler.ResetProcessHandler(sf, asduPack)
+		return fmt.Errorf("reset process command error: %w", err)
 
 	case asdu.C_CD_NA_1: // DelayAcquireCommand
-		return sf.handler.DelayAcquisitionHandler(sf, asduPack)
+		err := sf.handler.DelayAcquisitionHandler(sf, asduPack)
+		return fmt.Errorf("delay acquire command error: %w", err)
 	default:
-		return sf.handler.ASDUHandler(sf, asduPack)
+		err := sf.handler.ASDUHandler(sf, asduPack)
+		return fmt.Errorf("unknown asdu type: %w", err)
 	}
 }
 
@@ -587,13 +606,13 @@ func (sf *Client) Close() error {
 // SendStartDt start data transmission on this connection
 func (sf *Client) SendStartDt() {
 	sf.startDtActiveSendSince.Store(time.Now())
-	sf.sendUFrame(uStartDtActive)
+	sf.sendUFrame(UStartDtActive)
 }
 
 // SendStopDt stop data transmission on this connection
 func (sf *Client) SendStopDt() {
 	sf.stopDtActiveSendSince.Store(time.Now())
-	sf.sendUFrame(uStopDtActive)
+	sf.sendUFrame(UStopDtActive)
 }
 
 // InterrogationCmd wrap asdu.InterrogationCmd

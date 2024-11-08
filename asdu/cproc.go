@@ -5,6 +5,7 @@
 package asdu
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -331,7 +332,11 @@ func SetpointCmdFloat(c Connect, typeID TypeID, coa CauseOfTransmission, ca Comm
 		return ErrTypeIDNotMatch
 	}
 
-	return c.Send(u)
+	if err := c.Send(u); err != nil {
+		return fmt.Errorf("SetpointCmdFloat: %w", err)
+	}
+
+	return nil
 }
 
 // BitsString32CommandInfo Bit strings command information body
@@ -385,7 +390,11 @@ func BitsString32Cmd(c Connect, typeID TypeID, coa CauseOfTransmission, commonAd
 		return ErrTypeIDNotMatch
 	}
 
-	return c.Send(u)
+	if err := c.Send(u); err != nil {
+		return fmt.Errorf("BitsString32Cmd: %w", err)
+	}
+
+	return nil
 }
 
 // GetSingleCmd [C_SC_NA_1] or [C_SC_TA_1] Get the order command information body

@@ -1,16 +1,18 @@
-package asdu
+package asdu_test
 
 import (
 	"math"
 	"reflect"
 	"testing"
 	"time"
+
+	"gitlab.com/circutor-library/go-iecp5/asdu"
 )
 
 func Test_checkValid(t *testing.T) {
 	type args struct {
-		c          Connect
-		typeID     TypeID
+		c          asdu.Connect
+		typeID     asdu.TypeID
 		isSequence bool
 		attrsLen   int
 	}
@@ -23,7 +25,7 @@ func Test_checkValid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := checkValid(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.attrsLen); (err != nil) != tt.wantErr {
+			if err := asdu.CheckValid(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.attrsLen); (err != nil) != tt.wantErr {
 				t.Errorf("checkValid() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -32,12 +34,12 @@ func Test_checkValid(t *testing.T) {
 
 func Test_single(t *testing.T) {
 	type args struct {
-		c          Connect
-		typeID     TypeID
+		c          asdu.Connect
+		typeID     asdu.TypeID
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []SinglePointInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.SinglePointInfo
 	}
 	tests := []struct {
 		name    string
@@ -71,7 +73,7 @@ func TestSingle(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				false,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -81,8 +83,8 @@ func TestSingle(t *testing.T) {
 		{
 			"M_SP_NA_1 seq = false Number = 2",
 			args{
-				newConn([]byte{byte(M_SP_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x11, 0x02, 0x00, 0x00, 0x10}, t),
+				newConn(t, []byte{byte(M_SP_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x11, 0x02, 0x00, 0x00, 0x10}),
 				false,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -95,8 +97,8 @@ func TestSingle(t *testing.T) {
 		{
 			"M_SP_NA_1 seq = true Number = 2",
 			args{
-				newConn([]byte{byte(M_SP_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x11, 0x10}, t),
+				newConn(t, []byte{byte(M_SP_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x11, 0x10}),
 				true,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -131,7 +133,7 @@ func TestSingleCP24Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]SinglePointInfo{}},
@@ -140,9 +142,9 @@ func TestSingleCP24Time2a(t *testing.T) {
 		{
 			"M_SP_TA_1 CP24Time2a  Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_SP_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_SP_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]SinglePointInfo{
@@ -176,7 +178,7 @@ func TestSingleCP56Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]SinglePointInfo{}},
@@ -185,9 +187,9 @@ func TestSingleCP56Time2a(t *testing.T) {
 		{
 			"M_SP_TB_1 CP56Time2a Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]SinglePointInfo{
@@ -247,7 +249,7 @@ func TestDouble(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				false,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -257,8 +259,8 @@ func TestDouble(t *testing.T) {
 		{
 			"M_DP_NA_1 seq = false Number = 2",
 			args{
-				newConn([]byte{byte(M_DP_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x12, 0x02, 0x00, 0x00, 0x11}, t),
+				newConn(t, []byte{byte(M_DP_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x12, 0x02, 0x00, 0x00, 0x11}),
 				false,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -271,8 +273,8 @@ func TestDouble(t *testing.T) {
 		{
 			"M_DP_NA_1 seq = true Number = 2",
 			args{
-				newConn([]byte{byte(M_DP_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x12, 0x11}, t),
+				newConn(t, []byte{byte(M_DP_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x12, 0x11}),
 				true,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -307,7 +309,7 @@ func TestDoubleCP24Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]DoublePointInfo{}},
@@ -316,9 +318,9 @@ func TestDoubleCP24Time2a(t *testing.T) {
 		{
 			"M_DP_TA_1 CP24Time2a  Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_DP_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_DP_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x12}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]DoublePointInfo{
@@ -352,7 +354,7 @@ func TestDoubleCP56Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]DoublePointInfo{}},
@@ -361,9 +363,9 @@ func TestDoubleCP56Time2a(t *testing.T) {
 		{
 			"M_DP_TB_1 CP56Time2a Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_DP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_DP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x12}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]DoublePointInfo{
@@ -423,7 +425,7 @@ func TestStep(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				false,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -433,8 +435,8 @@ func TestStep(t *testing.T) {
 		{
 			"M_ST_NA_1 seq = false Number = 2",
 			args{
-				newConn([]byte{byte(M_ST_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x01, 0x10, 0x02, 0x00, 0x00, 0x02, 0x10}, t),
+				newConn(t, []byte{byte(M_ST_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x01, 0x10, 0x02, 0x00, 0x00, 0x02, 0x10}),
 				false,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -447,8 +449,8 @@ func TestStep(t *testing.T) {
 		{
 			"M_ST_NA_1 seq = true Number = 2",
 			args{
-				newConn([]byte{byte(M_ST_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x01, 0x10, 0x02, 0x10}, t),
+				newConn(t, []byte{byte(M_ST_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x01, 0x10, 0x02, 0x10}),
 				true,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -483,7 +485,7 @@ func TestStepCP24Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]StepPositionInfo{}},
@@ -492,9 +494,9 @@ func TestStepCP24Time2a(t *testing.T) {
 		{
 			"M_ST_TA_1 CP24Time2a  Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_ST_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_ST_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP24Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP24Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]StepPositionInfo{
@@ -528,7 +530,7 @@ func TestStepCP56Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]StepPositionInfo{}},
@@ -537,9 +539,9 @@ func TestStepCP56Time2a(t *testing.T) {
 		{
 			"M_SP_TB_1 CP56Time2a Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP56Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP56Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]StepPositionInfo{
@@ -599,7 +601,7 @@ func TestBitString32(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				false,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -609,8 +611,8 @@ func TestBitString32(t *testing.T) {
 		{
 			"M_BO_NA_1 seq = false Number = 2",
 			args{
-				newConn([]byte{byte(M_BO_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, t),
+				newConn(t, []byte{byte(M_BO_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}),
 				false,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -623,8 +625,8 @@ func TestBitString32(t *testing.T) {
 		{
 			"M_BO_NA_1 seq = true Number = 2",
 			args{
-				newConn([]byte{byte(M_BO_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10, 0x02, 0x00, 0x00, 0x00, 0x10}, t),
+				newConn(t, []byte{byte(M_BO_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10, 0x02, 0x00, 0x00, 0x00, 0x10}),
 				true,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -659,7 +661,7 @@ func TestBitString32CP24Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]BitString32Info{}},
@@ -668,9 +670,9 @@ func TestBitString32CP24Time2a(t *testing.T) {
 		{
 			"M_BO_TA_1 CP24Time2a  Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_BO_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_BO_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]BitString32Info{
@@ -704,7 +706,7 @@ func TestBitString32CP56Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]BitString32Info{}},
@@ -713,9 +715,9 @@ func TestBitString32CP56Time2a(t *testing.T) {
 		{
 			"M_BO_TB_1 CP56Time2a Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_BO_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_BO_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]BitString32Info{
@@ -775,7 +777,7 @@ func TestMeasuredValueNormal(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				false,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -785,8 +787,8 @@ func TestMeasuredValueNormal(t *testing.T) {
 		{
 			"M_ME_NA_1 seq = false Number = 2",
 			args{
-				newConn([]byte{byte(M_ME_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, t),
+				newConn(t, []byte{byte(M_ME_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x10}),
 				false,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -799,8 +801,8 @@ func TestMeasuredValueNormal(t *testing.T) {
 		{
 			"M_ME_NA_1 seq = true Number = 2",
 			args{
-				newConn([]byte{byte(M_ME_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x10}, t),
+				newConn(t, []byte{byte(M_ME_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x10}),
 				true,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -835,7 +837,7 @@ func TestMeasuredValueNormalCP24Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]MeasuredValueNormalInfo{}},
@@ -844,9 +846,9 @@ func TestMeasuredValueNormalCP24Time2a(t *testing.T) {
 		{
 			"M_ME_TA_1 CP24Time2a  Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_ME_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_ME_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]MeasuredValueNormalInfo{
@@ -880,7 +882,7 @@ func TestMeasuredValueNormalCP56Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]MeasuredValueNormalInfo{}},
@@ -889,9 +891,9 @@ func TestMeasuredValueNormalCP56Time2a(t *testing.T) {
 		{
 			"M_ME_TD_1 CP56Time2a Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_ME_TD_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_ME_TD_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]MeasuredValueNormalInfo{
@@ -926,7 +928,7 @@ func TestMeasuredValueNormalNoQuality(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				false,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -936,8 +938,8 @@ func TestMeasuredValueNormalNoQuality(t *testing.T) {
 		{
 			"M_ME_ND_1 seq = false Number = 2",
 			args{
-				newConn([]byte{byte(M_ME_ND_1), 0x02, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x02, 0x00}, t),
+				newConn(t, []byte{byte(M_ME_ND_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x02, 0x00}),
 				false,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -950,8 +952,8 @@ func TestMeasuredValueNormalNoQuality(t *testing.T) {
 		{
 			"M_ME_ND_1 seq = true Number = 2",
 			args{
-				newConn([]byte{byte(M_ME_ND_1), 0x82, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00}, t),
+				newConn(t, []byte{byte(M_ME_ND_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00}),
 				true,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -1012,7 +1014,7 @@ func TestMeasuredValueScaled(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				false,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -1022,8 +1024,8 @@ func TestMeasuredValueScaled(t *testing.T) {
 		{
 			"M_ME_NB_1 seq = false Number = 2",
 			args{
-				newConn([]byte{byte(M_ME_NB_1), 0x02, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, t),
+				newConn(t, []byte{byte(M_ME_NB_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x10}),
 				false,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -1036,8 +1038,8 @@ func TestMeasuredValueScaled(t *testing.T) {
 		{
 			"M_ME_NB_1 seq = true Number = 2",
 			args{
-				newConn([]byte{byte(M_ME_NB_1), 0x82, 0x02, 0x00, 0x34, 0x12,
-					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x10}, t),
+				newConn(t, []byte{byte(M_ME_NB_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x10}),
 				true,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -1072,7 +1074,7 @@ func TestMeasuredValueScaledCP24Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]MeasuredValueScaledInfo{}},
@@ -1081,9 +1083,9 @@ func TestMeasuredValueScaledCP24Time2a(t *testing.T) {
 		{
 			"M_ME_TB_1 CP24Time2a  Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_ME_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_ME_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]MeasuredValueScaledInfo{
@@ -1117,7 +1119,7 @@ func TestMeasuredValueScaledCP56Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]MeasuredValueScaledInfo{}},
@@ -1126,9 +1128,9 @@ func TestMeasuredValueScaledCP56Time2a(t *testing.T) {
 		{
 			"M_ME_TE_1 CP56Time2a Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_ME_TE_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_ME_TE_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]MeasuredValueScaledInfo{
@@ -1191,7 +1193,7 @@ func TestMeasuredValueFloat(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				false,
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
@@ -1201,9 +1203,9 @@ func TestMeasuredValueFloat(t *testing.T) {
 		{
 			"M_ME_NC_1 seq = false Number = 2",
 			args{
-				newConn([]byte{byte(M_ME_NC_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(M_ME_NC_1), 0x02, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10,
-					0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, t),
+					0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}),
 				false,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -1216,9 +1218,9 @@ func TestMeasuredValueFloat(t *testing.T) {
 		{
 			"M_ME_NC_1 seq = true Number = 2",
 			args{
-				newConn([]byte{byte(M_ME_NC_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(M_ME_NC_1), 0x82, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10,
-					byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, t),
+					byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}),
 				true,
 				CauseOfTransmission{Cause: Background},
 				0x1234,
@@ -1256,7 +1258,7 @@ func TestMeasuredValueFloatCP24Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]MeasuredValueFloatInfo{}},
@@ -1265,9 +1267,9 @@ func TestMeasuredValueFloatCP24Time2a(t *testing.T) {
 		{
 			"M_ME_TC_1 seq = false Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_ME_TC_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_ME_TC_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP24Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP24Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]MeasuredValueFloatInfo{
@@ -1303,7 +1305,7 @@ func TestMeasuredValueFloatCP56Time2a(t *testing.T) {
 		{
 			"invalid cause",
 			args{
-				newConn(nil, t),
+				newConn(t, nil),
 				CauseOfTransmission{Cause: Unused},
 				0x1234,
 				[]MeasuredValueFloatInfo{}},
@@ -1312,9 +1314,9 @@ func TestMeasuredValueFloatCP56Time2a(t *testing.T) {
 		{
 			"M_ME_TF_1 seq = false Number = 2",
 			args{
-				newConn(append(append([]byte{byte(M_ME_TF_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(M_ME_TF_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP56Time2aBytes...)...), t),
+					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP56Time2aBytes...)...)),
 				CauseOfTransmission{Cause: Spontaneous},
 				0x1234,
 				[]MeasuredValueFloatInfo{

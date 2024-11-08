@@ -10,7 +10,7 @@ import (
 	"gitlab.com/circutor-library/go-iecp5/asdu"
 )
 
-const startFrame byte = 0x68 // start frame
+const StartFrame byte = 0x68 // start frame
 
 // APDU form Max size 255
 //
@@ -28,51 +28,51 @@ const (
 
 // U-frame Control Field Function
 const (
-	uStartDtActive  byte = 4 << iota // Startup activation 0x04
-	uStartDtConfirm                  // Startup Confirmation 0x08
-	uStopDtActive                    // Stop activation 0x10
-	uStopDtConfirm                   // Stop Confirmation 0x20
-	uTestFrActive                    // Test activation 0x40
-	uTestFrConfirm                   // Test Confirmation 0x80
+	UStartDtActive  byte = 4 << iota // Startup activation 0x04
+	UStartDtConfirm                  // Startup Confirmation 0x08
+	UStopDtActive                    // Stop activation 0x10
+	UStopDtConfirm                   // Stop Confirmation 0x20
+	UTestFrActive                    // Test activation 0x40
+	UTestFrConfirm                   // Test Confirmation 0x80
 )
 
 // I-frame Contains apci and asdu information frames. Information transmission for numbering information
-type iAPCI struct {
-	sendSN, rcvSN uint16
+type IAPCI struct {
+	SendSN, RcvSN uint16
 }
 
-func (sf iAPCI) String() string {
-	return fmt.Sprintf("I[sendNO: %d, recvNO: %d]", sf.sendSN, sf.rcvSN)
+func (sf IAPCI) String() string {
+	return fmt.Sprintf("I[sendNO: %d, recvNO: %d]", sf.SendSN, sf.RcvSN)
 }
 
 // S-frames are used primarily to confirm the correct transmission of frames, and are called supervisory by the protocol.
-type sAPCI struct {
-	rcvSN uint16
+type SAPCI struct {
+	RcvSN uint16
 }
 
-func (sf sAPCI) String() string {
-	return fmt.Sprintf("S[recvNO: %d]", sf.rcvSN)
+func (sf SAPCI) String() string {
+	return fmt.Sprintf("S[recvNO: %d]", sf.RcvSN)
 }
 
 // U-frame apci only Unnumbered control information
-type uAPCI struct {
-	function byte // bit8 Test confirmation
+type UAPCI struct {
+	Function byte // bit8 Test confirmation
 }
 
-func (sf uAPCI) String() string {
+func (sf UAPCI) String() string {
 	var s string
-	switch sf.function {
-	case uStartDtActive:
+	switch sf.Function {
+	case UStartDtActive:
 		s = "StartDtActive"
-	case uStartDtConfirm:
+	case UStartDtConfirm:
 		s = "StartDtConfirm"
-	case uStopDtActive:
+	case UStopDtActive:
 		s = "StopDtActive"
-	case uStopDtConfirm:
+	case UStopDtConfirm:
 		s = "StopDtConfirm"
-	case uTestFrActive:
+	case UTestFrActive:
 		s = "TestFrActive"
-	case uTestFrConfirm:
+	case UTestFrConfirm:
 		s = "TestFrConfirm"
 	default:
 		s = "Unknown"
@@ -81,14 +81,14 @@ func (sf uAPCI) String() string {
 }
 
 // newIFrame Creates an I-frame and returns his corresponding apdu.
-func newIFrame(sendSN, RcvSN uint16, asdus []byte) ([]byte, error) {
+func NewIFrame(sendSN, RcvSN uint16, asdus []byte) ([]byte, error) {
 	if len(asdus) > asdu.ASDUSizeMax {
 		return nil, fmt.Errorf("ASDU filed large than max %d", asdu.ASDUSizeMax)
 	}
 
 	b := make([]byte, len(asdus)+6)
 
-	b[0] = startFrame
+	b[0] = StartFrame
 	b[1] = byte(len(asdus) + 4)
 	b[2] = byte(sendSN << 1)
 	b[3] = byte(sendSN >> 7)
@@ -100,13 +100,13 @@ func newIFrame(sendSN, RcvSN uint16, asdus []byte) ([]byte, error) {
 }
 
 // newSFrame createSFrame and returns his apdu
-func newSFrame(RcvSN uint16) []byte {
-	return []byte{startFrame, 4, 0x01, 0x00, byte(RcvSN << 1), byte(RcvSN >> 7)}
+func NewSFrame(RcvSN uint16) []byte {
+	return []byte{StartFrame, 4, 0x01, 0x00, byte(RcvSN << 1), byte(RcvSN >> 7)}
 }
 
 // newUFrame Creates a U-frame and returns his apdu.
-func newUFrame(which byte) []byte {
-	return []byte{startFrame, 4, which | 0x03, 0x00, 0x00, 0x00}
+func NewUFrame(which byte) []byte {
+	return []byte{StartFrame, 4, which | 0x03, 0x00, 0x00, 0x00}
 }
 
 // apci application protocol control information
@@ -117,21 +117,21 @@ type APCI struct {
 }
 
 // return frame type , APCI, remain data
-func parse(apdu []byte) (interface{}, []byte) {
+func Parse(apdu []byte) (interface{}, []byte) {
 	apci := APCI{apdu[0], apdu[1], apdu[2], apdu[3], apdu[4], apdu[5]}
 	if apci.ctr1&0x01 == 0 {
-		return iAPCI{
-			sendSN: uint16(apci.ctr1)>>1 + uint16(apci.ctr2)<<7,
-			rcvSN:  uint16(apci.ctr3)>>1 + uint16(apci.ctr4)<<7,
+		return IAPCI{
+			SendSN: uint16(apci.ctr1)>>1 + uint16(apci.ctr2)<<7,
+			RcvSN:  uint16(apci.ctr3)>>1 + uint16(apci.ctr4)<<7,
 		}, apdu[6:]
 	}
 	if apci.ctr1&0x03 == 0x01 {
-		return sAPCI{
-			rcvSN: uint16(apci.ctr3)>>1 + uint16(apci.ctr4)<<7,
+		return SAPCI{
+			RcvSN: uint16(apci.ctr3)>>1 + uint16(apci.ctr4)<<7,
 		}, apdu[6:]
 	}
 	// apci.ctrl&0x03 == 0x03
-	return uAPCI{
-		function: apci.ctr1 & 0xfc,
+	return UAPCI{
+		Function: apci.ctr1 & 0xfc,
 	}, apdu[6:]
 }
