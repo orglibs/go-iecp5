@@ -81,6 +81,7 @@ func Test_newIFrame(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := cs104.NewIFrame(tt.args.sendSN, tt.args.RcvSN, tt.args.asdu)
@@ -106,6 +107,7 @@ func Test_newSFrame(t *testing.T) {
 	}{
 		{"", args{0x06}, []byte{cs104.StartFrame, 0x04, 0x01, 0x00, 0x0c, 0x00}},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := cs104.NewSFrame(tt.args.RcvSN); !reflect.DeepEqual(got, tt.want) {
@@ -126,6 +128,7 @@ func Test_newUFrame(t *testing.T) {
 	}{
 		{"", args{cs104.UStopDtActive}, []byte{cs104.StartFrame, 0x04, 0x13, 0x00, 0x00, 0x00}},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := cs104.NewUFrame(tt.args.which); !reflect.DeepEqual(got, tt.want) {

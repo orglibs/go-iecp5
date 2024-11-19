@@ -143,13 +143,13 @@ func TestSingleCP24Time2a(t *testing.T) {
 			"M_SP_TA_1 CP24Time2a  Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_SP_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x11}, asdu.Tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.SinglePointInfo{
-					{0x000001, true, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, false, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, true, asdu.QDSBlocked, tm0},
+					{0x000002, false, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -188,13 +188,13 @@ func TestSingleCP56Time2a(t *testing.T) {
 			"M_SP_TB_1 CP56Time2a Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x11}, asdu.Tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.SinglePointInfo{
-					{0x000001, true, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, false, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, true, asdu.QDSBlocked, tm0},
+					{0x000002, false, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -319,13 +319,13 @@ func TestDoubleCP24Time2a(t *testing.T) {
 			"M_DP_TA_1 CP24Time2a  Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_DP_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x12}, asdu.Tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x11}, asdu.Tm0CP24Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x12}, tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.DoublePointInfo{
-					{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, tm0},
+					{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -364,13 +364,13 @@ func TestDoubleCP56Time2a(t *testing.T) {
 			"M_DP_TB_1 CP56Time2a Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_DP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x12}, asdu.Tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x11}, asdu.Tm0CP56Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x12}, tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.DoublePointInfo{
-					{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, tm0},
+					{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -495,13 +495,13 @@ func TestStepCP24Time2a(t *testing.T) {
 			"M_ST_TA_1 CP24Time2a  Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_ST_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, asdu.Tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP24Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.StepPositionInfo{
-					{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, tm0},
+					{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -540,13 +540,13 @@ func TestStepCP56Time2a(t *testing.T) {
 			"M_SP_TB_1 CP56Time2a Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, asdu.Tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP56Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.StepPositionInfo{
-					{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, tm0},
+					{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -671,13 +671,13 @@ func TestBitString32CP24Time2a(t *testing.T) {
 			"M_BO_TA_1 CP24Time2a  Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_BO_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.BitString32Info{
-					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, 1, asdu.QDSBlocked, tm0},
+					{0x000002, 2, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -716,13 +716,13 @@ func TestBitString32CP56Time2a(t *testing.T) {
 			"M_BO_TB_1 CP56Time2a Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_BO_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.BitString32Info{
-					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, 1, asdu.QDSBlocked, tm0},
+					{0x000002, 2, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -847,13 +847,13 @@ func TestMeasuredValueNormalCP24Time2a(t *testing.T) {
 			"M_ME_TA_1 CP24Time2a  Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_ME_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.MeasuredValueNormalInfo{
-					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, 1, asdu.QDSBlocked, tm0},
+					{0x000002, 2, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -892,13 +892,13 @@ func TestMeasuredValueNormalCP56Time2a(t *testing.T) {
 			"M_ME_TD_1 CP56Time2a Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_ME_TD_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.MeasuredValueNormalInfo{
-					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, 1, asdu.QDSBlocked, tm0},
+					{0x000002, 2, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -1084,13 +1084,13 @@ func TestMeasuredValueScaledCP24Time2a(t *testing.T) {
 			"M_ME_TB_1 CP24Time2a  Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_ME_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.MeasuredValueScaledInfo{
-					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, 1, asdu.QDSBlocked, tm0},
+					{0x000002, 2, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -1129,13 +1129,13 @@ func TestMeasuredValueScaledCP56Time2a(t *testing.T) {
 			"M_ME_TE_1 CP56Time2a Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_ME_TE_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.MeasuredValueScaledInfo{
-					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, 1, asdu.QDSBlocked, tm0},
+					{0x000002, 2, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -1268,13 +1268,13 @@ func TestMeasuredValueFloatCP24Time2a(t *testing.T) {
 			"M_ME_TC_1 seq = false Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_ME_TC_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, asdu.Tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP24Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.MeasuredValueFloatInfo{
-					{0x000001, 100, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, 101, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, 100, asdu.QDSBlocked, tm0},
+					{0x000002, 101, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -1315,13 +1315,13 @@ func TestMeasuredValueFloatCP56Time2a(t *testing.T) {
 			"M_ME_TF_1 seq = false Number = 2",
 			args{
 				newConn(t, append(append([]byte{byte(asdu.M_ME_TF_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, asdu.Tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+					append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP56Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
 				[]asdu.MeasuredValueFloatInfo{
-					{0x000001, 100, asdu.QDSBlocked, asdu.Tm0},
-					{0x000002, 101, asdu.QDSBlocked, asdu.Tm0},
+					{0x000001, 100, asdu.QDSBlocked, tm0},
+					{0x000002, 101, asdu.QDSBlocked, tm0},
 				}},
 			false,
 		},
@@ -1377,11 +1377,11 @@ func TestASDU_GetSinglePoint(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_SP_TB_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x11}, asdu.Tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...)},
 			[]asdu.SinglePointInfo{
-				{0x000001, true, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, false, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, true, asdu.QDSBlocked, tm0},
+				{0x000002, false, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -1417,11 +1417,11 @@ func TestASDU_GetSinglePointCP24Time2a(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_SP_TA_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x11}, asdu.Tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...)},
 			[]asdu.SinglePointInfo{
-				{0x000001, true, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, false, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, true, asdu.QDSBlocked, tm0},
+				{0x000002, false, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -1499,11 +1499,11 @@ func TestASDU_GetDoublePoint(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_DP_TB_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x12}, asdu.Tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x11}, asdu.Tm0CP56Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x12}, tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...)...)},
 			[]asdu.DoublePointInfo{
-				{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, tm0},
+				{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -1539,11 +1539,11 @@ func TestASDU_GetDoublePointCP24Time2a(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_DP_TA_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x12}, asdu.Tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x11}, asdu.Tm0CP24Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x12}, tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...)...)},
 			[]asdu.DoublePointInfo{
-				{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, tm0},
+				{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -1621,11 +1621,11 @@ func TestASDU_GetStepPosition(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_ST_TB_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, asdu.Tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP56Time2aBytes...)...)},
 			[]asdu.StepPositionInfo{
-				{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, tm0},
+				{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -1661,11 +1661,11 @@ func TestASDU_GetStepPositionCP24Time2a(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_ST_TA_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, asdu.Tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP24Time2aBytes...)...)},
 			[]asdu.StepPositionInfo{
-				{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, tm0},
+				{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -1743,11 +1743,11 @@ func TestASDU_GetBitString32(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_BO_TB_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...)},
 			[]asdu.BitString32Info{
-				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, 1, asdu.QDSBlocked, tm0},
+				{0x000002, 2, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -1782,11 +1782,11 @@ func TestASDU_GetBitString32CP24Time2a(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_BO_TA_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...)},
 			[]asdu.BitString32Info{
-				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, 1, asdu.QDSBlocked, tm0},
+				{0x000002, 2, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -1864,11 +1864,11 @@ func TestASDU_GetMeasuredValueNormal(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_ME_TD_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...)},
 			[]asdu.MeasuredValueNormalInfo{
-				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, 1, asdu.QDSBlocked, tm0},
+				{0x000002, 2, asdu.QDSBlocked, tm0}},
 		},
 		{
 			"M_ME_ND_1 seq = false Number = 2",
@@ -1928,11 +1928,11 @@ func TestASDU_GetMeasuredValueNormalCP24Time2a(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_ME_TA_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...)},
 			[]asdu.MeasuredValueNormalInfo{
-				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, 1, asdu.QDSBlocked, tm0},
+				{0x000002, 2, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -2010,11 +2010,11 @@ func TestASDU_GetMeasuredValueScaled(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_ME_TE_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...)},
 			[]asdu.MeasuredValueScaledInfo{
-				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, 1, asdu.QDSBlocked, tm0},
+				{0x000002, 2, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -2049,11 +2049,11 @@ func TestASDU_GetMeasuredValueScaledCP24Time2a(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_ME_TB_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...)},
 			[]asdu.MeasuredValueScaledInfo{
-				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, 1, asdu.QDSBlocked, tm0},
+				{0x000002, 2, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -2137,11 +2137,11 @@ func TestASDU_GetMeasuredValueFloat(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_ME_TF_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, asdu.Tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP56Time2aBytes...)...)},
 			[]asdu.MeasuredValueFloatInfo{
-				{0x000001, 100, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, 101, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, 100, asdu.QDSBlocked, tm0},
+				{0x000002, 101, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {
@@ -2178,11 +2178,11 @@ func TestASDU_GetMeasuredValueFloatCP24Time2a(t *testing.T) {
 				asdu.Identifier{
 					Type:     asdu.M_ME_TC_1,
 					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, asdu.Tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+				append(append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP24Time2aBytes...)...)},
 			[]asdu.MeasuredValueFloatInfo{
-				{0x000001, 100, asdu.QDSBlocked, asdu.Tm0},
-				{0x000002, 101, asdu.QDSBlocked, asdu.Tm0}},
+				{0x000001, 100, asdu.QDSBlocked, tm0},
+				{0x000002, 101, asdu.QDSBlocked, tm0}},
 		},
 	}
 	for _, tt := range tests {

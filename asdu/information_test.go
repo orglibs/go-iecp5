@@ -1,19 +1,21 @@
-package asdu
+package asdu_test
 
 import (
 	"math"
 	"reflect"
 	"testing"
+
+	"gitlab.com/circutor-library/go-iecp5/asdu"
 )
 
 func TestSinglePoint_Value(t *testing.T) {
 	tests := []struct {
 		name string
-		this SinglePoint
+		this asdu.SinglePoint
 		want byte
 	}{
-		{"off", SPIOff, 0x00},
-		{"on", SPIOn, 0x01},
+		{"off", asdu.SPIOff, 0x00},
+		{"on", asdu.SPIOn, 0x01},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -27,13 +29,13 @@ func TestSinglePoint_Value(t *testing.T) {
 func TestDoublePoint_Value(t *testing.T) {
 	tests := []struct {
 		name string
-		this DoublePoint
+		this asdu.DoublePoint
 		want byte
 	}{
-		{"IndeterminateOrIntermediate", DPIIndeterminateOrIntermediate, 0x00},
-		{"DeterminedOff", DPIDeterminedOff, 0x01},
-		{"DeterminedOn", DPIDeterminedOn, 0x02},
-		{"Indeterminate", DPIIndeterminate, 0x03},
+		{"IndeterminateOrIntermediate", asdu.DPIIndeterminateOrIntermediate, 0x00},
+		{"DeterminedOff", asdu.DPIDeterminedOff, 0x01},
+		{"DeterminedOn", asdu.DPIDeterminedOn, 0x02},
+		{"Indeterminate", asdu.DPIIndeterminate, 0x03},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -51,16 +53,17 @@ func TestParseStepPosition(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want StepPosition
+		want asdu.StepPosition
 	}{
-		{"Value 0xc0 In transient state", args{0xc0}, StepPosition{-64, true}},
-		{"Value 0x40 Not in transient state", args{0x40}, StepPosition{-64, false}},
-		{"Value 0x87 In transient state", args{0x87}, StepPosition{0x07, true}},
-		{"Value 0x07 Not in transient state", args{0x07}, StepPosition{0x07, false}},
+		{"Value 0xc0 In transient state", args{0xc0}, asdu.StepPosition{-64, true}},
+		{"Value 0x40 Not in transient state", args{0x40}, asdu.StepPosition{-64, false}},
+		{"Value 0x87 In transient state", args{0x87}, asdu.StepPosition{0x07, true}},
+		{"Value 0x07 Not in transient state", args{0x07}, asdu.StepPosition{0x07, false}},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ParseStepPosition(tt.args.value); got != tt.want {
+			if got := asdu.ParseStepPosition(tt.args.value); got != tt.want {
 				t.Errorf("NewStepPos() = %v, want %v", got, tt.want)
 			}
 		})
@@ -70,7 +73,7 @@ func TestParseStepPosition(t *testing.T) {
 func TestStepPosition_Value(t *testing.T) {
 	for _, HasTransient := range []bool{false, true} {
 		for value := -64; value <= 63; value++ {
-			got := ParseStepPosition(StepPosition{value, HasTransient}.Value())
+			got := asdu.ParseStepPosition(asdu.StepPosition{value, HasTransient}.Value())
 			if got.Val != value || got.HasTransient != HasTransient {
 				t.Errorf("ParseStepPosition(StepPosition(%d, %t).Value()) = StepPosition(%d, %t)", value, HasTransient, got.Val, got.HasTransient)
 			}
@@ -80,7 +83,7 @@ func TestStepPosition_Value(t *testing.T) {
 
 // TestNormal tests the full value range.
 func TestNormal(t *testing.T) {
-	v := Normalize(-1 << 15)
+	v := asdu.Normalize(-1 << 15)
 	last := v.Float64()
 	if last != -1 {
 		t.Errorf("%#04x: got %f, want -1", uint16(v), last)
@@ -100,7 +103,7 @@ func TestNormalize_Float64(t *testing.T) {
 	min := float64(-1)
 
 	for v := math.MinInt16; v < math.MaxInt16; v++ {
-		got := Normalize(v).Float64()
+		got := asdu.Normalize(v).Float64()
 		if got < min || got >= 1 {
 			t.Errorf("%#04x: got %f (%#04x was %f)", uint16(v), got, uint16(v-1), min)
 		}
@@ -115,14 +118,15 @@ func TestParseQualifierOfCmd(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want QualifierOfCommand
+		want asdu.QualifierOfCommand
 	}{
-		{"with selects", args{0x84}, QualifierOfCommand{1, true}},
-		{"with executes", args{0x0c}, QualifierOfCommand{3, false}},
+		{"with selects", args{0x84}, asdu.QualifierOfCommand{1, true}},
+		{"with executes", args{0x0c}, asdu.QualifierOfCommand{3, false}},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ParseQualifierOfCommand(tt.args.b); !reflect.DeepEqual(got, tt.want) {
+			if got := asdu.ParseQualifierOfCommand(tt.args.b); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ParseQualifierOfCommand() = %v, want %v", got, tt.want)
 			}
 		})
@@ -136,14 +140,15 @@ func TestParseQualifierOfSetpointCmd(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want QualifierOfSetpointCmd
+		want asdu.QualifierOfSetpointCmd
 	}{
-		{"with selects", args{0x87}, QualifierOfSetpointCmd{7, true}},
-		{"with executes", args{0x07}, QualifierOfSetpointCmd{7, false}},
+		{"with selects", args{0x87}, asdu.QualifierOfSetpointCmd{7, true}},
+		{"with executes", args{0x07}, asdu.QualifierOfSetpointCmd{7, false}},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ParseQualifierOfSetpointCmd(tt.args.b); !reflect.DeepEqual(got, tt.want) {
+			if got := asdu.ParseQualifierOfSetpointCmd(tt.args.b); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ParseQualifierOfSetpointCmd() = %v, want %v", got, tt.want)
 			}
 		})
@@ -152,7 +157,7 @@ func TestParseQualifierOfSetpointCmd(t *testing.T) {
 
 func TestQualifierOfCmd_Value(t *testing.T) {
 	type fields struct {
-		CmdQ   QOCQual
+		CmdQ   asdu.QOCQual
 		InExec bool
 	}
 	tests := []struct {
@@ -162,9 +167,10 @@ func TestQualifierOfCmd_Value(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := QualifierOfCommand{
+			this := asdu.QualifierOfCommand{
 				Qual:     tt.fields.CmdQ,
 				InSelect: tt.fields.InExec,
 			}
@@ -177,7 +183,7 @@ func TestQualifierOfCmd_Value(t *testing.T) {
 
 func TestQualifierOfSetpointCmd_Value(t *testing.T) {
 	type fields struct {
-		CmdS   QOSQual
+		CmdS   asdu.QOSQual
 		InExec bool
 	}
 	tests := []struct {
@@ -187,9 +193,10 @@ func TestQualifierOfSetpointCmd_Value(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := QualifierOfSetpointCmd{
+			this := asdu.QualifierOfSetpointCmd{
 				Qual:     tt.fields.CmdS,
 				InSelect: tt.fields.InExec,
 			}
@@ -207,13 +214,14 @@ func TestParseQualifierOfParam(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want QualifierOfParameterMV
+		want asdu.QualifierOfParameterMV
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ParseQualifierOfParamMV(tt.args.b); !reflect.DeepEqual(got, tt.want) {
+			if got := asdu.ParseQualifierOfParamMV(tt.args.b); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ParseQualifierOfParamMV() = %v, want %v", got, tt.want)
 			}
 		})
@@ -222,7 +230,7 @@ func TestParseQualifierOfParam(t *testing.T) {
 
 func TestQualifierOfParam_Value(t *testing.T) {
 	type fields struct {
-		ParamQ        QPMCategory
+		ParamQ        asdu.QPMCategory
 		IsChange      bool
 		IsInOperation bool
 	}
@@ -233,9 +241,10 @@ func TestQualifierOfParam_Value(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := QualifierOfParameterMV{
+			this := asdu.QualifierOfParameterMV{
 				Category:      tt.fields.ParamQ,
 				IsChange:      tt.fields.IsChange,
 				IsInOperation: tt.fields.IsInOperation,

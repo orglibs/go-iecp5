@@ -43,16 +43,19 @@ func (sf *ASDU) AppendInfoObjAddr(addr InfoObjAddr) error {
 		if addr > 255 {
 			return ErrInfoObjAddrFit
 		}
+
 		sf.InfoObj = append(sf.InfoObj, byte(addr))
 	case 2:
 		if addr > 65535 {
 			return ErrInfoObjAddrFit
 		}
+
 		sf.InfoObj = append(sf.InfoObj, byte(addr), byte(addr>>8))
 	case 3:
 		if addr > 16777215 {
 			return ErrInfoObjAddrFit
 		}
+
 		sf.InfoObj = append(sf.InfoObj, byte(addr), byte(addr>>8), byte(addr>>16))
 	default:
 		return ErrParam
@@ -134,6 +137,7 @@ func (sf *ASDU) AppendBinaryCounterReading(v BinaryCounterReading) *ASDU {
 	if v.IsInvalid {
 		value |= 0x80
 	}
+
 	sf.InfoObj = append(sf.InfoObj, byte(v.CounterReading), byte(v.CounterReading>>8),
 		byte(v.CounterReading>>16), byte(v.CounterReading>>24), value)
 	return sf

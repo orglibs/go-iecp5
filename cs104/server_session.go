@@ -59,6 +59,7 @@ type SrvSession struct {
 // RecvLoop feeds t.rcvRaw.
 func (sf *SrvSession) recvLoop() {
 	slog.Debug("recvLoop started!")
+
 	defer func() {
 		sf.cancel()
 		sf.wg.Done()
@@ -123,6 +124,7 @@ func (sf *SrvSession) recvLoop() {
 // sendLoop drains t.sendTime.
 func (sf *SrvSession) sendLoop() {
 	slog.Debug("sendLoop started!")
+
 	defer func() {
 		sf.cancel()
 		sf.wg.Done()
@@ -135,6 +137,7 @@ func (sf *SrvSession) sendLoop() {
 			return
 		case apdu := <-sf.sendRaw:
 			slog.Debug("TX Raw", "tx", apdu)
+
 			for wrCnt := 0; len(apdu) > wrCnt; {
 				byteCount, err := sf.conn.Write(apdu[wrCnt:])
 				if err != nil {
@@ -165,6 +168,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 	sf.ctx, sf.cancel = context.WithCancel(ctx)
 	sf.setConnectStatus(connected)
 	sf.wg.Add(3)
+
 	go sf.recvLoop()
 	go sf.sendLoop()
 	go sf.handlerLoop()

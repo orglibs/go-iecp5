@@ -85,6 +85,7 @@ func (sf *serverSpec) running() {
 	}
 	ctx, sf.closeCancel = context.WithCancel(context.Background())
 	sf.rwMux.Unlock()
+
 	defer sf.setConnectStatus(initial)
 
 	for {

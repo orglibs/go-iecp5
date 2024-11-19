@@ -49,6 +49,7 @@ func TestParameterNormal(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := asdu.ParameterNormal(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
@@ -99,6 +100,7 @@ func TestParameterScaled(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := asdu.ParameterScaled(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
@@ -151,6 +153,7 @@ func TestParameterFloat(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := asdu.ParameterFloat(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
@@ -196,6 +199,7 @@ func TestParameterActivation(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := asdu.ParameterActivation(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
@@ -229,6 +233,7 @@ func TestASDU_GetParameterNormal(t *testing.T) {
 					false}},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			this := &asdu.ASDU{
@@ -266,6 +271,7 @@ func TestASDU_GetParameterScaled(t *testing.T) {
 					false}},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			this := &asdu.ASDU{
@@ -305,6 +311,7 @@ func TestASDU_GetParameterFloat(t *testing.T) {
 					false}},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			this := &asdu.ASDU{
@@ -338,6 +345,7 @@ func TestASDU_GetParameterActivation(t *testing.T) {
 				asdu.QPAUnused},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			this := &asdu.ASDU{

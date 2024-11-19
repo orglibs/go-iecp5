@@ -255,6 +255,7 @@ const (
 
 func (sf TypeID) String() string {
 	var s string
+
 	switch {
 	case 1 <= sf && sf <= 21:
 		sf--
@@ -497,6 +498,7 @@ func (sf CauseOfTransmission) Value() byte {
 // String Returns the string of the Cause, containing the ",neg" and ",test" of the corresponding application.
 func (sf CauseOfTransmission) String() string {
 	s := "COT<" + causeSemantics[sf.Cause]
+
 	switch {
 	case sf.IsNegative && sf.IsTest:
 		s += ",neg,test"

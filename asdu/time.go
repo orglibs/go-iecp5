@@ -47,6 +47,7 @@ func ParseCP56Time2a(bytes []byte, loc *time.Location) time.Time {
 	year := 2000 + int(bytes[6]&0x7f)
 
 	nsec := msec * int(time.Millisecond)
+
 	if loc == nil {
 		loc = time.UTC
 	}
@@ -79,6 +80,7 @@ func ParseCP24Time2a(bytes []byte, loc *time.Location) time.Time {
 	hour, _, _ := now.Clock()
 
 	nsec := msec * int(time.Millisecond)
+
 	if loc == nil {
 		loc = time.UTC
 	}

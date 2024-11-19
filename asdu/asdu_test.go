@@ -42,6 +42,7 @@ func TestParams_ValidCommonAddr(t *testing.T) {
 		{"common address size(1),valid", asdu.ParamsNarrow, args{255}, false},
 		{"common address size(2),valid", asdu.ParamsWide, args{65535}, false},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.this.ValidCommonAddr(tt.args.addr); (err != nil) != tt.wantErr {
@@ -87,6 +88,7 @@ func TestASDU_SetVariableNumber(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			this := &asdu.ASDU{
@@ -121,6 +123,7 @@ func TestASDU_Reply(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			this := &asdu.ASDU{
@@ -274,6 +277,7 @@ func TestASDU_MarshalBinary(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			this := asdu.NewASDU(tt.fields.Params, tt.fields.Identifier)
@@ -353,6 +357,7 @@ func TestASDU_UnmarshalBinary(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			this := asdu.NewEmptyASDU(tt.Params)

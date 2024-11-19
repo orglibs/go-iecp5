@@ -1,6 +1,7 @@
 package asdu_test
 
 import (
+	"fmt"
 	"math"
 	"net"
 	"reflect"
@@ -27,7 +28,7 @@ func (sf *conn) UnderlyingConn() net.Conn { return nil }
 func (sf *conn) Send(u *asdu.ASDU) error {
 	data, err := u.MarshalBinary()
 	if err != nil {
-		return err
+		return fmt.Errorf("Send asdu failed:%w", err)
 	}
 	if !reflect.DeepEqual(sf.want, data) {
 		sf.t.Errorf("Send() out = % x, want % x", data, sf.want)
@@ -84,14 +85,14 @@ func TestSingleCmd(t *testing.T) {
 			"C_SC_TA_1 CP56Time2a",
 			args{
 				newConn(t, append([]byte{byte(asdu.C_SC_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x04}, asdu.Tm0CP56Time2aBytes...)),
+					0x90, 0x78, 0x56, 0x04}, tm0CP56Time2aBytes...)),
 				asdu.C_SC_TA_1,
 				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
 				asdu.SingleCommandInfo{
 					0x567890, false,
 					asdu.QualifierOfCommand{asdu.QOCShortPulseDuration, false},
-					asdu.Tm0}},
+					tm0}},
 			false},
 	}
 	for _, tt := range tests {
@@ -152,7 +153,7 @@ func TestDoubleCmd(t *testing.T) {
 			"C_DC_TA_1 CP56Time2a",
 			args{
 				newConn(t, append([]byte{byte(asdu.C_DC_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x06}, asdu.Tm0CP56Time2aBytes...)),
+					0x90, 0x78, 0x56, 0x06}, tm0CP56Time2aBytes...)),
 				asdu.C_DC_TA_1,
 				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
@@ -160,7 +161,7 @@ func TestDoubleCmd(t *testing.T) {
 					0x567890,
 					asdu.DCOOff,
 					asdu.QualifierOfCommand{asdu.QOCShortPulseDuration, false},
-					asdu.Tm0}},
+					tm0}},
 			false},
 	}
 	for _, tt := range tests {
@@ -220,7 +221,7 @@ func TestStepCmd(t *testing.T) {
 			"C_RC_TA_1 CP56Time2a",
 			args{
 				newConn(t, append([]byte{byte(asdu.C_RC_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x06}, asdu.Tm0CP56Time2aBytes...)),
+					0x90, 0x78, 0x56, 0x06}, tm0CP56Time2aBytes...)),
 				asdu.C_RC_TA_1,
 				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
@@ -228,7 +229,7 @@ func TestStepCmd(t *testing.T) {
 					0x567890,
 					asdu.SCOStepUP,
 					asdu.QualifierOfCommand{asdu.QOCShortPulseDuration, false},
-					asdu.Tm0}},
+					tm0}},
 			false},
 	}
 	for _, tt := range tests {
@@ -289,16 +290,17 @@ func TestSetpointCmdNormal(t *testing.T) {
 			"C_SE_TA_1 CP56Time2a",
 			args{
 				newConn(t, append([]byte{byte(asdu.C_SE_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, asdu.Tm0CP56Time2aBytes...)),
+					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, tm0CP56Time2aBytes...)),
 				asdu.C_SE_TA_1,
 				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
 				asdu.SetpointCommandNormalInfo{
 					0x567890, 100,
 					asdu.QualifierOfSetpointCmd{1, false},
-					asdu.Tm0}},
+					tm0}},
 			false},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := asdu.SetpointCmdNormal(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
@@ -357,14 +359,14 @@ func TestSetpointCmdScaled(t *testing.T) {
 			"C_SE_TB_1 CP56Time2a",
 			args{
 				newConn(t, append([]byte{byte(asdu.C_SE_TB_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, asdu.Tm0CP56Time2aBytes...)),
+					0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, tm0CP56Time2aBytes...)),
 				asdu.C_SE_TB_1,
 				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
 				asdu.SetpointCommandScaledInfo{
 					0x567890, 100,
 					asdu.QualifierOfSetpointCmd{1, false},
-					asdu.Tm0}},
+					tm0}},
 			false},
 	}
 	for _, tt := range tests {
@@ -427,14 +429,14 @@ func TestSetpointCmdFloat(t *testing.T) {
 			"C_SE_TC_1 CP56Time2a",
 			args{
 				newConn(t, append([]byte{byte(asdu.C_SE_TC_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}, asdu.Tm0CP56Time2aBytes...)),
+					0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}, tm0CP56Time2aBytes...)),
 				asdu.C_SE_TC_1,
 				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
 				asdu.SetpointCommandFloatInfo{
 					0x567890, 100,
 					asdu.QualifierOfSetpointCmd{1, false},
-					asdu.Tm0}},
+					tm0}},
 			false},
 	}
 	for _, tt := range tests {
@@ -494,15 +496,16 @@ func TestBitsString32Cmd(t *testing.T) {
 			"C_BO_TA_1 CP56Time2a",
 			args{
 				newConn(t, append([]byte{byte(asdu.C_BO_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x90, 0x78, 0x56, 0x64, 0x00, 0x00, 0x00}, asdu.Tm0CP56Time2aBytes...)),
+					0x90, 0x78, 0x56, 0x64, 0x00, 0x00, 0x00}, tm0CP56Time2aBytes...)),
 				asdu.C_BO_TA_1,
 				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
 				asdu.BitsString32CommandInfo{
 					0x567890, 100,
-					asdu.Tm0}},
+					tm0}},
 			false},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := asdu.BitsString32Cmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.commonAddr, tt.args.cmd); (err != nil) != tt.wantErr {
@@ -540,12 +543,12 @@ func TestASDU_GetSingleCmd(t *testing.T) {
 			fields{
 				asdu.ParamsWide,
 				asdu.Identifier{Type: asdu.C_SC_TA_1},
-				append([]byte{0x90, 0x78, 0x56, 0x04}, asdu.Tm0CP56Time2aBytes...)},
+				append([]byte{0x90, 0x78, 0x56, 0x04}, tm0CP56Time2aBytes...)},
 			asdu.SingleCommandInfo{
 				0x567890,
 				false,
 				asdu.QualifierOfCommand{asdu.QOCShortPulseDuration, false},
-				asdu.Tm0},
+				tm0},
 		},
 	}
 	for _, tt := range tests {
@@ -592,12 +595,12 @@ func TestASDU_GetDoubleCmd(t *testing.T) {
 			fields{
 				asdu.ParamsWide,
 				asdu.Identifier{Type: asdu.C_DC_TA_1},
-				append([]byte{0x90, 0x78, 0x56, 0x06}, asdu.Tm0CP56Time2aBytes...)},
+				append([]byte{0x90, 0x78, 0x56, 0x06}, tm0CP56Time2aBytes...)},
 			asdu.DoubleCommandInfo{
 				0x567890,
 				asdu.DCOOff,
 				asdu.QualifierOfCommand{asdu.QOCShortPulseDuration, false},
-				asdu.Tm0},
+				tm0},
 		},
 	}
 	for _, tt := range tests {
@@ -643,12 +646,12 @@ func TestASDU_GetStepCmd(t *testing.T) {
 			fields{
 				asdu.ParamsWide,
 				asdu.Identifier{Type: asdu.C_RC_TA_1},
-				append([]byte{0x90, 0x78, 0x56, 0x06}, asdu.Tm0CP56Time2aBytes...)},
+				append([]byte{0x90, 0x78, 0x56, 0x06}, tm0CP56Time2aBytes...)},
 			asdu.StepCommandInfo{
 				0x567890,
 				asdu.SCOStepUP,
 				asdu.QualifierOfCommand{asdu.QOCShortPulseDuration, false},
-				asdu.Tm0},
+				tm0},
 		},
 	}
 	for _, tt := range tests {
@@ -694,12 +697,12 @@ func TestASDU_GetSetpointNormalCmd(t *testing.T) {
 			fields{
 				asdu.ParamsWide,
 				asdu.Identifier{Type: asdu.C_SE_TA_1},
-				append([]byte{0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, asdu.Tm0CP56Time2aBytes...)},
+				append([]byte{0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, tm0CP56Time2aBytes...)},
 			asdu.SetpointCommandNormalInfo{
 				0x567890,
 				100,
 				asdu.QualifierOfSetpointCmd{1, false},
-				asdu.Tm0},
+				tm0},
 		},
 	}
 	for _, tt := range tests {
@@ -745,12 +748,12 @@ func TestASDU_GetSetpointCmdScaled(t *testing.T) {
 			fields{
 				asdu.ParamsWide,
 				asdu.Identifier{Type: asdu.C_SE_TB_1},
-				append([]byte{0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, asdu.Tm0CP56Time2aBytes...)},
+				append([]byte{0x90, 0x78, 0x56, 0x64, 0x00, 0x01}, tm0CP56Time2aBytes...)},
 			asdu.SetpointCommandScaledInfo{
 				0x567890,
 				100,
 				asdu.QualifierOfSetpointCmd{1, false},
-				asdu.Tm0},
+				tm0},
 		},
 	}
 	for _, tt := range tests {
@@ -798,12 +801,12 @@ func TestASDU_GetSetpointFloatCmd(t *testing.T) {
 			fields{
 				asdu.ParamsWide,
 				asdu.Identifier{Type: asdu.C_SE_TC_1},
-				append([]byte{0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}, asdu.Tm0CP56Time2aBytes...)},
+				append([]byte{0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}, tm0CP56Time2aBytes...)},
 			asdu.SetpointCommandFloatInfo{
 				0x567890,
 				100,
 				asdu.QualifierOfSetpointCmd{1, false},
-				asdu.Tm0},
+				tm0},
 		},
 	}
 	for _, tt := range tests {
@@ -848,11 +851,11 @@ func TestASDU_GetBitsString32Cmd(t *testing.T) {
 			fields{
 				asdu.ParamsWide,
 				asdu.Identifier{Type: asdu.C_BO_TA_1},
-				append([]byte{0x90, 0x78, 0x56, 0x64, 0x00, 0x00, 0x00}, asdu.Tm0CP56Time2aBytes...)},
+				append([]byte{0x90, 0x78, 0x56, 0x64, 0x00, 0x00, 0x00}, tm0CP56Time2aBytes...)},
 			asdu.BitsString32CommandInfo{
 				0x567890,
 				100,
-				asdu.Tm0},
+				tm0},
 		},
 	}
 	for _, tt := range tests {

@@ -129,10 +129,10 @@ func TestClockSynchronizationCmd(t *testing.T) {
 			"C_CS_NA_1",
 			args{
 				newConn(t, append([]byte{byte(asdu.C_CS_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x00, 0x00, 0x00}, asdu.Tm0CP56Time2aBytes...)),
+					0x00, 0x00, 0x00}, tm0CP56Time2aBytes...)),
 				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
-				asdu.Tm0},
+				tm0},
 			false,
 		},
 	}
@@ -264,10 +264,10 @@ func TestTestCommandCP56Time2a(t *testing.T) {
 			"C_TS_TA_1",
 			args{
 				newConn(t, append([]byte{byte(asdu.C_TS_TA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
-					0x00, 0x00, 0x00, 0xaa, 0x55}, asdu.Tm0CP56Time2aBytes...)),
+					0x00, 0x00, 0x00, 0xaa, 0x55}, tm0CP56Time2aBytes...)),
 				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
-				asdu.Tm0},
+				tm0},
 			false,
 		},
 	}
@@ -311,7 +311,6 @@ func TestASDU_GetInterrogationCmd(t *testing.T) {
 			if got1 != tt.want1 {
 				t.Errorf("ASDU.GetInterrogationCmd() InfoObjAddr = %v, want %v", got1, tt.want1)
 			}
-
 		})
 	}
 }
@@ -394,9 +393,9 @@ func TestASDU_GetClockSynchronizationCmd(t *testing.T) {
 	}{
 		{
 			"C_CS_NA_1",
-			fields{asdu.ParamsWide, append([]byte{0x00, 0x00, 0x00}, asdu.Tm0CP56Time2aBytes...)},
+			fields{asdu.ParamsWide, append([]byte{0x00, 0x00, 0x00}, tm0CP56Time2aBytes...)},
 			0,
-			asdu.Tm0,
+			tm0,
 		},
 	}
 	for _, tt := range tests {
@@ -535,10 +534,10 @@ func TestASDU_GetTestCommandCP56Time2a(t *testing.T) {
 	}{
 		{
 			"C_CS_TA_1",
-			fields{asdu.ParamsWide, append([]byte{0x00, 0x00, 0x00, 0xaa, 0x55}, asdu.Tm0CP56Time2aBytes...)},
+			fields{asdu.ParamsWide, append([]byte{0x00, 0x00, 0x00, 0xaa, 0x55}, tm0CP56Time2aBytes...)},
 			0,
 			true,
-			asdu.Tm0,
+			tm0,
 		},
 	}
 	for _, tt := range tests {

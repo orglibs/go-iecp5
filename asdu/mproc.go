@@ -69,9 +69,11 @@ func SendSingle(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmissi
 		return err
 	}
 	once := false
+
 	for _, v := range infos {
 		if !isSequence || !once {
 			once = true
+
 			if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 				return err
 			}
@@ -182,9 +184,11 @@ func SendDouble(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmissi
 		return err
 	}
 	once := false
+
 	for _, v := range infos {
 		if !isSequence || !once {
 			once = true
+
 			if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 				return err
 			}
@@ -288,9 +292,11 @@ func SendStep(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission
 		return err
 	}
 	once := false
+
 	for _, v := range infos {
 		if !isSequence || !once {
 			once = true
+
 			if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 				return err
 			}
@@ -394,9 +400,11 @@ func SendBitString32(c Connect, typeID TypeID, isSequence bool, coa CauseOfTrans
 		return err
 	}
 	once := false
+
 	for _, v := range infos {
 		if !isSequence || !once {
 			once = true
+
 			if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 				return err
 			}
@@ -492,9 +500,11 @@ func SendMeasuredValueNormal(c Connect, typeID TypeID, isSequence bool, coa Caus
 		return err
 	}
 	once := false
+
 	for _, v := range attrs {
 		if !isSequence || !once {
 			once = true
+
 			if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 				return err
 			}
@@ -615,9 +625,11 @@ func SendMeasuredValueScaled(c Connect, typeID TypeID, isSequence bool, coa Caus
 		return err
 	}
 	once := false
+
 	for _, v := range infos {
 		if !isSequence || !once {
 			once = true
+
 			if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 				return err
 			}
@@ -713,9 +725,11 @@ func SendMeasuredValueFloat(c Connect, typeID TypeID, isSequence bool, coa Cause
 		return err
 	}
 	once := false
+
 	for _, v := range infos {
 		if !isSequence || !once {
 			once = true
+
 			if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 				return err
 			}
@@ -810,9 +824,11 @@ func integratedTotals(c Connect, typeID TypeID, isSequence bool, coa CauseOfTran
 		return err
 	}
 	once := false
+
 	for _, v := range infos {
 		if !isSequence || !once {
 			once = true
+
 			if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 				return err
 			}
@@ -913,6 +929,7 @@ func eventOfProtectionEquipment(c Connect, typeID TypeID, coa CauseOfTransmissio
 	if err := u.SetVariableNumber(len(infos)); err != nil {
 		return err
 	}
+
 	for _, v := range infos {
 		if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 			return err
@@ -1126,9 +1143,11 @@ func PackedSinglePointWithSCD(c Connect, isSequence bool, coa CauseOfTransmissio
 		return err
 	}
 	once := false
+
 	for _, v := range infos {
 		if !isSequence || !once {
 			once = true
+
 			if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 				return err
 			}
@@ -1143,6 +1162,7 @@ func PackedSinglePointWithSCD(c Connect, isSequence bool, coa CauseOfTransmissio
 func (sf *ASDU) GetSinglePoint() []SinglePointInfo {
 	info := make([]SinglePointInfo, 0, sf.Variable.Number)
 	infoObjAddr := InfoObjAddr(0)
+
 	for i, once := 0, false; i < int(sf.Variable.Number); i++ {
 		if !sf.Variable.IsSequence || !once {
 			once = true
@@ -1176,6 +1196,7 @@ func (sf *ASDU) GetSinglePoint() []SinglePointInfo {
 func (sf *ASDU) GetDoublePoint() []DoublePointInfo {
 	info := make([]DoublePointInfo, 0, sf.Variable.Number)
 	infoObjAddr := InfoObjAddr(0)
+
 	for i, once := 0, false; i < int(sf.Variable.Number); i++ {
 		if !sf.Variable.IsSequence || !once {
 			once = true
@@ -1209,6 +1230,7 @@ func (sf *ASDU) GetDoublePoint() []DoublePointInfo {
 func (sf *ASDU) GetStepPosition() []StepPositionInfo {
 	info := make([]StepPositionInfo, 0, sf.Variable.Number)
 	infoObjAddr := InfoObjAddr(0)
+
 	for i, once := 0, false; i < int(sf.Variable.Number); i++ {
 		if !sf.Variable.IsSequence || !once {
 			once = true
@@ -1243,6 +1265,7 @@ func (sf *ASDU) GetStepPosition() []StepPositionInfo {
 func (sf *ASDU) GetBitString32() []BitString32Info {
 	info := make([]BitString32Info, 0, sf.Variable.Number)
 	infoObjAddr := InfoObjAddr(0)
+
 	for i, once := 0, false; i < int(sf.Variable.Number); i++ {
 		if !sf.Variable.IsSequence || !once {
 			once = true
@@ -1278,6 +1301,7 @@ func (sf *ASDU) GetBitString32() []BitString32Info {
 func (sf *ASDU) GetMeasuredValueNormal() []MeasuredValueNormalInfo {
 	info := make([]MeasuredValueNormalInfo, 0, sf.Variable.Number)
 	infoObjAddr := InfoObjAddr(0)
+
 	for i, once := 0, false; i < int(sf.Variable.Number); i++ {
 		if !sf.Variable.IsSequence || !once {
 			once = true
@@ -1317,6 +1341,7 @@ func (sf *ASDU) GetMeasuredValueNormal() []MeasuredValueNormalInfo {
 func (sf *ASDU) GetMeasuredValueScaled() []MeasuredValueScaledInfo {
 	info := make([]MeasuredValueScaledInfo, 0, sf.Variable.Number)
 	infoObjAddr := InfoObjAddr(0)
+
 	for i, once := 0, false; i < int(sf.Variable.Number); i++ {
 		if !sf.Variable.IsSequence || !once {
 			once = true
@@ -1352,6 +1377,7 @@ func (sf *ASDU) GetMeasuredValueScaled() []MeasuredValueScaledInfo {
 func (sf *ASDU) GetMeasuredValueFloat() []MeasuredValueFloatInfo {
 	info := make([]MeasuredValueFloatInfo, 0, sf.Variable.Number)
 	infoObjAddr := InfoObjAddr(0)
+
 	for i, once := 0, false; i < int(sf.Variable.Number); i++ {
 		if !sf.Variable.IsSequence || !once {
 			once = true
@@ -1373,6 +1399,7 @@ func (sf *ASDU) GetMeasuredValueFloat() []MeasuredValueFloatInfo {
 		default:
 			panic(ErrTypeIDNotMatch)
 		}
+
 		info = append(info, MeasuredValueFloatInfo{
 			Ioa:   infoObjAddr,
 			Value: value,
@@ -1386,6 +1413,7 @@ func (sf *ASDU) GetMeasuredValueFloat() []MeasuredValueFloatInfo {
 func (sf *ASDU) GetIntegratedTotals() []BinaryCounterReadingInfo {
 	info := make([]BinaryCounterReadingInfo, 0, sf.Variable.Number)
 	infoObjAddr := InfoObjAddr(0)
+
 	for i, once := 0, false; i < int(sf.Variable.Number); i++ {
 		if !sf.Variable.IsSequence || !once {
 			once = true
@@ -1406,6 +1434,7 @@ func (sf *ASDU) GetIntegratedTotals() []BinaryCounterReadingInfo {
 		default:
 			panic(ErrTypeIDNotMatch)
 		}
+
 		info = append(info, BinaryCounterReadingInfo{
 			Ioa:   infoObjAddr,
 			Value: value,
@@ -1418,6 +1447,7 @@ func (sf *ASDU) GetIntegratedTotals() []BinaryCounterReadingInfo {
 func (sf *ASDU) GetEventOfProtectionEquipment() []EventOfProtectionEquipmentInfo {
 	info := make([]EventOfProtectionEquipmentInfo, 0, sf.Variable.Number)
 	infoObjAddr := InfoObjAddr(0)
+
 	for i, once := 0, false; i < int(sf.Variable.Number); i++ {
 		if !sf.Variable.IsSequence || !once {
 			once = true
@@ -1437,6 +1467,7 @@ func (sf *ASDU) GetEventOfProtectionEquipment() []EventOfProtectionEquipmentInfo
 		default:
 			panic(ErrTypeIDNotMatch)
 		}
+
 		info = append(info, EventOfProtectionEquipmentInfo{
 			Ioa:   infoObjAddr,
 			Event: SingleEvent(value & 0x03),
@@ -1497,6 +1528,7 @@ func (sf *ASDU) GetPackedOutputCircuitInfo() PackedOutputCircuitInfoInfo {
 func (sf *ASDU) GetPackedSinglePointWithSCD() []PackedSinglePointWithSCDInfo {
 	info := make([]PackedSinglePointWithSCDInfo, 0, sf.Variable.Number)
 	infoObjAddr := InfoObjAddr(0)
+
 	for i, once := 0, false; i < int(sf.Variable.Number); i++ {
 		if !sf.Variable.IsSequence || !once {
 			once = true
