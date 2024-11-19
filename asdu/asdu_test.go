@@ -1,20 +1,22 @@
-package asdu
+package asdu_test
 
 import (
 	"reflect"
 	"testing"
 	"time"
+
+	"gitlab.com/circutor-library/go-iecp5/asdu"
 )
 
 func TestParams_Valid(t *testing.T) {
 	tests := []struct {
 		name    string
-		this    *Params
+		this    *asdu.Params
 		wantErr bool
 	}{
-		{"invalid", &Params{}, true},
-		{"ParamsNarrow", ParamsNarrow, false},
-		{"ParamsWide", ParamsWide, false},
+		{"invalid", &asdu.Params{}, true},
+		{"ParamsNarrow", asdu.ParamsNarrow, false},
+		{"ParamsWide", asdu.ParamsWide, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -27,18 +29,18 @@ func TestParams_Valid(t *testing.T) {
 
 func TestParams_ValidCommonAddr(t *testing.T) {
 	type args struct {
-		addr CommonAddr
+		addr asdu.CommonAddr
 	}
 	tests := []struct {
 		name    string
-		this    *Params
+		this    *asdu.Params
 		args    args
 		wantErr bool
 	}{
-		{"common address zero", ParamsNarrow, args{InvalidCommonAddr}, true},
-		{"common address size(1),invalid", ParamsNarrow, args{256}, true},
-		{"common address size(1),valid", ParamsNarrow, args{255}, false},
-		{"common address size(2),valid", ParamsWide, args{65535}, false},
+		{"common address zero", asdu.ParamsNarrow, args{asdu.InvalidCommonAddr}, true},
+		{"common address size(1),invalid", asdu.ParamsNarrow, args{256}, true},
+		{"common address size(1),valid", asdu.ParamsNarrow, args{255}, false},
+		{"common address size(2),valid", asdu.ParamsWide, args{65535}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -52,11 +54,11 @@ func TestParams_ValidCommonAddr(t *testing.T) {
 func TestParams_IdentifierSize(t *testing.T) {
 	tests := []struct {
 		name string
-		this *Params
+		this *asdu.Params
 		want int
 	}{
-		{"ParamsNarrow(4)", ParamsNarrow, 4},
-		{"ParamsWide(6)", ParamsWide, 6},
+		{"ParamsNarrow(4)", asdu.ParamsNarrow, 4},
+		{"ParamsWide(6)", asdu.ParamsWide, 6},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -69,10 +71,10 @@ func TestParams_IdentifierSize(t *testing.T) {
 
 func TestASDU_SetVariableNumber(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		InfoObj    []byte
-		bootstrap  [ASDUSizeMax]byte
+		bootstrap  [asdu.ASDUSizeMax]byte
 	}
 	type args struct {
 		n int
@@ -87,11 +89,11 @@ func TestASDU_SetVariableNumber(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.InfoObj,
-				bootstrap:  tt.fields.bootstrap,
+				InfoObj:    tt.fields.InfoObj,
+				Bootstrap:  tt.fields.bootstrap,
 			}
 			if err := this.SetVariableNumber(tt.args.n); (err != nil) != tt.wantErr {
 				t.Errorf("ASDU.SetVariableNumber() error = %v, wantErr %v", err, tt.wantErr)
@@ -102,30 +104,30 @@ func TestASDU_SetVariableNumber(t *testing.T) {
 
 func TestASDU_Reply(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		InfoObj    []byte
-		bootstrap  [ASDUSizeMax]byte
+		bootstrap  [asdu.ASDUSizeMax]byte
 	}
 	type args struct {
-		c    Cause
-		addr CommonAddr
+		c    asdu.Cause
+		addr asdu.CommonAddr
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
-		want   *ASDU
+		want   *asdu.ASDU
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.InfoObj,
-				bootstrap:  tt.fields.bootstrap,
+				InfoObj:    tt.fields.InfoObj,
+				Bootstrap:  tt.fields.bootstrap,
 			}
 			if got := this.Reply(tt.args.c, tt.args.addr); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.Reply() = %v, want %v", got, tt.want)
@@ -136,8 +138,8 @@ func TestASDU_Reply(t *testing.T) {
 
 func TestASDU_MarshalBinary(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		InfoObj    []byte
 	}
 	tests := []struct {
@@ -149,11 +151,11 @@ func TestASDU_MarshalBinary(t *testing.T) {
 		{
 			"unused cause",
 			fields{
-				ParamsNarrow,
-				Identifier{
-					M_SP_NA_1,
-					VariableStruct{},
-					CauseOfTransmission{Cause: Unused},
+				asdu.ParamsNarrow,
+				asdu.Identifier{
+					asdu.M_SP_NA_1,
+					asdu.VariableStruct{},
+					asdu.CauseOfTransmission{Cause: asdu.Unused},
 					0,
 					0x80},
 				nil},
@@ -163,11 +165,11 @@ func TestASDU_MarshalBinary(t *testing.T) {
 		{
 			"invalid cause size",
 			fields{
-				&Params{CauseSize: 0, CommonAddrSize: 1, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC},
-				Identifier{
-					M_SP_NA_1,
-					VariableStruct{},
-					CauseOfTransmission{Cause: Activation},
+				&asdu.Params{CauseSize: 0, CommonAddrSize: 1, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC},
+				asdu.Identifier{
+					asdu.M_SP_NA_1,
+					asdu.VariableStruct{},
+					asdu.CauseOfTransmission{Cause: asdu.Activation},
 					0,
 					0x80},
 				nil},
@@ -177,11 +179,11 @@ func TestASDU_MarshalBinary(t *testing.T) {
 		{
 			"cause size(1),but origAddress not equal zero",
 			fields{
-				&Params{CauseSize: 1, CommonAddrSize: 1, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC},
-				Identifier{
-					M_SP_NA_1,
-					VariableStruct{},
-					CauseOfTransmission{Cause: Activation},
+				&asdu.Params{CauseSize: 1, CommonAddrSize: 1, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC},
+				asdu.Identifier{
+					asdu.M_SP_NA_1,
+					asdu.VariableStruct{},
+					asdu.CauseOfTransmission{Cause: asdu.Activation},
 					1,
 					0x80},
 				nil},
@@ -191,24 +193,24 @@ func TestASDU_MarshalBinary(t *testing.T) {
 		{
 			"invalid common address",
 			fields{
-				&Params{CauseSize: 1, CommonAddrSize: 1, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC},
-				Identifier{
-					M_SP_NA_1,
-					VariableStruct{},
-					CauseOfTransmission{Cause: Activation},
+				&asdu.Params{CauseSize: 1, CommonAddrSize: 1, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC},
+				asdu.Identifier{
+					asdu.M_SP_NA_1,
+					asdu.VariableStruct{},
+					asdu.CauseOfTransmission{Cause: asdu.Activation},
 					0,
-					InvalidCommonAddr},
+					asdu.InvalidCommonAddr},
 				nil},
 			nil,
 			true},
 		{
 			"invalid common address size",
 			fields{
-				&Params{CauseSize: 1, CommonAddrSize: 0, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC},
-				Identifier{
-					M_SP_NA_1,
-					VariableStruct{},
-					CauseOfTransmission{Cause: Activation},
+				&asdu.Params{CauseSize: 1, CommonAddrSize: 0, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC},
+				asdu.Identifier{
+					asdu.M_SP_NA_1,
+					asdu.VariableStruct{},
+					asdu.CauseOfTransmission{Cause: asdu.Activation},
 					0,
 					0x80},
 				nil},
@@ -218,11 +220,11 @@ func TestASDU_MarshalBinary(t *testing.T) {
 		{
 			"common size(1),but common address equal 255",
 			fields{
-				&Params{CauseSize: 1, CommonAddrSize: 1, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC},
-				Identifier{
-					M_SP_NA_1,
-					VariableStruct{},
-					CauseOfTransmission{Cause: Activation},
+				&asdu.Params{CauseSize: 1, CommonAddrSize: 1, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC},
+				asdu.Identifier{
+					asdu.M_SP_NA_1,
+					asdu.VariableStruct{},
+					asdu.CauseOfTransmission{Cause: asdu.Activation},
 					0,
 					255},
 				nil},
@@ -232,11 +234,11 @@ func TestASDU_MarshalBinary(t *testing.T) {
 		{
 			"ParamsNarrow",
 			fields{
-				ParamsNarrow,
-				Identifier{
-					M_SP_NA_1,
-					VariableStruct{Number: 1},
-					CauseOfTransmission{Cause: Activation},
+				asdu.ParamsNarrow,
+				asdu.Identifier{
+					asdu.M_SP_NA_1,
+					asdu.VariableStruct{Number: 1},
+					asdu.CauseOfTransmission{Cause: asdu.Activation},
 					0,
 					0x80},
 				[]byte{0x00, 0x01, 0x02, 0x03}},
@@ -246,13 +248,13 @@ func TestASDU_MarshalBinary(t *testing.T) {
 		{
 			"ParamsNarrow global address",
 			fields{
-				ParamsNarrow,
-				Identifier{
-					M_SP_NA_1,
-					VariableStruct{Number: 1},
-					CauseOfTransmission{Cause: Activation},
+				asdu.ParamsNarrow,
+				asdu.Identifier{
+					asdu.M_SP_NA_1,
+					asdu.VariableStruct{Number: 1},
+					asdu.CauseOfTransmission{Cause: asdu.Activation},
 					0,
-					GlobalCommonAddr},
+					asdu.GlobalCommonAddr},
 				[]byte{0x00, 0x01, 0x02, 0x03}},
 			[]byte{0x01, 0x01, 0x06, 0xff, 0x00, 0x01, 0x02, 0x03},
 			false,
@@ -260,11 +262,11 @@ func TestASDU_MarshalBinary(t *testing.T) {
 		{
 			"ParamsWide",
 			fields{
-				ParamsWide,
-				Identifier{
-					M_SP_NA_1,
-					VariableStruct{Number: 1},
-					CauseOfTransmission{Cause: Activation},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					asdu.M_SP_NA_1,
+					asdu.VariableStruct{Number: 1},
+					asdu.CauseOfTransmission{Cause: asdu.Activation},
 					0,
 					0x6080},
 				[]byte{0x00, 0x01, 0x02, 0x03}},
@@ -274,8 +276,8 @@ func TestASDU_MarshalBinary(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := NewASDU(tt.fields.Params, tt.fields.Identifier)
-			this.infoObj = append(this.infoObj, tt.fields.InfoObj...)
+			this := asdu.NewASDU(tt.fields.Params, tt.fields.Identifier)
+			this.InfoObj = append(this.InfoObj, tt.fields.InfoObj...)
 
 			gotData, err := this.MarshalBinary()
 			if (err != nil) != tt.wantErr {
@@ -295,28 +297,28 @@ func TestASDU_UnmarshalBinary(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		Params  *Params
+		Params  *asdu.Params
 		args    args
 		want    []byte
 		wantErr bool
 	}{
 		{
 			"invalid param",
-			&Params{},
+			&asdu.Params{},
 			args{}, // 125
 			[]byte{},
 			true,
 		},
 		{
 			"less than data unit identifier size",
-			ParamsWide,
+			asdu.ParamsWide,
 			args{[]byte{0x0b, 0x01, 0x06, 0x80}},
 			[]byte{},
 			true,
 		},
 		{
 			"type id fix size error",
-			ParamsWide,
+			asdu.ParamsWide,
 			args{[]byte{0x07d, 0x01, 0x06, 0x00, 0x80, 0x60}},
 			[]byte{},
 			true,
@@ -324,28 +326,28 @@ func TestASDU_UnmarshalBinary(t *testing.T) {
 
 		{
 			"ParamsNarrow global address",
-			ParamsNarrow,
+			asdu.ParamsNarrow,
 			args{[]byte{0x0b, 0x01, 0x06, 0x80, 0x00, 0x01, 0x02, 0x03}},
 			[]byte{0x00, 0x01, 0x02, 0x03},
 			false,
 		},
 		{
 			"ParamsNarrow",
-			ParamsNarrow,
+			asdu.ParamsNarrow,
 			args{[]byte{0x0b, 0x01, 0x06, 0xff, 0x00, 0x01, 0x02, 0x03}},
 			[]byte{0x00, 0x01, 0x02, 0x03},
 			false,
 		},
 		{
 			"ParamsWide",
-			ParamsWide,
+			asdu.ParamsWide,
 			args{[]byte{0x01, 0x01, 0x06, 0x00, 0x80, 0x60, 0x00, 0x01, 0x02, 0x03}},
 			[]byte{0x00, 0x01, 0x02, 0x03},
 			false,
 		},
 		{
 			"ParamsWide sequence",
-			ParamsWide,
+			asdu.ParamsWide,
 			args{[]byte{0x01, 0x81, 0x06, 0x00, 0x80, 0x60, 0x00, 0x01, 0x02, 0x03}},
 			[]byte{0x00, 0x01, 0x02, 0x03},
 			false,
@@ -353,12 +355,12 @@ func TestASDU_UnmarshalBinary(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := NewEmptyASDU(tt.Params)
+			this := asdu.NewEmptyASDU(tt.Params)
 			if err := this.UnmarshalBinary(tt.args.data); (err != nil) != tt.wantErr {
 				t.Errorf("ASDU.UnmarshalBinary() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !reflect.DeepEqual(this.infoObj, tt.want) {
-				t.Errorf("ASDU.UnmarshalBinary() got % x, want % x", this.infoObj, tt.want)
+			if !reflect.DeepEqual(this.InfoObj, tt.want) {
+				t.Errorf("ASDU.UnmarshalBinary() got % x, want % x", this.InfoObj, tt.want)
 			}
 		})
 	}

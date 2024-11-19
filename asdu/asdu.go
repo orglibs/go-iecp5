@@ -114,15 +114,15 @@ func (id Identifier) String() string {
 type ASDU struct {
 	*Params
 	Identifier
-	infoObj   []byte            // information object serial
-	bootstrap [ASDUSizeMax]byte // prevents Info malloc
+	InfoObj   []byte            // information object serial
+	Bootstrap [ASDUSizeMax]byte // prevents Info malloc
 }
 
 // NewEmptyASDU new empty asdu with special params
 func NewEmptyASDU(p *Params) *ASDU {
 	a := &ASDU{Params: p}
 	lenDUI := a.IdentifierSize()
-	a.infoObj = a.bootstrap[lenDUI:lenDUI]
+	a.InfoObj = a.Bootstrap[lenDUI:lenDUI]
 	return a
 }
 
@@ -136,7 +136,7 @@ func NewASDU(p *Params, identifier Identifier) *ASDU {
 // Clone deep clone asdu
 func (sf *ASDU) Clone() *ASDU {
 	r := NewASDU(sf.Params, sf.Identifier)
-	r.infoObj = append(r.infoObj, sf.infoObj...)
+	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
 	return r
 }
 
@@ -164,7 +164,7 @@ func (sf *ASDU) Reply(c Cause, addr CommonAddr) *ASDU {
 	sf.CommonAddr = addr
 	r := NewASDU(sf.Params, sf.Identifier)
 	r.Coa.Cause = c
-	r.infoObj = append(r.infoObj, sf.infoObj...)
+	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
 	return r
 }
 
@@ -172,7 +172,7 @@ func (sf *ASDU) Reply(c Cause, addr CommonAddr) *ASDU {
 func (sf *ASDU) SendReplyMirror(c Connect, cause Cause) error {
 	r := NewASDU(sf.Params, sf.Identifier)
 	r.Coa.Cause = cause
-	r.infoObj = append(r.infoObj, sf.infoObj...)
+	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
 	return c.Send(r)
 }
 
@@ -243,7 +243,7 @@ func (sf *ASDU) MarshalBinary() (data []byte, err error) {
 		return nil, ErrParam
 	}
 
-	raw := sf.bootstrap[:(sf.IdentifierSize() + len(sf.infoObj))]
+	raw := sf.Bootstrap[:(sf.IdentifierSize() + len(sf.InfoObj))]
 	raw[0] = byte(sf.Type)
 	raw[1] = sf.Variable.Value()
 	raw[2] = sf.Coa.Value()
@@ -298,7 +298,7 @@ func (sf *ASDU) UnmarshalBinary(rawAsdu []byte) error {
 		sf.CommonAddr = CommonAddr(rawAsdu[lenDUI-2]) | CommonAddr(rawAsdu[lenDUI-1])<<8
 	}
 	// information object
-	sf.infoObj = append(sf.bootstrap[lenDUI:lenDUI], rawAsdu[lenDUI:]...)
+	sf.InfoObj = append(sf.Bootstrap[lenDUI:lenDUI], rawAsdu[lenDUI:]...)
 	return sf.fixInfoObjSize()
 }
 
@@ -321,10 +321,10 @@ func (sf *ASDU) fixInfoObjSize() error {
 	switch {
 	case size == 0:
 		return ErrInfoObjIndexFit
-	case size > len(sf.infoObj):
+	case size > len(sf.InfoObj):
 		return io.EOF
-	case size < len(sf.infoObj): // not explicitly prohibited
-		sf.infoObj = sf.infoObj[:size]
+	case size < len(sf.InfoObj): // not explicitly prohibited
+		sf.InfoObj = sf.InfoObj[:size]
 	}
 
 	return nil

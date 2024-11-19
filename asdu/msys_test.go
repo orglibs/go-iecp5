@@ -3,15 +3,17 @@ package asdu_test
 import (
 	"reflect"
 	"testing"
+
+	"gitlab.com/circutor-library/go-iecp5/asdu"
 )
 
 func TestEndOfInitialization(t *testing.T) {
 	type args struct {
-		c   Connect
-		coa CauseOfTransmission
-		ca  CommonAddr
-		ioa InfoObjAddr
-		coi CauseOfInitial
+		c   asdu.Connect
+		coa asdu.CauseOfTransmission
+		ca  asdu.CommonAddr
+		ioa asdu.InfoObjAddr
+		coi asdu.CauseOfInitial
 	}
 	tests := []struct {
 		name    string
@@ -21,18 +23,18 @@ func TestEndOfInitialization(t *testing.T) {
 		{
 			"M_EI_NA_1",
 			args{
-				newConn(t, []byte{byte(M_EI_NA_1), 0x01, 0x04, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_EI_NA_1), 0x01, 0x04, 0x00, 0x34, 0x12,
 					0x90, 0x78, 0x56, 0x01}),
-				CauseOfTransmission{Cause: Initialized},
+				asdu.CauseOfTransmission{Cause: asdu.Initialized},
 				0x1234,
 				0x567890,
-				CauseOfInitial{COILocalHandReset, false}},
+				asdu.CauseOfInitial{asdu.COILocalHandReset, false}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := EndOfInitialization(tt.args.c, tt.args.coa, tt.args.ca, tt.args.ioa, tt.args.coi); (err != nil) != tt.wantErr {
+			if err := asdu.EndOfInitialization(tt.args.c, tt.args.coa, tt.args.ca, tt.args.ioa, tt.args.coi); (err != nil) != tt.wantErr {
 				t.Errorf("EndOfInitialization() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -41,27 +43,27 @@ func TestEndOfInitialization(t *testing.T) {
 
 func TestASDU_GetEndOfInitialization(t *testing.T) {
 	type fields struct {
-		Params  *Params
+		Params  *asdu.Params
 		infoObj []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   InfoObjAddr
-		want1  CauseOfInitial
+		want   asdu.InfoObjAddr
+		want1  asdu.CauseOfInitial
 	}{
 		{
 			"M_EI_NA_1",
-			fields{ParamsWide, []byte{0x90, 0x78, 0x56, 0x01}},
+			fields{asdu.ParamsWide, []byte{0x90, 0x78, 0x56, 0x01}},
 			0x567890,
-			CauseOfInitial{COILocalHandReset, false},
+			asdu.CauseOfInitial{asdu.COILocalHandReset, false},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:  tt.fields.Params,
-				infoObj: tt.fields.infoObj,
+				InfoObj: tt.fields.infoObj,
 			}
 			got, got1 := this.GetEndOfInitialization()
 			if got != tt.want {

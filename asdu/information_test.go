@@ -98,6 +98,7 @@ func TestNormal(t *testing.T) {
 
 func TestNormalize_Float64(t *testing.T) {
 	min := float64(-1)
+
 	for v := math.MinInt16; v < math.MaxInt16; v++ {
 		got := Normalize(v).Float64()
 		if got < min || got >= 1 {

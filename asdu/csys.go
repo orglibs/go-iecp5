@@ -261,12 +261,12 @@ func TestCommandCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, t 
 
 // GetInterrogationCmd [C_IC_NA_1] Get total summoning information body (information object address, summoning qualifier)
 func (sf *ASDU) GetInterrogationCmd() (InfoObjAddr, QualifierOfInterrogation) {
-	return sf.DecodeInfoObjAddr(), QualifierOfInterrogation(sf.infoObj[0])
+	return sf.DecodeInfoObjAddr(), QualifierOfInterrogation(sf.InfoObj[0])
 }
 
 // GetCounterInterrogationCmd [C_CI_NA_1] Get Counter Interrogation Information Body (Information Object Address, Counter Interrogation Qualifier)
 func (sf *ASDU) GetCounterInterrogationCmd() (InfoObjAddr, QualifierCountCall) {
-	return sf.DecodeInfoObjAddr(), ParseQualifierCountCall(sf.infoObj[0])
+	return sf.DecodeInfoObjAddr(), ParseQualifierCountCall(sf.InfoObj[0])
 }
 
 // GetReadCmd [C_RD_NA_1] Get read command message address
@@ -287,7 +287,7 @@ func (sf *ASDU) GetTestCommand() (InfoObjAddr, bool) {
 
 // GetResetProcessCmd [C_RP_NA_1] Get the reset process command message body (message object address, reset process command qualifier).
 func (sf *ASDU) GetResetProcessCmd() (InfoObjAddr, QualifierOfResetProcessCmd) {
-	return sf.DecodeInfoObjAddr(), QualifierOfResetProcessCmd(sf.infoObj[0])
+	return sf.DecodeInfoObjAddr(), QualifierOfResetProcessCmd(sf.InfoObj[0])
 }
 
 // GetDelayAcquireCommand [C_CD_NA_1] Get Delay Acquire Command message body (address of message object, number of milliseconds of delay).

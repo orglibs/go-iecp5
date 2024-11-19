@@ -4,14 +4,16 @@ import (
 	"math"
 	"reflect"
 	"testing"
+
+	"gitlab.com/circutor-library/go-iecp5/asdu"
 )
 
 func TestParameterNormal(t *testing.T) {
 	type args struct {
-		c   Connect
-		coa CauseOfTransmission
-		ca  CommonAddr
-		p   ParameterNormalInfo
+		c   asdu.Connect
+		coa asdu.CauseOfTransmission
+		ca  asdu.CommonAddr
+		p   asdu.ParameterNormalInfo
 	}
 	tests := []struct {
 		name    string
@@ -22,26 +24,26 @@ func TestParameterNormal(t *testing.T) {
 			"cause not act",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				ParameterNormalInfo{
+				asdu.ParameterNormalInfo{
 					0x567890,
 					0x3344,
-					QualifierOfParameterMV{}}},
+					asdu.QualifierOfParameterMV{}}},
 			true,
 		},
 		{
 			"P_ME_NA_1",
 			args{
-				newConn(t, []byte{byte(P_ME_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.P_ME_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
 					0x90, 0x78, 0x56, 0x44, 0x33, 0x01}),
-				CauseOfTransmission{Cause: Activation},
+				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
-				ParameterNormalInfo{
+				asdu.ParameterNormalInfo{
 					0x567890,
 					0x3344,
-					QualifierOfParameterMV{
-						QPMThreshold,
+					asdu.QualifierOfParameterMV{
+						asdu.QPMThreshold,
 						false,
 						false}}},
 			false,
@@ -49,7 +51,7 @@ func TestParameterNormal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ParameterNormal(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
+			if err := asdu.ParameterNormal(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
 				t.Errorf("ParameterNormal() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -58,10 +60,10 @@ func TestParameterNormal(t *testing.T) {
 
 func TestParameterScaled(t *testing.T) {
 	type args struct {
-		c   Connect
-		coa CauseOfTransmission
-		ca  CommonAddr
-		p   ParameterScaledInfo
+		c   asdu.Connect
+		coa asdu.CauseOfTransmission
+		ca  asdu.CommonAddr
+		p   asdu.ParameterScaledInfo
 	}
 	tests := []struct {
 		name    string
@@ -72,26 +74,26 @@ func TestParameterScaled(t *testing.T) {
 			"cause not act",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				ParameterScaledInfo{
+				asdu.ParameterScaledInfo{
 					0x567890,
 					0x3344,
-					QualifierOfParameterMV{}}},
+					asdu.QualifierOfParameterMV{}}},
 			true,
 		},
 		{
 			"P_ME_NB_1",
 			args{
-				newConn(t, []byte{byte(P_ME_NB_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.P_ME_NB_1), 0x01, 0x06, 0x00, 0x34, 0x12,
 					0x90, 0x78, 0x56, 0x44, 0x33, 0x01}),
-				CauseOfTransmission{Cause: Activation},
+				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
-				ParameterScaledInfo{
+				asdu.ParameterScaledInfo{
 					0x567890,
 					0x3344,
-					QualifierOfParameterMV{
-						QPMThreshold,
+					asdu.QualifierOfParameterMV{
+						asdu.QPMThreshold,
 						false,
 						false}}},
 			false,
@@ -99,7 +101,7 @@ func TestParameterScaled(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ParameterScaled(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
+			if err := asdu.ParameterScaled(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
 				t.Errorf("ParameterScaled() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -110,10 +112,10 @@ func TestParameterFloat(t *testing.T) {
 	bits := math.Float32bits(100)
 
 	type args struct {
-		c   Connect
-		coa CauseOfTransmission
-		ca  CommonAddr
-		p   ParameterFloatInfo
+		c   asdu.Connect
+		coa asdu.CauseOfTransmission
+		ca  asdu.CommonAddr
+		p   asdu.ParameterFloatInfo
 	}
 	tests := []struct {
 		name    string
@@ -124,26 +126,26 @@ func TestParameterFloat(t *testing.T) {
 			"cause not act",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				ParameterFloatInfo{
+				asdu.ParameterFloatInfo{
 					0x567890,
 					100,
-					QualifierOfParameterMV{}}},
+					asdu.QualifierOfParameterMV{}}},
 			true,
 		},
 		{
 			"P_ME_NC_1",
 			args{
-				newConn(t, []byte{byte(P_ME_NC_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.P_ME_NC_1), 0x01, 0x06, 0x00, 0x34, 0x12,
 					0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}),
-				CauseOfTransmission{Cause: Activation},
+				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
-				ParameterFloatInfo{
+				asdu.ParameterFloatInfo{
 					0x567890,
 					100,
-					QualifierOfParameterMV{
-						QPMThreshold,
+					asdu.QualifierOfParameterMV{
+						asdu.QPMThreshold,
 						false,
 						false}}},
 			false,
@@ -151,7 +153,7 @@ func TestParameterFloat(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ParameterFloat(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
+			if err := asdu.ParameterFloat(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
 				t.Errorf("ParameterFloat() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -160,10 +162,10 @@ func TestParameterFloat(t *testing.T) {
 
 func TestParameterActivation(t *testing.T) {
 	type args struct {
-		c   Connect
-		coa CauseOfTransmission
-		ca  CommonAddr
-		p   ParameterActivationInfo
+		c   asdu.Connect
+		coa asdu.CauseOfTransmission
+		ca  asdu.CommonAddr
+		p   asdu.ParameterActivationInfo
 	}
 	tests := []struct {
 		name    string
@@ -174,29 +176,29 @@ func TestParameterActivation(t *testing.T) {
 			"cause not act and deact",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				ParameterActivationInfo{
+				asdu.ParameterActivationInfo{
 					0x567890,
-					QPAUnused}},
+					asdu.QPAUnused}},
 			true,
 		},
 		{
 			"P_AC_NA_1",
 			args{
-				newConn(t, []byte{byte(P_AC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.P_AC_NA_1), 0x01, 0x06, 0x00, 0x34, 0x12,
 					0x90, 0x78, 0x56, 0x00}),
-				CauseOfTransmission{Cause: Activation},
+				asdu.CauseOfTransmission{Cause: asdu.Activation},
 				0x1234,
-				ParameterActivationInfo{
+				asdu.ParameterActivationInfo{
 					0x567890,
-					QPAUnused}},
+					asdu.QPAUnused}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ParameterActivation(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
+			if err := asdu.ParameterActivation(tt.args.c, tt.args.coa, tt.args.ca, tt.args.p); (err != nil) != tt.wantErr {
 				t.Errorf("ParameterActivation() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -205,33 +207,33 @@ func TestParameterActivation(t *testing.T) {
 
 func TestASDU_GetParameterNormal(t *testing.T) {
 	type fields struct {
-		Params  *Params
+		Params  *asdu.Params
 		infoObj []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   ParameterNormalInfo
+		want   asdu.ParameterNormalInfo
 	}{
 		{
 			"P_ME_NA_1",
 			fields{
-				ParamsWide,
+				asdu.ParamsWide,
 				[]byte{0x90, 0x78, 0x56, 0x44, 0x33, 0x01}},
-			ParameterNormalInfo{
+			asdu.ParameterNormalInfo{
 				0x567890,
 				0x3344,
-				QualifierOfParameterMV{
-					QPMThreshold,
+				asdu.QualifierOfParameterMV{
+					asdu.QPMThreshold,
 					false,
 					false}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:  tt.fields.Params,
-				infoObj: tt.fields.infoObj,
+				InfoObj: tt.fields.infoObj,
 			}
 			if got := this.GetParameterNormal(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.GetParameterNormal() = %v, want %v", got, tt.want)
@@ -242,33 +244,33 @@ func TestASDU_GetParameterNormal(t *testing.T) {
 
 func TestASDU_GetParameterScaled(t *testing.T) {
 	type fields struct {
-		Params  *Params
+		Params  *asdu.Params
 		infoObj []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   ParameterScaledInfo
+		want   asdu.ParameterScaledInfo
 	}{
 		{
 			"P_ME_NB_1",
 			fields{
-				ParamsWide,
+				asdu.ParamsWide,
 				[]byte{0x90, 0x78, 0x56, 0x44, 0x33, 0x01}},
-			ParameterScaledInfo{
+			asdu.ParameterScaledInfo{
 				0x567890,
 				0x3344,
-				QualifierOfParameterMV{
-					QPMThreshold,
+				asdu.QualifierOfParameterMV{
+					asdu.QPMThreshold,
 					false,
 					false}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:  tt.fields.Params,
-				infoObj: tt.fields.infoObj,
+				InfoObj: tt.fields.infoObj,
 			}
 			if got := this.GetParameterScaled(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.GetParameterScaled() = %v, want %v", got, tt.want)
@@ -281,33 +283,33 @@ func TestASDU_GetParameterFloat(t *testing.T) {
 	bits := math.Float32bits(100)
 
 	type fields struct {
-		Params  *Params
+		Params  *asdu.Params
 		infoObj []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   ParameterFloatInfo
+		want   asdu.ParameterFloatInfo
 	}{
 		{
 			"P_ME_NC_1",
 			fields{
-				ParamsWide,
+				asdu.ParamsWide,
 				[]byte{0x90, 0x78, 0x56, byte(bits), byte(bits >> 8), byte(bits >> 16), byte(bits >> 24), 0x01}},
-			ParameterFloatInfo{
+			asdu.ParameterFloatInfo{
 				0x567890,
 				100,
-				QualifierOfParameterMV{
-					QPMThreshold,
+				asdu.QualifierOfParameterMV{
+					asdu.QPMThreshold,
 					false,
 					false}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:  tt.fields.Params,
-				infoObj: tt.fields.infoObj,
+				InfoObj: tt.fields.infoObj,
 			}
 			if got := this.GetParameterFloat(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.GetParameterFloat() = %v, want %v", got, tt.want)
@@ -318,29 +320,29 @@ func TestASDU_GetParameterFloat(t *testing.T) {
 
 func TestASDU_GetParameterActivation(t *testing.T) {
 	type fields struct {
-		Params  *Params
+		Params  *asdu.Params
 		infoObj []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   ParameterActivationInfo
+		want   asdu.ParameterActivationInfo
 	}{
 		{
 			"P_AC_NA_1",
 			fields{
-				ParamsWide,
+				asdu.ParamsWide,
 				[]byte{0x90, 0x78, 0x56, 0x00}},
-			ParameterActivationInfo{
+			asdu.ParameterActivationInfo{
 				0x567890,
-				QPAUnused},
+				asdu.QPAUnused},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:  tt.fields.Params,
-				infoObj: tt.fields.infoObj,
+				InfoObj: tt.fields.infoObj,
 			}
 			if got := this.GetParameterActivation(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.GetParameterActivation() = %v, want %v", got, tt.want)

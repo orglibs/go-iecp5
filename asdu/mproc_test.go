@@ -50,7 +50,7 @@ func Test_single(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := single(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendSingle(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("single() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -59,11 +59,11 @@ func Test_single(t *testing.T) {
 
 func TestSingle(t *testing.T) {
 	type args struct {
-		c          Connect
+		c          asdu.Connect
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []SinglePointInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.SinglePointInfo
 	}
 	tests := []struct {
 		name    string
@@ -75,43 +75,43 @@ func TestSingle(t *testing.T) {
 			args{
 				newConn(t, nil),
 				false,
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]SinglePointInfo{}},
+				[]asdu.SinglePointInfo{}},
 			true,
 		},
 		{
 			"M_SP_NA_1 seq = false Number = 2",
 			args{
-				newConn(t, []byte{byte(M_SP_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_SP_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x11, 0x02, 0x00, 0x00, 0x10}),
 				false,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]SinglePointInfo{
-					{0x000001, true, QDSBlocked, time.Time{}},
-					{0x000002, false, QDSBlocked, time.Time{}},
+				[]asdu.SinglePointInfo{
+					{0x000001, true, asdu.QDSBlocked, time.Time{}},
+					{0x000002, false, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 		{
 			"M_SP_NA_1 seq = true Number = 2",
 			args{
-				newConn(t, []byte{byte(M_SP_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_SP_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x11, 0x10}),
 				true,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]SinglePointInfo{
-					{0x000001, true, QDSBlocked, time.Time{}},
-					{0x000002, false, QDSBlocked, time.Time{}},
+				[]asdu.SinglePointInfo{
+					{0x000001, true, asdu.QDSBlocked, time.Time{}},
+					{0x000002, false, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Single(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.Single(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("Single() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -120,10 +120,10 @@ func TestSingle(t *testing.T) {
 
 func TestSingleCP24Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []SinglePointInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.SinglePointInfo
 	}
 	tests := []struct {
 		name    string
@@ -134,29 +134,29 @@ func TestSingleCP24Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]SinglePointInfo{}},
+				[]asdu.SinglePointInfo{}},
 			true,
 		},
 		{
 			"M_SP_TA_1 CP24Time2a  Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_SP_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_SP_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x11}, asdu.Tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]SinglePointInfo{
-					{0x000001, true, QDSBlocked, tm0},
-					{0x000002, false, QDSBlocked, tm0},
+				[]asdu.SinglePointInfo{
+					{0x000001, true, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, false, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := SingleCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SingleCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("SingleCP24Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -165,10 +165,10 @@ func TestSingleCP24Time2a(t *testing.T) {
 
 func TestSingleCP56Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []SinglePointInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.SinglePointInfo
 	}
 	tests := []struct {
 		name    string
@@ -179,29 +179,29 @@ func TestSingleCP56Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]SinglePointInfo{}},
+				[]asdu.SinglePointInfo{}},
 			true,
 		},
 		{
 			"M_SP_TB_1 CP56Time2a Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x11}, asdu.Tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]SinglePointInfo{
-					{0x000001, true, QDSBlocked, tm0},
-					{0x000002, false, QDSBlocked, tm0},
+				[]asdu.SinglePointInfo{
+					{0x000001, true, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, false, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := SingleCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SingleCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("SingleCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -210,12 +210,12 @@ func TestSingleCP56Time2a(t *testing.T) {
 
 func Test_double(t *testing.T) {
 	type args struct {
-		c          Connect
-		typeID     TypeID
+		c          asdu.Connect
+		typeID     asdu.TypeID
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []DoublePointInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.DoublePointInfo
 	}
 	tests := []struct {
 		name    string
@@ -226,7 +226,7 @@ func Test_double(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := double(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendDouble(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("double() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -235,11 +235,11 @@ func Test_double(t *testing.T) {
 
 func TestDouble(t *testing.T) {
 	type args struct {
-		c          Connect
+		c          asdu.Connect
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []DoublePointInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.DoublePointInfo
 	}
 	tests := []struct {
 		name    string
@@ -251,43 +251,43 @@ func TestDouble(t *testing.T) {
 			args{
 				newConn(t, nil),
 				false,
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]DoublePointInfo{}},
+				[]asdu.DoublePointInfo{}},
 			true,
 		},
 		{
 			"M_DP_NA_1 seq = false Number = 2",
 			args{
-				newConn(t, []byte{byte(M_DP_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_DP_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x12, 0x02, 0x00, 0x00, 0x11}),
 				false,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]DoublePointInfo{
-					{0x000001, DPIDeterminedOn, QDSBlocked, time.Time{}},
-					{0x000002, DPIDeterminedOff, QDSBlocked, time.Time{}},
+				[]asdu.DoublePointInfo{
+					{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, time.Time{}},
+					{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 		{
 			"M_DP_NA_1 seq = true Number = 2",
 			args{
-				newConn(t, []byte{byte(M_DP_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_DP_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x12, 0x11}),
 				true,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]DoublePointInfo{
-					{0x000001, DPIDeterminedOn, QDSBlocked, time.Time{}},
-					{0x000002, DPIDeterminedOff, QDSBlocked, time.Time{}},
+				[]asdu.DoublePointInfo{
+					{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, time.Time{}},
+					{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Double(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.Double(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("Double() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -296,10 +296,10 @@ func TestDouble(t *testing.T) {
 
 func TestDoubleCP24Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []DoublePointInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.DoublePointInfo
 	}
 	tests := []struct {
 		name    string
@@ -310,29 +310,29 @@ func TestDoubleCP24Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]DoublePointInfo{}},
+				[]asdu.DoublePointInfo{}},
 			true,
 		},
 		{
 			"M_DP_TA_1 CP24Time2a  Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_DP_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x12}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_DP_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x12}, asdu.Tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x11}, asdu.Tm0CP24Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]DoublePointInfo{
-					{0x000001, DPIDeterminedOn, QDSBlocked, tm0},
-					{0x000002, DPIDeterminedOff, QDSBlocked, tm0},
+				[]asdu.DoublePointInfo{
+					{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := DoubleCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.DoubleCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("DoubleCP24Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -341,10 +341,10 @@ func TestDoubleCP24Time2a(t *testing.T) {
 
 func TestDoubleCP56Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []DoublePointInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.DoublePointInfo
 	}
 	tests := []struct {
 		name    string
@@ -355,29 +355,29 @@ func TestDoubleCP56Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]DoublePointInfo{}},
+				[]asdu.DoublePointInfo{}},
 			true,
 		},
 		{
 			"M_DP_TB_1 CP56Time2a Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_DP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x12}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_DP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x12}, asdu.Tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x11}, asdu.Tm0CP56Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]DoublePointInfo{
-					{0x000001, DPIDeterminedOn, QDSBlocked, tm0},
-					{0x000002, DPIDeterminedOff, QDSBlocked, tm0},
+				[]asdu.DoublePointInfo{
+					{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := DoubleCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.DoubleCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("DoubleCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -386,12 +386,12 @@ func TestDoubleCP56Time2a(t *testing.T) {
 
 func Test_step(t *testing.T) {
 	type args struct {
-		c          Connect
-		typeID     TypeID
+		c          asdu.Connect
+		typeID     asdu.TypeID
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []StepPositionInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.StepPositionInfo
 	}
 	tests := []struct {
 		name    string
@@ -402,7 +402,7 @@ func Test_step(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := step(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendStep(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("step() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -411,11 +411,11 @@ func Test_step(t *testing.T) {
 
 func TestStep(t *testing.T) {
 	type args struct {
-		c          Connect
+		c          asdu.Connect
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []StepPositionInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.StepPositionInfo
 	}
 	tests := []struct {
 		name    string
@@ -427,43 +427,43 @@ func TestStep(t *testing.T) {
 			args{
 				newConn(t, nil),
 				false,
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]StepPositionInfo{}},
+				[]asdu.StepPositionInfo{}},
 			true,
 		},
 		{
 			"M_ST_NA_1 seq = false Number = 2",
 			args{
-				newConn(t, []byte{byte(M_ST_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_ST_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x01, 0x10, 0x02, 0x00, 0x00, 0x02, 0x10}),
 				false,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]StepPositionInfo{
-					{0x000001, StepPosition{Val: 0x01}, QDSBlocked, time.Time{}},
-					{0x000002, StepPosition{Val: 0x02}, QDSBlocked, time.Time{}},
+				[]asdu.StepPositionInfo{
+					{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, time.Time{}},
+					{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 		{
 			"M_ST_NA_1 seq = true Number = 2",
 			args{
-				newConn(t, []byte{byte(M_ST_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_ST_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x01, 0x10, 0x02, 0x10}),
 				true,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]StepPositionInfo{
-					{0x000001, StepPosition{Val: 0x01}, QDSBlocked, time.Time{}},
-					{0x000002, StepPosition{Val: 0x02}, QDSBlocked, time.Time{}},
+				[]asdu.StepPositionInfo{
+					{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, time.Time{}},
+					{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Step(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.Step(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("Step() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -472,10 +472,10 @@ func TestStep(t *testing.T) {
 
 func TestStepCP24Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []StepPositionInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.StepPositionInfo
 	}
 	tests := []struct {
 		name    string
@@ -486,29 +486,29 @@ func TestStepCP24Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]StepPositionInfo{}},
+				[]asdu.StepPositionInfo{}},
 			true,
 		},
 		{
 			"M_ST_TA_1 CP24Time2a  Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_ST_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP24Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_ST_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, asdu.Tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]StepPositionInfo{
-					{0x000001, StepPosition{Val: 0x01}, QDSBlocked, tm0},
-					{0x000002, StepPosition{Val: 0x02}, QDSBlocked, tm0},
+				[]asdu.StepPositionInfo{
+					{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := StepCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.StepCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("StepCP24Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -517,10 +517,10 @@ func TestStepCP24Time2a(t *testing.T) {
 
 func TestStepCP56Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []StepPositionInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.StepPositionInfo
 	}
 	tests := []struct {
 		name    string
@@ -531,29 +531,29 @@ func TestStepCP56Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]StepPositionInfo{}},
+				[]asdu.StepPositionInfo{}},
 			true,
 		},
 		{
 			"M_SP_TB_1 CP56Time2a Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP56Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, asdu.Tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]StepPositionInfo{
-					{0x000001, StepPosition{Val: 0x01}, QDSBlocked, tm0},
-					{0x000002, StepPosition{Val: 0x02}, QDSBlocked, tm0},
+				[]asdu.StepPositionInfo{
+					{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := StepCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.StepCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("StepCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -562,12 +562,12 @@ func TestStepCP56Time2a(t *testing.T) {
 
 func Test_bitString32(t *testing.T) {
 	type args struct {
-		c          Connect
-		typeID     TypeID
+		c          asdu.Connect
+		typeID     asdu.TypeID
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []BitString32Info
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.BitString32Info
 	}
 	tests := []struct {
 		name    string
@@ -578,7 +578,7 @@ func Test_bitString32(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := bitString32(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendBitString32(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("bitString32() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -587,11 +587,11 @@ func Test_bitString32(t *testing.T) {
 
 func TestBitString32(t *testing.T) {
 	type args struct {
-		c          Connect
+		c          asdu.Connect
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []BitString32Info
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.BitString32Info
 	}
 	tests := []struct {
 		name    string
@@ -603,43 +603,43 @@ func TestBitString32(t *testing.T) {
 			args{
 				newConn(t, nil),
 				false,
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]BitString32Info{}},
+				[]asdu.BitString32Info{}},
 			true,
 		},
 		{
 			"M_BO_NA_1 seq = false Number = 2",
 			args{
-				newConn(t, []byte{byte(M_BO_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_BO_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}),
 				false,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]BitString32Info{
-					{0x000001, 1, QDSBlocked, time.Time{}},
-					{0x000002, 2, QDSBlocked, time.Time{}},
+				[]asdu.BitString32Info{
+					{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+					{0x000002, 2, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 		{
 			"M_BO_NA_1 seq = true Number = 2",
 			args{
-				newConn(t, []byte{byte(M_BO_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_BO_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10, 0x02, 0x00, 0x00, 0x00, 0x10}),
 				true,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]BitString32Info{
-					{0x000001, 1, QDSBlocked, time.Time{}},
-					{0x000002, 2, QDSBlocked, time.Time{}},
+				[]asdu.BitString32Info{
+					{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+					{0x000002, 2, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := BitString32(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.BitString32(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("BitString32() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -648,10 +648,10 @@ func TestBitString32(t *testing.T) {
 
 func TestBitString32CP24Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []BitString32Info
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.BitString32Info
 	}
 	tests := []struct {
 		name    string
@@ -662,29 +662,29 @@ func TestBitString32CP24Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]BitString32Info{}},
+				[]asdu.BitString32Info{}},
 			true,
 		},
 		{
 			"M_BO_TA_1 CP24Time2a  Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_BO_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_BO_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]BitString32Info{
-					{0x000001, 1, QDSBlocked, tm0},
-					{0x000002, 2, QDSBlocked, tm0},
+				[]asdu.BitString32Info{
+					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := BitString32CP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.BitString32CP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("BitString32CP24Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -693,10 +693,10 @@ func TestBitString32CP24Time2a(t *testing.T) {
 
 func TestBitString32CP56Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []BitString32Info
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.BitString32Info
 	}
 	tests := []struct {
 		name    string
@@ -707,29 +707,29 @@ func TestBitString32CP56Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]BitString32Info{}},
+				[]asdu.BitString32Info{}},
 			true,
 		},
 		{
 			"M_BO_TB_1 CP56Time2a Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_BO_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_BO_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]BitString32Info{
-					{0x000001, 1, QDSBlocked, tm0},
-					{0x000002, 2, QDSBlocked, tm0},
+				[]asdu.BitString32Info{
+					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := BitString32CP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.BitString32CP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("BitString32CP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -738,12 +738,12 @@ func TestBitString32CP56Time2a(t *testing.T) {
 
 func Test_measuredValueNormal(t *testing.T) {
 	type args struct {
-		c          Connect
-		typeID     TypeID
+		c          asdu.Connect
+		typeID     asdu.TypeID
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		attrs      []MeasuredValueNormalInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		attrs      []asdu.MeasuredValueNormalInfo
 	}
 	tests := []struct {
 		name    string
@@ -754,7 +754,7 @@ func Test_measuredValueNormal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := measuredValueNormal(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.attrs...); (err != nil) != tt.wantErr {
+			if err := asdu.SendMeasuredValueNormal(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.attrs...); (err != nil) != tt.wantErr {
 				t.Errorf("measuredValueNormal() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -763,11 +763,11 @@ func Test_measuredValueNormal(t *testing.T) {
 
 func TestMeasuredValueNormal(t *testing.T) {
 	type args struct {
-		c          Connect
+		c          asdu.Connect
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []MeasuredValueNormalInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.MeasuredValueNormalInfo
 	}
 	tests := []struct {
 		name    string
@@ -779,43 +779,43 @@ func TestMeasuredValueNormal(t *testing.T) {
 			args{
 				newConn(t, nil),
 				false,
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]MeasuredValueNormalInfo{}},
+				[]asdu.MeasuredValueNormalInfo{}},
 			true,
 		},
 		{
 			"M_ME_NA_1 seq = false Number = 2",
 			args{
-				newConn(t, []byte{byte(M_ME_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_ME_NA_1), 0x02, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x10}),
 				false,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]MeasuredValueNormalInfo{
-					{0x000001, 1, QDSBlocked, time.Time{}},
-					{0x000002, 2, QDSBlocked, time.Time{}},
+				[]asdu.MeasuredValueNormalInfo{
+					{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+					{0x000002, 2, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 		{
 			"M_ME_NA_1 seq = true Number = 2",
 			args{
-				newConn(t, []byte{byte(M_ME_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_ME_NA_1), 0x82, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x10}),
 				true,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]MeasuredValueNormalInfo{
-					{0x000001, 1, QDSBlocked, time.Time{}},
-					{0x000002, 2, QDSBlocked, time.Time{}},
+				[]asdu.MeasuredValueNormalInfo{
+					{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+					{0x000002, 2, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := MeasuredValueNormal(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueNormal(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueNormal() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -824,10 +824,10 @@ func TestMeasuredValueNormal(t *testing.T) {
 
 func TestMeasuredValueNormalCP24Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []MeasuredValueNormalInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.MeasuredValueNormalInfo
 	}
 	tests := []struct {
 		name    string
@@ -838,29 +838,29 @@ func TestMeasuredValueNormalCP24Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]MeasuredValueNormalInfo{}},
+				[]asdu.MeasuredValueNormalInfo{}},
 			true,
 		},
 		{
 			"M_ME_TA_1 CP24Time2a  Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_ME_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_ME_TA_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]MeasuredValueNormalInfo{
-					{0x000001, 1, QDSBlocked, tm0},
-					{0x000002, 2, QDSBlocked, tm0},
+				[]asdu.MeasuredValueNormalInfo{
+					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := MeasuredValueNormalCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueNormalCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueNormalCP24Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -869,10 +869,10 @@ func TestMeasuredValueNormalCP24Time2a(t *testing.T) {
 
 func TestMeasuredValueNormalCP56Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []MeasuredValueNormalInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.MeasuredValueNormalInfo
 	}
 	tests := []struct {
 		name    string
@@ -883,29 +883,29 @@ func TestMeasuredValueNormalCP56Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]MeasuredValueNormalInfo{}},
+				[]asdu.MeasuredValueNormalInfo{}},
 			true,
 		},
 		{
 			"M_ME_TD_1 CP56Time2a Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_ME_TD_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_ME_TD_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]MeasuredValueNormalInfo{
-					{0x000001, 1, QDSBlocked, tm0},
-					{0x000002, 2, QDSBlocked, tm0},
+				[]asdu.MeasuredValueNormalInfo{
+					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := MeasuredValueNormalCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueNormalCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueNormalCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -914,11 +914,11 @@ func TestMeasuredValueNormalCP56Time2a(t *testing.T) {
 
 func TestMeasuredValueNormalNoQuality(t *testing.T) {
 	type args struct {
-		c          Connect
+		c          asdu.Connect
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []MeasuredValueNormalInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.MeasuredValueNormalInfo
 	}
 	tests := []struct {
 		name    string
@@ -930,43 +930,43 @@ func TestMeasuredValueNormalNoQuality(t *testing.T) {
 			args{
 				newConn(t, nil),
 				false,
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]MeasuredValueNormalInfo{}},
+				[]asdu.MeasuredValueNormalInfo{}},
 			true,
 		},
 		{
 			"M_ME_ND_1 seq = false Number = 2",
 			args{
-				newConn(t, []byte{byte(M_ME_ND_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_ME_ND_1), 0x02, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x02, 0x00}),
 				false,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]MeasuredValueNormalInfo{
-					{0x000001, 1, QDSGood, time.Time{}},
-					{0x000002, 2, QDSGood, time.Time{}},
+				[]asdu.MeasuredValueNormalInfo{
+					{0x000001, 1, asdu.QDSGood, time.Time{}},
+					{0x000002, 2, asdu.QDSGood, time.Time{}},
 				}},
 			false,
 		},
 		{
 			"M_ME_ND_1 seq = true Number = 2",
 			args{
-				newConn(t, []byte{byte(M_ME_ND_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_ME_ND_1), 0x82, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00}),
 				true,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]MeasuredValueNormalInfo{
-					{0x000001, 1, QDSGood, time.Time{}},
-					{0x000002, 2, QDSGood, time.Time{}},
+				[]asdu.MeasuredValueNormalInfo{
+					{0x000001, 1, asdu.QDSGood, time.Time{}},
+					{0x000002, 2, asdu.QDSGood, time.Time{}},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := MeasuredValueNormalNoQuality(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueNormalNoQuality(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueNormalNoQuality() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -975,12 +975,12 @@ func TestMeasuredValueNormalNoQuality(t *testing.T) {
 
 func Test_measuredValueScaled(t *testing.T) {
 	type args struct {
-		c          Connect
-		typeID     TypeID
+		c          asdu.Connect
+		typeID     asdu.TypeID
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []MeasuredValueScaledInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.MeasuredValueScaledInfo
 	}
 	tests := []struct {
 		name    string
@@ -991,7 +991,7 @@ func Test_measuredValueScaled(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := measuredValueScaled(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendMeasuredValueScaled(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("measuredValueScaled() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1000,11 +1000,11 @@ func Test_measuredValueScaled(t *testing.T) {
 
 func TestMeasuredValueScaled(t *testing.T) {
 	type args struct {
-		c          Connect
+		c          asdu.Connect
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []MeasuredValueScaledInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.MeasuredValueScaledInfo
 	}
 	tests := []struct {
 		name    string
@@ -1016,43 +1016,43 @@ func TestMeasuredValueScaled(t *testing.T) {
 			args{
 				newConn(t, nil),
 				false,
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]MeasuredValueScaledInfo{}},
+				[]asdu.MeasuredValueScaledInfo{}},
 			true,
 		},
 		{
 			"M_ME_NB_1 seq = false Number = 2",
 			args{
-				newConn(t, []byte{byte(M_ME_NB_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_ME_NB_1), 0x02, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x10}),
 				false,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]MeasuredValueScaledInfo{
-					{0x000001, 1, QDSBlocked, time.Time{}},
-					{0x000002, 2, QDSBlocked, time.Time{}},
+				[]asdu.MeasuredValueScaledInfo{
+					{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+					{0x000002, 2, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 		{
 			"M_ME_NB_1 seq = true Number = 2",
 			args{
-				newConn(t, []byte{byte(M_ME_NB_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_ME_NB_1), 0x82, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x10}),
 				true,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]MeasuredValueScaledInfo{
-					{0x000001, 1, QDSBlocked, time.Time{}},
-					{0x000002, 2, QDSBlocked, time.Time{}},
+				[]asdu.MeasuredValueScaledInfo{
+					{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+					{0x000002, 2, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := MeasuredValueScaled(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueScaled(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueScaled() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1061,10 +1061,10 @@ func TestMeasuredValueScaled(t *testing.T) {
 
 func TestMeasuredValueScaledCP24Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []MeasuredValueScaledInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.MeasuredValueScaledInfo
 	}
 	tests := []struct {
 		name    string
@@ -1075,29 +1075,29 @@ func TestMeasuredValueScaledCP24Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]MeasuredValueScaledInfo{}},
+				[]asdu.MeasuredValueScaledInfo{}},
 			true,
 		},
 		{
 			"M_ME_TB_1 CP24Time2a  Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_ME_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_ME_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]MeasuredValueScaledInfo{
-					{0x000001, 1, QDSBlocked, tm0},
-					{0x000002, 2, QDSBlocked, tm0},
+				[]asdu.MeasuredValueScaledInfo{
+					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := MeasuredValueScaledCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueScaledCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueScaledCP24Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1106,10 +1106,10 @@ func TestMeasuredValueScaledCP24Time2a(t *testing.T) {
 
 func TestMeasuredValueScaledCP56Time2a(t *testing.T) {
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []MeasuredValueScaledInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.MeasuredValueScaledInfo
 	}
 	tests := []struct {
 		name    string
@@ -1120,29 +1120,29 @@ func TestMeasuredValueScaledCP56Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]MeasuredValueScaledInfo{}},
+				[]asdu.MeasuredValueScaledInfo{}},
 			true,
 		},
 		{
 			"M_ME_TE_1 CP56Time2a Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_ME_TE_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_ME_TE_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]MeasuredValueScaledInfo{
-					{0x000001, 1, QDSBlocked, tm0},
-					{0x000002, 2, QDSBlocked, tm0},
+				[]asdu.MeasuredValueScaledInfo{
+					{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, 2, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := MeasuredValueScaledCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueScaledCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueScaledCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1151,12 +1151,12 @@ func TestMeasuredValueScaledCP56Time2a(t *testing.T) {
 
 func Test_measuredValueFloat(t *testing.T) {
 	type args struct {
-		c          Connect
-		typeID     TypeID
+		c          asdu.Connect
+		typeID     asdu.TypeID
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []MeasuredValueFloatInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.MeasuredValueFloatInfo
 	}
 	tests := []struct {
 		name    string
@@ -1167,7 +1167,7 @@ func Test_measuredValueFloat(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := measuredValueFloat(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendMeasuredValueFloat(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("measuredValueFloat() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1179,11 +1179,11 @@ func TestMeasuredValueFloat(t *testing.T) {
 	bits2 := math.Float32bits(101)
 
 	type args struct {
-		c          Connect
+		c          asdu.Connect
 		isSequence bool
-		coa        CauseOfTransmission
-		ca         CommonAddr
-		infos      []MeasuredValueFloatInfo
+		coa        asdu.CauseOfTransmission
+		ca         asdu.CommonAddr
+		infos      []asdu.MeasuredValueFloatInfo
 	}
 	tests := []struct {
 		name    string
@@ -1195,45 +1195,45 @@ func TestMeasuredValueFloat(t *testing.T) {
 			args{
 				newConn(t, nil),
 				false,
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]MeasuredValueFloatInfo{}},
+				[]asdu.MeasuredValueFloatInfo{}},
 			true,
 		},
 		{
 			"M_ME_NC_1 seq = false Number = 2",
 			args{
-				newConn(t, []byte{byte(M_ME_NC_1), 0x02, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_ME_NC_1), 0x02, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10,
 					0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}),
 				false,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]MeasuredValueFloatInfo{
-					{0x000001, 100, QDSBlocked, time.Time{}},
-					{0x000002, 101, QDSBlocked, time.Time{}},
+				[]asdu.MeasuredValueFloatInfo{
+					{0x000001, 100, asdu.QDSBlocked, time.Time{}},
+					{0x000002, 101, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 		{
 			"M_ME_NC_1 seq = true Number = 2",
 			args{
-				newConn(t, []byte{byte(M_ME_NC_1), 0x82, 0x02, 0x00, 0x34, 0x12,
+				newConn(t, []byte{byte(asdu.M_ME_NC_1), 0x82, 0x02, 0x00, 0x34, 0x12,
 					0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10,
 					byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}),
 				true,
-				CauseOfTransmission{Cause: Background},
+				asdu.CauseOfTransmission{Cause: asdu.Background},
 				0x1234,
-				[]MeasuredValueFloatInfo{
-					{0x000001, 100, QDSBlocked, time.Time{}},
-					{0x000002, 101, QDSBlocked, time.Time{}},
+				[]asdu.MeasuredValueFloatInfo{
+					{0x000001, 100, asdu.QDSBlocked, time.Time{}},
+					{0x000002, 101, asdu.QDSBlocked, time.Time{}},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := MeasuredValueFloat(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueFloat(tt.args.c, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueFloat() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1245,10 +1245,10 @@ func TestMeasuredValueFloatCP24Time2a(t *testing.T) {
 	bits2 := math.Float32bits(101)
 
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []MeasuredValueFloatInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.MeasuredValueFloatInfo
 	}
 	tests := []struct {
 		name    string
@@ -1259,29 +1259,29 @@ func TestMeasuredValueFloatCP24Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]MeasuredValueFloatInfo{}},
+				[]asdu.MeasuredValueFloatInfo{}},
 			true,
 		},
 		{
 			"M_ME_TC_1 seq = false Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_ME_TC_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, tm0CP24Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP24Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_ME_TC_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, asdu.Tm0CP24Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, asdu.Tm0CP24Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]MeasuredValueFloatInfo{
-					{0x000001, 100, QDSBlocked, tm0},
-					{0x000002, 101, QDSBlocked, tm0},
+				[]asdu.MeasuredValueFloatInfo{
+					{0x000001, 100, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, 101, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := MeasuredValueFloatCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueFloatCP24Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueFloatCP24Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1292,10 +1292,10 @@ func TestMeasuredValueFloatCP56Time2a(t *testing.T) {
 	bits1 := math.Float32bits(100)
 	bits2 := math.Float32bits(101)
 	type args struct {
-		c     Connect
-		coa   CauseOfTransmission
-		ca    CommonAddr
-		infos []MeasuredValueFloatInfo
+		c     asdu.Connect
+		coa   asdu.CauseOfTransmission
+		ca    asdu.CommonAddr
+		infos []asdu.MeasuredValueFloatInfo
 	}
 	tests := []struct {
 		name    string
@@ -1306,29 +1306,29 @@ func TestMeasuredValueFloatCP56Time2a(t *testing.T) {
 			"invalid cause",
 			args{
 				newConn(t, nil),
-				CauseOfTransmission{Cause: Unused},
+				asdu.CauseOfTransmission{Cause: asdu.Unused},
 				0x1234,
-				[]MeasuredValueFloatInfo{}},
+				[]asdu.MeasuredValueFloatInfo{}},
 			true,
 		},
 		{
 			"M_ME_TF_1 seq = false Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(M_ME_TF_1), 0x02, 0x03, 0x00, 0x34, 0x12},
-					append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, tm0CP56Time2aBytes...)...),
-					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP56Time2aBytes...)...)),
-				CauseOfTransmission{Cause: Spontaneous},
+				newConn(t, append(append([]byte{byte(asdu.M_ME_TF_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+					append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, asdu.Tm0CP56Time2aBytes...)...),
+					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, asdu.Tm0CP56Time2aBytes...)...)),
+				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},
 				0x1234,
-				[]MeasuredValueFloatInfo{
-					{0x000001, 100, QDSBlocked, tm0},
-					{0x000002, 101, QDSBlocked, tm0},
+				[]asdu.MeasuredValueFloatInfo{
+					{0x000001, 100, asdu.QDSBlocked, asdu.Tm0},
+					{0x000002, 101, asdu.QDSBlocked, asdu.Tm0},
 				}},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := MeasuredValueFloatCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueFloatCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueFloatCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1337,59 +1337,59 @@ func TestMeasuredValueFloatCP56Time2a(t *testing.T) {
 
 func TestASDU_GetSinglePoint(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []SinglePointInfo
+		want   []asdu.SinglePointInfo
 	}{
 		{
 			"M_SP_NA_1 seq = false Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_SP_NA_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_SP_NA_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x11, 0x02, 0x00, 0x00, 0x10}},
-			[]SinglePointInfo{
-				{0x000001, true, QDSBlocked, time.Time{}},
-				{0x000002, false, QDSBlocked, time.Time{}}},
+			[]asdu.SinglePointInfo{
+				{0x000001, true, asdu.QDSBlocked, time.Time{}},
+				{0x000002, false, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_SP_NA_1 seq = true Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_SP_NA_1,
-					Variable: VariableStruct{IsSequence: true, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_SP_NA_1,
+					Variable: asdu.VariableStruct{IsSequence: true, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x11, 0x10}},
-			[]SinglePointInfo{
-				{0x000001, true, QDSBlocked, time.Time{}},
-				{0x000002, false, QDSBlocked, time.Time{}}},
+			[]asdu.SinglePointInfo{
+				{0x000001, true, asdu.QDSBlocked, time.Time{}},
+				{0x000002, false, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_SP_TB_1 CP56Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_SP_TB_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...)},
-			[]SinglePointInfo{
-				{0x000001, true, QDSBlocked, tm0},
-				{0x000002, false, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_SP_TB_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x11}, asdu.Tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+			[]asdu.SinglePointInfo{
+				{0x000001, true, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, false, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			got := this.GetSinglePoint()
 			if !reflect.DeepEqual(got, tt.want) {
@@ -1401,35 +1401,35 @@ func TestASDU_GetSinglePoint(t *testing.T) {
 
 func TestASDU_GetSinglePointCP24Time2a(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []SinglePointInfo
+		want   []asdu.SinglePointInfo
 	}{
 		{
 			"M_SP_TA_1 CP24Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_SP_TA_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...)},
-			[]SinglePointInfo{
-				{0x000001, true, QDSBlocked, tm0},
-				{0x000002, false, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_SP_TA_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x11}, asdu.Tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+			[]asdu.SinglePointInfo{
+				{0x000001, true, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, false, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			got := this.GetSinglePoint()
 			for i, v := range got {
@@ -1459,59 +1459,59 @@ func TestASDU_GetSinglePointCP24Time2a(t *testing.T) {
 
 func TestASDU_GetDoublePoint(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []DoublePointInfo
+		want   []asdu.DoublePointInfo
 	}{
 		{
 			"M_DP_NA_1 seq = false Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_DP_NA_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_DP_NA_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x12, 0x02, 0x00, 0x00, 0x11}},
-			[]DoublePointInfo{
-				{0x000001, DPIDeterminedOn, QDSBlocked, time.Time{}},
-				{0x000002, DPIDeterminedOff, QDSBlocked, time.Time{}}},
+			[]asdu.DoublePointInfo{
+				{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, time.Time{}},
+				{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_DP_NA_1 seq = true Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_DP_NA_1,
-					Variable: VariableStruct{IsSequence: true, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_DP_NA_1,
+					Variable: asdu.VariableStruct{IsSequence: true, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x12, 0x11}},
-			[]DoublePointInfo{
-				{0x000001, DPIDeterminedOn, QDSBlocked, time.Time{}},
-				{0x000002, DPIDeterminedOff, QDSBlocked, time.Time{}}},
+			[]asdu.DoublePointInfo{
+				{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, time.Time{}},
+				{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_DP_TB_1 CP56Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_DP_TB_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x12}, tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP56Time2aBytes...)...)},
-			[]DoublePointInfo{
-				{0x000001, DPIDeterminedOn, QDSBlocked, tm0},
-				{0x000002, DPIDeterminedOff, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_DP_TB_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x12}, asdu.Tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x11}, asdu.Tm0CP56Time2aBytes...)...)},
+			[]asdu.DoublePointInfo{
+				{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			if got := this.GetDoublePoint(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.GetDoublePoint() = %v, want %v", got, tt.want)
@@ -1522,36 +1522,36 @@ func TestASDU_GetDoublePoint(t *testing.T) {
 
 func TestASDU_GetDoublePointCP24Time2a(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []DoublePointInfo
+		want   []asdu.DoublePointInfo
 	}{
 
 		{
 			"M_DP_TA_1 CP56Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_DP_TA_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x12}, tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x11}, tm0CP24Time2aBytes...)...)},
-			[]DoublePointInfo{
-				{0x000001, DPIDeterminedOn, QDSBlocked, tm0},
-				{0x000002, DPIDeterminedOff, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_DP_TA_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x12}, asdu.Tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x11}, asdu.Tm0CP24Time2aBytes...)...)},
+			[]asdu.DoublePointInfo{
+				{0x000001, asdu.DPIDeterminedOn, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, asdu.DPIDeterminedOff, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			got := this.GetDoublePoint()
 			for i, v := range got {
@@ -1581,59 +1581,59 @@ func TestASDU_GetDoublePointCP24Time2a(t *testing.T) {
 
 func TestASDU_GetStepPosition(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []StepPositionInfo
+		want   []asdu.StepPositionInfo
 	}{
 		{
 			"M_ST_NA_1 seq = false Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ST_NA_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ST_NA_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x01, 0x10, 0x02, 0x00, 0x00, 0x02, 0x10}},
-			[]StepPositionInfo{
-				{0x000001, StepPosition{Val: 0x01}, QDSBlocked, time.Time{}},
-				{0x000002, StepPosition{Val: 0x02}, QDSBlocked, time.Time{}}},
+			[]asdu.StepPositionInfo{
+				{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, time.Time{}},
+				{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_ST_NA_1 seq = true Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ST_NA_1,
-					Variable: VariableStruct{IsSequence: true, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ST_NA_1,
+					Variable: asdu.VariableStruct{IsSequence: true, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x01, 0x10, 0x02, 0x10}},
-			[]StepPositionInfo{
-				{0x000001, StepPosition{Val: 0x01}, QDSBlocked, time.Time{}},
-				{0x000002, StepPosition{Val: 0x02}, QDSBlocked, time.Time{}}},
+			[]asdu.StepPositionInfo{
+				{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, time.Time{}},
+				{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_ST_TB_1 CP56Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ST_TB_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP56Time2aBytes...)...)},
-			[]StepPositionInfo{
-				{0x000001, StepPosition{Val: 0x01}, QDSBlocked, tm0},
-				{0x000002, StepPosition{Val: 0x02}, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ST_TB_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, asdu.Tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+			[]asdu.StepPositionInfo{
+				{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			if got := this.GetStepPosition(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.GetStepPosition() = %v, want %v", got, tt.want)
@@ -1644,36 +1644,36 @@ func TestASDU_GetStepPosition(t *testing.T) {
 
 func TestASDU_GetStepPositionCP24Time2a(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []StepPositionInfo
+		want   []asdu.StepPositionInfo
 	}{
 
 		{
 			"M_ST_TA_1 CP24Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ST_TA_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP24Time2aBytes...)...)},
-			[]StepPositionInfo{
-				{0x000001, StepPosition{Val: 0x01}, QDSBlocked, tm0},
-				{0x000002, StepPosition{Val: 0x02}, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ST_TA_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, asdu.Tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+			[]asdu.StepPositionInfo{
+				{0x000001, asdu.StepPosition{Val: 0x01}, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, asdu.StepPosition{Val: 0x02}, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			got := this.GetStepPosition()
 			for i, v := range got {
@@ -1703,59 +1703,59 @@ func TestASDU_GetStepPositionCP24Time2a(t *testing.T) {
 
 func TestASDU_GetBitString32(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []BitString32Info
+		want   []asdu.BitString32Info
 	}{
 		{
 			"M_BO_NA_1 seq = false Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_BO_NA_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_BO_NA_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}},
-			[]BitString32Info{
-				{0x000001, 1, QDSBlocked, time.Time{}},
-				{0x000002, 2, QDSBlocked, time.Time{}}},
+			[]asdu.BitString32Info{
+				{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+				{0x000002, 2, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_BO_NA_1 seq = true Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_BO_NA_1,
-					Variable: VariableStruct{IsSequence: true, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_BO_NA_1,
+					Variable: asdu.VariableStruct{IsSequence: true, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10, 0x02, 0x00, 0x00, 0x00, 0x10}},
-			[]BitString32Info{
-				{0x000001, 1, QDSBlocked, time.Time{}},
-				{0x000002, 2, QDSBlocked, time.Time{}}},
+			[]asdu.BitString32Info{
+				{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+				{0x000002, 2, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_BO_TB_1 CP56Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_BO_TB_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP56Time2aBytes...)...)},
-			[]BitString32Info{
-				{0x000001, 1, QDSBlocked, tm0},
-				{0x000002, 2, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_BO_TB_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+			[]asdu.BitString32Info{
+				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			if got := this.GetBitString32(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.GetBitString32() = %v, want %v", got, tt.want)
@@ -1766,35 +1766,35 @@ func TestASDU_GetBitString32(t *testing.T) {
 
 func TestASDU_GetBitString32CP24Time2a(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []BitString32Info
+		want   []asdu.BitString32Info
 	}{
 		{
 			"M_BO_TA_1 CP24Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_BO_TA_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, tm0CP24Time2aBytes...)...)},
-			[]BitString32Info{
-				{0x000001, 1, QDSBlocked, tm0},
-				{0x000002, 2, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_BO_TA_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+			[]asdu.BitString32Info{
+				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			got := this.GetBitString32()
 			for i, v := range got {
@@ -1824,83 +1824,83 @@ func TestASDU_GetBitString32CP24Time2a(t *testing.T) {
 
 func TestASDU_GetMeasuredValueNormal(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []MeasuredValueNormalInfo
+		want   []asdu.MeasuredValueNormalInfo
 	}{
 		{
 			"M_ME_NA_1 seq = false Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_NA_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_NA_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x10}},
-			[]MeasuredValueNormalInfo{
-				{0x000001, 1, QDSBlocked, time.Time{}},
-				{0x000002, 2, QDSBlocked, time.Time{}}},
+			[]asdu.MeasuredValueNormalInfo{
+				{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+				{0x000002, 2, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_ME_NA_1 seq = true Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_NA_1,
-					Variable: VariableStruct{IsSequence: true, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_NA_1,
+					Variable: asdu.VariableStruct{IsSequence: true, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x10}},
-			[]MeasuredValueNormalInfo{
-				{0x000001, 1, QDSBlocked, time.Time{}},
-				{0x000002, 2, QDSBlocked, time.Time{}}},
+			[]asdu.MeasuredValueNormalInfo{
+				{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+				{0x000002, 2, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_ME_TD_1 CP56Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_TD_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...)},
-			[]MeasuredValueNormalInfo{
-				{0x000001, 1, QDSBlocked, tm0},
-				{0x000002, 2, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_TD_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+			[]asdu.MeasuredValueNormalInfo{
+				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
 		},
 		{
 			"M_ME_ND_1 seq = false Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_ND_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_ND_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x00, 0x02, 0x00}},
-			[]MeasuredValueNormalInfo{
-				{0x000001, 1, QDSGood, time.Time{}},
-				{0x000002, 2, QDSGood, time.Time{}}},
+			[]asdu.MeasuredValueNormalInfo{
+				{0x000001, 1, asdu.QDSGood, time.Time{}},
+				{0x000002, 2, asdu.QDSGood, time.Time{}}},
 		},
 		{
 			"M_ME_ND_1 seq = true Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_ND_1,
-					Variable: VariableStruct{IsSequence: true, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_ND_1,
+					Variable: asdu.VariableStruct{IsSequence: true, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00}},
-			[]MeasuredValueNormalInfo{
-				{0x000001, 1, QDSGood, time.Time{}},
-				{0x000002, 2, QDSGood, time.Time{}}},
+			[]asdu.MeasuredValueNormalInfo{
+				{0x000001, 1, asdu.QDSGood, time.Time{}},
+				{0x000002, 2, asdu.QDSGood, time.Time{}}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			if got := this.GetMeasuredValueNormal(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.GetMeasuredValueNormal() = %v, want %v", got, tt.want)
@@ -1911,36 +1911,36 @@ func TestASDU_GetMeasuredValueNormal(t *testing.T) {
 
 func TestASDU_GetMeasuredValueNormalCP24Time2a(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []MeasuredValueNormalInfo
+		want   []asdu.MeasuredValueNormalInfo
 	}{
 
 		{
 			"M_ME_TA_1 CP24Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_TA_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...)},
-			[]MeasuredValueNormalInfo{
-				{0x000001, 1, QDSBlocked, tm0},
-				{0x000002, 2, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_TA_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+			[]asdu.MeasuredValueNormalInfo{
+				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			got := this.GetMeasuredValueNormal()
 			for i, v := range got {
@@ -1970,59 +1970,59 @@ func TestASDU_GetMeasuredValueNormalCP24Time2a(t *testing.T) {
 
 func TestASDU_GetMeasuredValueScaled(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []MeasuredValueScaledInfo
+		want   []asdu.MeasuredValueScaledInfo
 	}{
 		{
 			"M_ME_NB_1 seq = false Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_NB_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_NB_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x00, 0x02, 0x00, 0x10}},
-			[]MeasuredValueScaledInfo{
-				{0x000001, 1, QDSBlocked, time.Time{}},
-				{0x000002, 2, QDSBlocked, time.Time{}}},
+			[]asdu.MeasuredValueScaledInfo{
+				{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+				{0x000002, 2, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_ME_NB_1 seq = true Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_NB_1,
-					Variable: VariableStruct{IsSequence: true, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_NB_1,
+					Variable: asdu.VariableStruct{IsSequence: true, Number: 2}},
 				[]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10, 0x02, 0x00, 0x10}},
-			[]MeasuredValueScaledInfo{
-				{0x000001, 1, QDSBlocked, time.Time{}},
-				{0x000002, 2, QDSBlocked, time.Time{}}},
+			[]asdu.MeasuredValueScaledInfo{
+				{0x000001, 1, asdu.QDSBlocked, time.Time{}},
+				{0x000002, 2, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_ME_TE_1 CP56Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_TE_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP56Time2aBytes...)...)},
-			[]MeasuredValueScaledInfo{
-				{0x000001, 1, QDSBlocked, tm0},
-				{0x000002, 2, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_TE_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+			[]asdu.MeasuredValueScaledInfo{
+				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			if got := this.GetMeasuredValueScaled(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.GetMeasuredValueScaled() = %v, want %v", got, tt.want)
@@ -2033,35 +2033,35 @@ func TestASDU_GetMeasuredValueScaled(t *testing.T) {
 
 func TestASDU_GetMeasuredValueScaledCP24Time2a(t *testing.T) {
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []MeasuredValueScaledInfo
+		want   []asdu.MeasuredValueScaledInfo
 	}{
 		{
 			"M_ME_TB_1 CP24Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_TB_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, tm0CP24Time2aBytes...)...)},
-			[]MeasuredValueScaledInfo{
-				{0x000001, 1, QDSBlocked, tm0},
-				{0x000002, 2, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_TB_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, 0x01, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, 0x02, 0x00, 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+			[]asdu.MeasuredValueScaledInfo{
+				{0x000001, 1, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, 2, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			got := this.GetMeasuredValueScaled()
 			for i, v := range got {
@@ -2093,63 +2093,63 @@ func TestASDU_GetMeasuredValueFloat(t *testing.T) {
 	bits1 := math.Float32bits(100)
 	bits2 := math.Float32bits(101)
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []MeasuredValueFloatInfo
+		want   []asdu.MeasuredValueFloatInfo
 	}{
 		{
 			"M_ME_NC_1 seq = false Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_NC_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_NC_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
 				[]byte{
 					0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10,
 					0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}},
-			[]MeasuredValueFloatInfo{
-				{0x000001, 100, QDSBlocked, time.Time{}},
-				{0x000002, 101, QDSBlocked, time.Time{}}},
+			[]asdu.MeasuredValueFloatInfo{
+				{0x000001, 100, asdu.QDSBlocked, time.Time{}},
+				{0x000002, 101, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_ME_NC_1 seq = true Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_NC_1,
-					Variable: VariableStruct{IsSequence: true, Number: 2}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_NC_1,
+					Variable: asdu.VariableStruct{IsSequence: true, Number: 2}},
 				[]byte{
 					0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10,
 					byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}},
-			[]MeasuredValueFloatInfo{
-				{0x000001, 100, QDSBlocked, time.Time{}},
-				{0x000002, 101, QDSBlocked, time.Time{}}},
+			[]asdu.MeasuredValueFloatInfo{
+				{0x000001, 100, asdu.QDSBlocked, time.Time{}},
+				{0x000002, 101, asdu.QDSBlocked, time.Time{}}},
 		},
 		{
 			"M_ME_TF_1 CP56Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_TF_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, tm0CP56Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP56Time2aBytes...)...)},
-			[]MeasuredValueFloatInfo{
-				{0x000001, 100, QDSBlocked, tm0},
-				{0x000002, 101, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_TF_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, asdu.Tm0CP56Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, asdu.Tm0CP56Time2aBytes...)...)},
+			[]asdu.MeasuredValueFloatInfo{
+				{0x000001, 100, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, 101, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			if got := this.GetMeasuredValueFloat(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.GetMeasuredValueFloat() = %v, want %v", got, tt.want)
@@ -2162,35 +2162,35 @@ func TestASDU_GetMeasuredValueFloatCP24Time2a(t *testing.T) {
 	bits1 := math.Float32bits(100)
 	bits2 := math.Float32bits(101)
 	type fields struct {
-		Params     *Params
-		Identifier Identifier
+		Params     *asdu.Params
+		Identifier asdu.Identifier
 		infoObj    []byte
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   []MeasuredValueFloatInfo
+		want   []asdu.MeasuredValueFloatInfo
 	}{
 		{
 			"M_ME_TC_1 CP24Time2a  Number = 2",
 			fields{
-				ParamsWide,
-				Identifier{
-					Type:     M_ME_TC_1,
-					Variable: VariableStruct{IsSequence: false, Number: 2}},
-				append(append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, tm0CP24Time2aBytes...),
-					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, tm0CP24Time2aBytes...)...)},
-			[]MeasuredValueFloatInfo{
-				{0x000001, 100, QDSBlocked, tm0},
-				{0x000002, 101, QDSBlocked, tm0}},
+				asdu.ParamsWide,
+				asdu.Identifier{
+					Type:     asdu.M_ME_TC_1,
+					Variable: asdu.VariableStruct{IsSequence: false, Number: 2}},
+				append(append([]byte{0x01, 0x00, 0x00, byte(bits1), byte(bits1 >> 8), byte(bits1 >> 16), byte(bits1 >> 24), 0x10}, asdu.Tm0CP24Time2aBytes...),
+					append([]byte{0x02, 0x00, 0x00, byte(bits2), byte(bits2 >> 8), byte(bits2 >> 16), byte(bits2 >> 24), 0x10}, asdu.Tm0CP24Time2aBytes...)...)},
+			[]asdu.MeasuredValueFloatInfo{
+				{0x000001, 100, asdu.QDSBlocked, asdu.Tm0},
+				{0x000002, 101, asdu.QDSBlocked, asdu.Tm0}},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			this := &ASDU{
+			this := &asdu.ASDU{
 				Params:     tt.fields.Params,
 				Identifier: tt.fields.Identifier,
-				infoObj:    tt.fields.infoObj,
+				InfoObj:    tt.fields.infoObj,
 			}
 			got := this.GetMeasuredValueFloat()
 			for i, v := range got {
