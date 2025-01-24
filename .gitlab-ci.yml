@@ -22,7 +22,7 @@ stages:
 lint:
     stage: lint
     needs: []
-    image: 'circutor/golang:1.21'
+    image: 'circutor/golang:1.23'
     script:
         - echo "Linter"
         - golangci-lint version
