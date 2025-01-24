@@ -74,7 +74,7 @@ type Config struct {
 	// See IEC 60870-5-104, figure 10.
 	RecvUnAckTimeout2 time.Duration
 
-	//t3 is the idle time value that triggers "TESTFR" keepalive message.
+	// t3 is the idle time value that triggers "TESTFR" keepalive message.
 	// "t3" range[1 second, 48 hours] default value 20 s
 	// See IEC 60870-5-104, subclass 5.2.
 	IdleTimeout3 time.Duration

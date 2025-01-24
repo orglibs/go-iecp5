@@ -61,6 +61,7 @@ func TestParams_IdentifierSize(t *testing.T) {
 		{"ParamsNarrow(4)", asdu.ParamsNarrow, 4},
 		{"ParamsWide(6)", asdu.ParamsWide, 6},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.this.IdentifierSize(); got != tt.want {
@@ -286,8 +287,10 @@ func TestASDU_MarshalBinary(t *testing.T) {
 			gotData, err := this.MarshalBinary()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ASDU.MarshalBinary() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
+
 			if !reflect.DeepEqual(gotData, tt.wantData) {
 				t.Errorf("ASDU.MarshalBinary() = % x, want % x", gotData, tt.wantData)
 			}

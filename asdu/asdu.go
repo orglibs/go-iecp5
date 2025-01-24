@@ -66,6 +66,7 @@ func (sf Params) Valid() error {
 		(sf.InfoObjTimeZone == nil) {
 		return ErrParam
 	}
+
 	return nil
 }
 
@@ -74,15 +75,17 @@ func (sf Params) ValidCommonAddr(addr CommonAddr) error {
 	if addr == InvalidCommonAddr {
 		return ErrCommonAddrZero
 	}
+
 	if bits.Len(uint(addr)) > sf.CommonAddrSize*8 {
 		return ErrCommonAddrFit
 	}
+
 	return nil
 }
 
 // IdentifierSize return the application service data unit identifies size
 func (sf Params) IdentifierSize() int {
-	return 2 + int(sf.CauseSize) + int(sf.CommonAddrSize)
+	return 2 + sf.CauseSize + sf.CommonAddrSize
 }
 
 // Identifier the application service data unit identifies.
@@ -107,6 +110,7 @@ func (id Identifier) String() string {
 	if id.OrigAddr == 0 {
 		return fmt.Sprintf("%s %s @%d", id.Type, id.Coa, id.CommonAddr)
 	}
+
 	return fmt.Sprintf("%s %s %d@%d ", id.Type, id.Coa, id.OrigAddr, id.CommonAddr)
 }
 
@@ -123,6 +127,7 @@ func NewEmptyASDU(p *Params) *ASDU {
 	a := &ASDU{Params: p}
 	lenDUI := a.IdentifierSize()
 	a.InfoObj = a.Bootstrap[lenDUI:lenDUI]
+
 	return a
 }
 
@@ -130,6 +135,7 @@ func NewEmptyASDU(p *Params) *ASDU {
 func NewASDU(p *Params, identifier Identifier) *ASDU {
 	a := NewEmptyASDU(p)
 	a.Identifier = identifier
+
 	return a
 }
 
@@ -137,6 +143,7 @@ func NewASDU(p *Params, identifier Identifier) *ASDU {
 func (sf *ASDU) Clone() *ASDU {
 	r := NewASDU(sf.Params, sf.Identifier)
 	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
 	return r
 }
 
@@ -146,11 +153,12 @@ func (sf *ASDU) SetVariableNumber(n int) error {
 		return ErrInfoObjIndexFit
 	}
 	sf.Variable.Number = byte(n)
+
 	return nil
 }
 
 // Respond returns a new "responding" ASDU which addresses "initiating" u.
-//func (u *ASDU) Respond(t TypeID, c Cause) *ASDU {
+// func (u *ASDU) Respond(t TypeID, c Cause) *ASDU {
 //	return NewASDU(u.Params, Identifier{
 //		CommonAddr: u.CommonAddr,
 //		OrigAddr:   u.OrigAddr,
@@ -165,6 +173,7 @@ func (sf *ASDU) Reply(c Cause, addr CommonAddr) *ASDU {
 	r := NewASDU(sf.Params, sf.Identifier)
 	r.Coa.Cause = c
 	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
 	return r
 }
 
@@ -173,11 +182,12 @@ func (sf *ASDU) SendReplyMirror(c Connect, cause Cause) error {
 	r := NewASDU(sf.Params, sf.Identifier)
 	r.Coa.Cause = cause
 	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
 	return c.Send(r)
 }
 
 //// String returns a full description.
-//func (u *ASDU) String() string {
+// func (u *ASDU) String() string {
 //	dataSize, err := GetInfoObjSize(u.Type)
 //	if err != nil {
 //		if !u.InfoSeq {
@@ -263,6 +273,7 @@ func (sf *ASDU) MarshalBinary() (data []byte, err error) {
 		offset++
 		raw[offset] = byte(sf.CommonAddr >> 8)
 	}
+
 	return raw, nil
 }
 
@@ -299,6 +310,7 @@ func (sf *ASDU) UnmarshalBinary(rawAsdu []byte) error {
 	}
 	// information object
 	sf.InfoObj = append(sf.Bootstrap[lenDUI:lenDUI], rawAsdu[lenDUI:]...)
+
 	return sf.fixInfoObjSize()
 }
 

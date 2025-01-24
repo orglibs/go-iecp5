@@ -77,11 +77,12 @@ func (sf UAPCI) String() string {
 	default:
 		s = "Unknown"
 	}
+
 	return fmt.Sprintf("U[function: %s]", s)
 }
 
 // newIFrame Creates an I-frame and returns his corresponding apdu.
-func NewIFrame(sendSN, RcvSN uint16, asdus []byte) ([]byte, error) {
+func NewIFrame(sendSN, rcvSN uint16, asdus []byte) ([]byte, error) {
 	if len(asdus) > asdu.ASDUSizeMax {
 		return nil, fmt.Errorf("ASDU filed large than max %d", asdu.ASDUSizeMax)
 	}
@@ -92,16 +93,16 @@ func NewIFrame(sendSN, RcvSN uint16, asdus []byte) ([]byte, error) {
 	b[1] = byte(len(asdus) + 4)
 	b[2] = byte(sendSN << 1)
 	b[3] = byte(sendSN >> 7)
-	b[4] = byte(RcvSN << 1)
-	b[5] = byte(RcvSN >> 7)
+	b[4] = byte(rcvSN << 1)
+	b[5] = byte(rcvSN >> 7)
 	copy(b[6:], asdus)
 
 	return b, nil
 }
 
 // newSFrame createSFrame and returns his apdu
-func NewSFrame(RcvSN uint16) []byte {
-	return []byte{StartFrame, 4, 0x01, 0x00, byte(RcvSN << 1), byte(RcvSN >> 7)}
+func NewSFrame(rcvSN uint16) []byte {
+	return []byte{StartFrame, 4, 0x01, 0x00, byte(rcvSN << 1), byte(rcvSN >> 7)}
 }
 
 // newUFrame Creates a U-frame and returns his apdu.
@@ -125,11 +126,13 @@ func Parse(apdu []byte) (interface{}, []byte) {
 			RcvSN:  uint16(apci.ctr3)>>1 + uint16(apci.ctr4)<<7,
 		}, apdu[6:]
 	}
+
 	if apci.ctr1&0x03 == 0x01 {
 		return SAPCI{
 			RcvSN: uint16(apci.ctr3)>>1 + uint16(apci.ctr4)<<7,
 		}, apdu[6:]
 	}
+
 	// apci.ctrl&0x03 == 0x03
 	return UAPCI{
 		Function: apci.ctr1 & 0xfc,

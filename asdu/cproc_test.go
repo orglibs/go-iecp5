@@ -18,6 +18,8 @@ type conn struct {
 }
 
 func newConn(t *testing.T, want []byte) *conn {
+	t.Helper()
+
 	return &conn{asdu.ParamsWide, want, t}
 }
 
@@ -30,9 +32,11 @@ func (sf *conn) Send(u *asdu.ASDU) error {
 	if err != nil {
 		return fmt.Errorf("Send asdu failed:%w", err)
 	}
+
 	if !reflect.DeepEqual(sf.want, data) {
 		sf.t.Errorf("Send() out = % x, want % x", data, sf.want)
 	}
+
 	return nil
 }
 
@@ -164,6 +168,7 @@ func TestDoubleCmd(t *testing.T) {
 					tm0}},
 			false},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := asdu.DoubleCmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
@@ -232,6 +237,7 @@ func TestStepCmd(t *testing.T) {
 					tm0}},
 			false},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := asdu.StepCmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
@@ -369,6 +375,7 @@ func TestSetpointCmdScaled(t *testing.T) {
 					tm0}},
 			false},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := asdu.SetpointCmdScaled(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
@@ -439,6 +446,7 @@ func TestSetpointCmdFloat(t *testing.T) {
 					tm0}},
 			false},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := asdu.SetpointCmdFloat(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
@@ -551,6 +559,7 @@ func TestASDU_GetSingleCmd(t *testing.T) {
 				tm0},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sf := &asdu.ASDU{
@@ -603,6 +612,7 @@ func TestASDU_GetDoubleCmd(t *testing.T) {
 				tm0},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sf := &asdu.ASDU{
@@ -654,6 +664,7 @@ func TestASDU_GetStepCmd(t *testing.T) {
 				tm0},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sf := &asdu.ASDU{
@@ -705,6 +716,7 @@ func TestASDU_GetSetpointNormalCmd(t *testing.T) {
 				tm0},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sf := &asdu.ASDU{
@@ -756,6 +768,7 @@ func TestASDU_GetSetpointCmdScaled(t *testing.T) {
 				tm0},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sf := &asdu.ASDU{
@@ -809,6 +822,7 @@ func TestASDU_GetSetpointFloatCmd(t *testing.T) {
 				tm0},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sf := &asdu.ASDU{
@@ -858,6 +872,7 @@ func TestASDU_GetBitsString32Cmd(t *testing.T) {
 				tm0},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sf := &asdu.ASDU{

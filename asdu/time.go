@@ -23,8 +23,10 @@ func CP56Time2a(t time.Time, loc *time.Location) []byte {
 	if loc == nil {
 		loc = time.UTC
 	}
+
 	ts := t.In(loc)
 	msec := ts.Nanosecond()/int(time.Millisecond) + ts.Second()*1000
+
 	return []byte{byte(msec), byte(msec >> 8), byte(ts.Minute()), byte(ts.Hour()),
 		byte(ts.Weekday()<<5) | byte(ts.Day()), byte(ts.Month()), byte(ts.Year() - 2000)}
 }
@@ -40,7 +42,7 @@ func ParseCP56Time2a(bytes []byte, loc *time.Location) time.Time {
 	x := int(binary.LittleEndian.Uint16(bytes))
 	msec := x % 1000
 	sec := x / 1000
-	min := int(bytes[2] & 0x3f)
+	minim := int(bytes[2] & 0x3f)
 	hour := int(bytes[3] & 0x1f)
 	day := int(bytes[4] & 0x1f)
 	month := time.Month(bytes[5] & 0x0f)
@@ -51,7 +53,8 @@ func ParseCP56Time2a(bytes []byte, loc *time.Location) time.Time {
 	if loc == nil {
 		loc = time.UTC
 	}
-	return time.Date(year, month, day, hour, min, sec, nsec, loc)
+
+	return time.Date(year, month, day, hour, minim, sec, nsec, loc)
 }
 
 // CP24Time2a time to CP56Time2a 3 octets of binary time, UTC recommended for all timescales.
@@ -60,8 +63,10 @@ func CP24Time2a(t time.Time, loc *time.Location) []byte {
 	if loc == nil {
 		loc = time.UTC
 	}
+
 	ts := t.In(loc)
 	msec := ts.Nanosecond()/int(time.Millisecond) + ts.Second()*1000
+
 	return []byte{byte(msec), byte(msec >> 8), byte(ts.Minute())}
 }
 
@@ -71,10 +76,11 @@ func ParseCP24Time2a(bytes []byte, loc *time.Location) time.Time {
 	if len(bytes) < 3 || bytes[2]&0x80 == 0x80 {
 		return time.Time{}
 	}
+
 	x := int(binary.LittleEndian.Uint16(bytes))
 	msec := x % 1000
 	sec := (x / 1000)
-	min := int(bytes[2] & 0x3f)
+	minim := int(bytes[2] & 0x3f)
 	now := time.Now()
 	year, month, day := now.Date()
 	hour, _, _ := now.Clock()
@@ -84,10 +90,11 @@ func ParseCP24Time2a(bytes []byte, loc *time.Location) time.Time {
 	if loc == nil {
 		loc = time.UTC
 	}
-	val := time.Date(year, month, day, hour, min, sec, nsec, loc)
 
-	////5 minute rounding - 55 minute span
-	//if min > currentMin+5 {
+	val := time.Date(year, month, day, hour, minim, sec, nsec, loc)
+
+	//// 5 minute rounding - 55 minute span
+	// if min > currentMin+5 {
 	//	val = val.Add(-time.Hour)
 	//}
 

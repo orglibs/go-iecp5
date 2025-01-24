@@ -38,6 +38,7 @@ func SingleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
+
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
@@ -53,10 +54,12 @@ func SingleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
 	if err := u.AppendInfoObjAddr(cmd.Ioa); err != nil {
 		return err
 	}
+
 	value := cmd.Qoc.Value()
 	if cmd.Value {
 		value |= 0x01
 	}
+
 	u.AppendBytes(value)
 	switch typeID {
 	case C_SC_NA_1:
@@ -65,6 +68,7 @@ func SingleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
 	default:
 		return ErrTypeIDNotMatch
 	}
+
 	return c.Send(u)
 }
 
@@ -91,14 +95,15 @@ type DoubleCommandInfo struct {
 // <45> := Unknown cause of transmission
 // <46> := Unknown application service data unit public address
 // <47> := Unknown information object address
-func DoubleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
-	cmd DoubleCommandInfo) error {
+func DoubleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd DoubleCommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
+
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
+
 	u := NewASDU(c.Params(), Identifier{
 		typeID,
 		VariableStruct{IsSequence: false, Number: 1},
@@ -112,6 +117,7 @@ func DoubleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
 	}
 
 	u.AppendBytes(cmd.Qoc.Value() | byte(cmd.Value&0x03))
+
 	switch typeID {
 	case C_DC_NA_1:
 	case C_DC_TA_1:
@@ -119,6 +125,7 @@ func DoubleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
 	default:
 		return ErrTypeIDNotMatch
 	}
+
 	return c.Send(u)
 }
 
@@ -130,7 +137,8 @@ type StepCommandInfo struct {
 	Time  time.Time
 }
 
-// StepCmd sends a type [C_RC_NA_1] or [C_RC_TA_1]. StepCmd sends a type [C_RC_NA_1] or [C_RC_TA_1]. StepCmd commands, only a single information object (SQ = 0).
+// StepCmd sends a type [C_RC_NA_1] or [C_RC_TA_1]. StepCmd sends a type [C_RC_NA_1] or [C_RC_TA_1].
+// StepCmd commands, only a single information object (SQ = 0).
 // [C_RC_NA_1] See companion standard 101, subclass 7.3.2.3.
 // [C_RC_TA_1] See companion standard 101, subclass 7.3.2.3.
 // The reason for transmission (coa) is used for the
@@ -150,9 +158,11 @@ func StepCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, c
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
+
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
+
 	u := NewASDU(c.Params(), Identifier{
 		typeID,
 		VariableStruct{IsSequence: false, Number: 1},
@@ -166,6 +176,7 @@ func StepCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, c
 	}
 
 	u.AppendBytes(cmd.Qoc.Value() | byte(cmd.Value&0x03))
+
 	switch typeID {
 	case C_RC_NA_1:
 	case C_RC_TA_1:
@@ -173,6 +184,7 @@ func StepCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, c
 	default:
 		return ErrTypeIDNotMatch
 	}
+
 	return c.Send(u)
 }
 
@@ -203,9 +215,11 @@ func SetpointCmdNormal(c Connect, typeID TypeID, coa CauseOfTransmission, ca Com
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
+
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
+
 	u := NewASDU(c.Params(), Identifier{
 		typeID,
 		VariableStruct{IsSequence: false, Number: 1},
@@ -217,6 +231,7 @@ func SetpointCmdNormal(c Connect, typeID TypeID, coa CauseOfTransmission, ca Com
 	if err := u.AppendInfoObjAddr(cmd.Ioa); err != nil {
 		return err
 	}
+
 	u.AppendNormalize(cmd.Value).AppendBytes(cmd.Qos.Value())
 	switch typeID {
 	case C_SE_NA_1:
@@ -225,6 +240,7 @@ func SetpointCmdNormal(c Connect, typeID TypeID, coa CauseOfTransmission, ca Com
 	default:
 		return ErrTypeIDNotMatch
 	}
+
 	return c.Send(u)
 }
 
@@ -256,9 +272,11 @@ func SetpointCmdScaled(c Connect, typeID TypeID, coa CauseOfTransmission, ca Com
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
+
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
+
 	u := NewASDU(c.Params(), Identifier{
 		typeID,
 		VariableStruct{IsSequence: false, Number: 1},
@@ -270,7 +288,9 @@ func SetpointCmdScaled(c Connect, typeID TypeID, coa CauseOfTransmission, ca Com
 	if err := u.AppendInfoObjAddr(cmd.Ioa); err != nil {
 		return err
 	}
+
 	u.AppendScaled(cmd.Value).AppendBytes(cmd.Qos.Value())
+
 	switch typeID {
 	case C_SE_NB_1:
 	case C_SE_TB_1:
@@ -278,6 +298,7 @@ func SetpointCmdScaled(c Connect, typeID TypeID, coa CauseOfTransmission, ca Com
 	default:
 		return ErrTypeIDNotMatch
 	}
+
 	return c.Send(u)
 }
 
@@ -308,9 +329,11 @@ func SetpointCmdFloat(c Connect, typeID TypeID, coa CauseOfTransmission, ca Comm
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
+
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
+
 	u := NewASDU(c.Params(), Identifier{
 		typeID,
 		VariableStruct{IsSequence: false, Number: 1},
@@ -361,14 +384,15 @@ type BitsString32CommandInfo struct {
 // <45>: = Unknown reasons for transmission
 // <46>: = Unknown application service data unit public address
 // <47>: = Unknown information object address
-func BitsString32Cmd(c Connect, typeID TypeID, coa CauseOfTransmission, commonAddr CommonAddr,
-	cmd BitsString32CommandInfo) error {
+func BitsString32Cmd(c Connect, typeID TypeID, coa CauseOfTransmission, commonAddr CommonAddr, cmd BitsString32CommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
+
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
+
 	u := NewASDU(c.Params(), Identifier{
 		typeID,
 		VariableStruct{IsSequence: false, Number: 1},

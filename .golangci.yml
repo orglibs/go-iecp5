@@ -4,10 +4,8 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
-    - containedctx
     - contextcheck
     - copyloopvar
-    - cyclop
     - decorder
     - dogsled
     - dupl
@@ -17,23 +15,16 @@ linters:
     - errchkjson
     - errname
     - errorlint
-    - exhaustive
     - fatcontext
     - forbidigo
     - forcetypeassert
-    - funlen
     - ginkgolinter
     - gocheckcompilerdirectives
-    - gochecknoglobals
     - gochecknoinits
     - gochecksumtype
-    - gocognit
     - goconst
     - gocritic
-    - gocyclo
-    - godot
     - gofmt
-    - gofumpt
     - goheader
     - goimports
     - gomoddirectives
@@ -87,16 +78,23 @@ linters:
     - usestdlibvars
     - wastedassign
     - whitespace
-    - wrapcheck
-    - wsl
     - zerologlint
   disable:
     - canonicalheader
+    - containedctx
+    - cyclop
     - depguard
     - err113
+    - exhaustive
     - exhaustruct
+    - funlen
     - gci
+    - gochecknoglobals
+    - gocognit
+    - gocyclo
+    - godot
     - godox
+    - gofumpt
     - gosmopolitan
     - interfacebloat
     - ireturn
@@ -108,7 +106,8 @@ linters:
     - tagalign
     - tagliatelle
     - varnamelen
-
+    - wrapcheck
+    - wsl
 linters-settings:
   gosec:
     excludes:
@@ -132,6 +131,15 @@ linters-settings:
     disable:
       - require-error
 
+  cyclop:
+    max-complexity: 20
+
+  revive:
+    rules:
+      - name: time-naming
+        disabled: true
+      - name: var-naming
+        disabled: true
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
@@ -142,6 +150,15 @@ issues:
         - funlen
         - goconst
         - lll
+        - gochecknoglobals
+    - path: asdu/mproc.go
+      linters:
+        - gofumpt
+        - dupl
+    - path: asdu/asdu.go
+      linters:
+        - dupword
     - linters:
-      - wsl
-      text: "assignments should only be cuddled with other assignments"
+      - stylecheck
+      text: "ST1003"
+ 

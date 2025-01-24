@@ -100,14 +100,14 @@ func TestNormal(t *testing.T) {
 }
 
 func TestNormalize_Float64(t *testing.T) {
-	min := float64(-1)
+	minim := float64(-1)
 
 	for v := math.MinInt16; v < math.MaxInt16; v++ {
 		got := asdu.Normalize(v).Float64()
-		if got < min || got >= 1 {
-			t.Errorf("%#04x: got %f (%#04x was %f)", uint16(v), got, uint16(v-1), min)
+		if got < minim || got >= 1 {
+			t.Errorf("%#04x: got %f (%#04x was %f)", uint16(v), got, uint16(v-1), minim)
 		}
-		min = got
+		minim = got
 	}
 }
 

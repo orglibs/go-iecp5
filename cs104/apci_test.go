@@ -39,6 +39,7 @@ func TestSAPCI_String(t *testing.T) {
 		})
 	}
 }
+
 func TestUAPCI_String(t *testing.T) {
 	tests := []struct {
 		name string
@@ -87,8 +88,10 @@ func Test_newIFrame(t *testing.T) {
 			got, err := cs104.NewIFrame(tt.args.sendSN, tt.args.RcvSN, tt.args.asdu)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("newIFrame() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("newIFrame() = % x, want % x", got, tt.want)
 			}
@@ -167,6 +170,7 @@ func Test_parse(t *testing.T) {
 			[]byte{},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := cs104.Parse(tt.args.apdu)

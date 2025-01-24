@@ -43,6 +43,7 @@ func (sf *ClientOption) SetConfig(cfg Config) *ClientOption {
 	} else {
 		sf.config = cfg
 	}
+
 	return sf
 }
 
@@ -53,6 +54,7 @@ func (sf *ClientOption) SetParams(p *asdu.Params) *ClientOption {
 	} else {
 		sf.params = *p
 	}
+
 	return sf
 }
 
@@ -61,18 +63,21 @@ func (sf *ClientOption) SetReconnectInterval(t time.Duration) *ClientOption {
 	if t > 0 {
 		sf.reconnectInterval = t
 	}
+
 	return sf
 }
 
 // SetAutoReconnect enable auto reconnect
 func (sf *ClientOption) SetAutoReconnect(b bool) *ClientOption {
 	sf.autoReconnect = b
+
 	return sf
 }
 
 // SetTLSConfig set tls config
 func (sf *ClientOption) SetTLSConfig(t *tls.Config) *ClientOption {
 	sf.TLSConfig = t
+
 	return sf
 }
 
@@ -84,13 +89,17 @@ func (sf *ClientOption) AddRemoteServer(server string) error {
 	if len(server) > 0 && server[0] == ':' {
 		server = "127.0.0.1" + server
 	}
+
 	if !strings.Contains(server, "://") {
 		server = "tcp://" + server
 	}
+
 	remoteURL, err := url.Parse(server)
 	if err != nil {
 		return fmt.Errorf("parse error:%w", err)
 	}
+
 	sf.server = remoteURL
+
 	return nil
 }

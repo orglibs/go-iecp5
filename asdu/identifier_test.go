@@ -26,8 +26,10 @@ func TestGetInfoObjSize(t *testing.T) {
 			got, err := asdu.GetInfoObjSize(tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetInfoObjSize() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
+
 			if got != tt.want {
 				t.Errorf("GetInfoObjSize() = %v, want %v", got, tt.want)
 			}

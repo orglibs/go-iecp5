@@ -22,7 +22,8 @@ const (
 	ACD_RES = 1 << 5 // Required access bit, unbalanced ACD, balanced hold
 	// Startup message bit: // PRM = 0, slave transmits message to startup station
 	// PRM = 0, slave to initiator; // PRM = 1, slave to initiator; // PRM = 1, slave to initiator.
-	// PRM = 1, transmit message from slave to initiator; // PRM = 1, transmit message from initiator to slave; // PRM = 1, transmit message from initiator to slave
+	// PRM = 1, transmit message from slave to initiator; // PRM = 1, transmit message from initiator to slave;
+	// PRM = 1, transmit message from initiator to slave
 	RPM     = 1 << 6
 	RES_DIR = 1 << 7 // Unbalanced hold, balanced for direction
 

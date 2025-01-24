@@ -120,6 +120,7 @@ func (sf StepPosition) Value() byte {
 	if sf.HasTransient {
 		p |= 0x80
 	}
+
 	return byte(p)
 }
 
@@ -131,6 +132,7 @@ func ParseStepPosition(b byte) StepPosition {
 	} else {
 		step.Val = int(b) | (-1 &^ 0x3f)
 	}
+
 	return step
 }
 
@@ -277,6 +279,7 @@ func (sf CauseOfInitial) Value() byte {
 	if sf.IsLocalChange {
 		return byte(sf.Cause | 0x80)
 	}
+
 	return byte(sf.Cause)
 }
 
@@ -403,6 +406,7 @@ func (sf QualifierOfParameterMV) Value() byte {
 	if sf.IsInOperation {
 		v |= 0x80
 	}
+
 	return v
 }
 
@@ -469,6 +473,7 @@ func (sf QualifierOfCommand) Value() byte {
 	if sf.InSelect {
 		v |= 0x80
 	}
+
 	return v
 }
 
@@ -522,6 +527,7 @@ func (sf QualifierOfSetpointCmd) Value() byte {
 	if sf.InSelect {
 		v |= 0x80
 	}
+
 	return v
 }
 

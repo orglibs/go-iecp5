@@ -56,6 +56,7 @@ func (sf *Server) SetConfig(cfg Config) *Server {
 	} else {
 		sf.config = cfg
 	}
+
 	return sf
 }
 
@@ -66,6 +67,7 @@ func (sf *Server) SetParams(p *asdu.Params) *Server {
 	} else {
 		sf.params = *p
 	}
+
 	return sf
 }
 
@@ -74,8 +76,10 @@ func (sf *Server) ListenAndServer(addr string) {
 	listen, err := net.Listen("tcp", addr)
 	if err != nil {
 		slog.Error("server run failed", "error", err)
+
 		return
 	}
+
 	sf.mux.Lock()
 	sf.listen = listen
 	sf.mux.Unlock()
@@ -87,12 +91,14 @@ func (sf *Server) ListenAndServer(addr string) {
 
 		slog.Debug("server stop")
 	}()
+
 	slog.Debug("server run")
 
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
 			slog.Error("server run failed", "error", err)
+
 			return
 		}
 
@@ -112,6 +118,7 @@ func (sf *Server) ListenAndServer(addr string) {
 				onConnection:   sf.onConnection,
 				connectionLost: sf.connectionLost,
 			}
+
 			sf.mux.Lock()
 			sf.sessions[sess] = struct{}{}
 			sf.mux.Unlock()
@@ -129,22 +136,28 @@ func (sf *Server) Close() error {
 	var err error
 
 	sf.mux.Lock()
+
 	if sf.listen != nil {
 		err = sf.listen.Close()
 		sf.listen = nil
 	}
+
 	sf.mux.Unlock()
 	sf.wg.Wait()
+
 	return err
 }
 
 // Send imp interface Connect
 func (sf *Server) Send(a *asdu.ASDU) error {
 	sf.mux.Lock()
+
 	for k := range sf.sessions {
 		_ = k.Send(a.Clone())
 	}
+
 	sf.mux.Unlock()
+
 	return nil
 }
 

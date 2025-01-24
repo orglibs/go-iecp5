@@ -16,10 +16,12 @@ func CheckValid(c Connect, typeID TypeID, isSequence bool, infosLen int) error {
 	if infosLen == 0 {
 		return ErrNotAnyObjInfo
 	}
+
 	objSize, err := GetInfoObjSize(typeID)
 	if err != nil {
 		return err
 	}
+
 	param := c.Params()
 	if err := param.Valid(); err != nil {
 		return err
@@ -35,6 +37,7 @@ func CheckValid(c Connect, typeID TypeID, isSequence bool, infosLen int) error {
 	if asduLen > ASDUSizeMax {
 		return ErrLengthOutOfRange
 	}
+
 	return nil
 }
 
@@ -68,6 +71,7 @@ func SendSingle(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmissi
 	if err := u.SetVariableNumber(len(infos)); err != nil {
 		return err
 	}
+
 	once := false
 
 	for _, v := range infos {
@@ -83,6 +87,7 @@ func SendSingle(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmissi
 		if v.Value {
 			value = 0x01
 		}
+
 		u.AppendBytes(value | byte(v.Qds&0xf0))
 		switch typeID {
 		case M_SP_NA_1:
@@ -94,9 +99,11 @@ func SendSingle(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmissi
 			return ErrTypeIDNotMatch
 		}
 	}
+
 	if err := c.Send(u); err != nil {
 		return fmt.Errorf("send error:%w", err)
 	}
+
 	return nil
 }
 
@@ -119,10 +126,14 @@ func Single(c Connect, isSequence bool, coa CauseOfTransmission, ca CommonAddr, 
 		(coa.Cause >= InterrogatedByStation && coa.Cause <= InterrogatedByGroup16)) {
 		return ErrCmdCause
 	}
+
 	return SendSingle(c, M_SP_NA_1, isSequence, coa, ca, infos...)
 }
 
-// SingleCP24Time2a sends a type identification [M_SP_TA_1], single point message with timescale CP24Time2a, with only (SQ = 0) a collection of individual message elements
+// SingleCP24Time2a sends a type identification [M_SP_TA_1], single point message with timescale CP24Time2a,
+//
+//	with only (SQ = 0) a collection of individual message elements
+//
 // [M_SP_TA_1] see companion standard 101, subclass 7.3.1.2
 // The reason for transmission (coa) is used in the
 // Monitoring direction:
@@ -135,10 +146,12 @@ func SingleCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos .
 		coa.Cause == ReturnInfoRemote || coa.Cause == ReturnInfoLocal) {
 		return ErrCmdCause
 	}
+
 	return SendSingle(c, M_SP_TA_1, false, coa, ca, infos...)
 }
 
-// SingleCP56Time2a sends a type identification [M_SP_TB_1]. Single CP56Time2a message with timescale CP56Time2a, with only (SQ = 0) a single set of message elements.
+// SingleCP56Time2a sends a type identification [M_SP_TB_1].
+// Single CP56Time2a message with timescale CP56Time2a, with only (SQ = 0) a single set of message elements.
 // [M_SP_TB_1] See companion standard 101, subclass 7.3.1.22.
 // The reason for transmission (coa) is used in the
 // Monitoring direction:
@@ -151,6 +164,7 @@ func SingleCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos .
 		coa.Cause == ReturnInfoRemote || coa.Cause == ReturnInfoLocal) {
 		return ErrCmdCause
 	}
+
 	return SendSingle(c, M_SP_TB_1, false, coa, ca, infos...)
 }
 
@@ -183,6 +197,7 @@ func SendDouble(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmissi
 	if err := u.SetVariableNumber(len(infos)); err != nil {
 		return err
 	}
+
 	once := false
 
 	for _, v := range infos {
@@ -205,6 +220,7 @@ func SendDouble(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmissi
 			return ErrTypeIDNotMatch
 		}
 	}
+
 	return c.Send(u)
 }
 
@@ -227,10 +243,12 @@ func Double(c Connect, isSequence bool, coa CauseOfTransmission, ca CommonAddr, 
 		(coa.Cause >= InterrogatedByStation && coa.Cause <= InterrogatedByGroup16)) {
 		return ErrCmdCause
 	}
+
 	return SendDouble(c, M_DP_NA_1, isSequence, coa, ca, infos...)
 }
 
-// DoubleCP24Time2a sends a type identification [M_DP_TA_1] . DoubleCP24Time2a sends a type identification [M_DP_TA_1] . with CP24Time2a double-point information, only (SQ = 0) a single set of information elements.
+// DoubleCP24Time2a sends a type identification [M_DP_TA_1].
+// DoubleCP24Time2a sends a type identification [M_DP_TA_1] with CP24Time2a double-point information, only (SQ = 0) a single set of information elements.
 // [M_DP_TA_1] See companion standard 101, subclass 7.3.1.4.
 // The reason for transmission (coa) is used in the
 // Monitoring direction:
@@ -243,6 +261,7 @@ func DoubleCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos .
 		coa.Cause == ReturnInfoRemote || coa.Cause == ReturnInfoLocal) {
 		return ErrCmdCause
 	}
+
 	return SendDouble(c, M_DP_TA_1, false, coa, ca, infos...)
 }
 
@@ -259,6 +278,7 @@ func DoubleCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos .
 		coa.Cause == ReturnInfoRemote || coa.Cause == ReturnInfoLocal) {
 		return ErrCmdCause
 	}
+
 	return SendDouble(c, M_DP_TB_1, false, coa, ca, infos...)
 }
 
@@ -291,6 +311,7 @@ func SendStep(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission
 	if err := u.SetVariableNumber(len(infos)); err != nil {
 		return err
 	}
+
 	once := false
 
 	for _, v := range infos {
@@ -313,6 +334,7 @@ func SendStep(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission
 			return ErrTypeIDNotMatch
 		}
 	}
+
 	return c.Send(u)
 }
 
@@ -335,6 +357,7 @@ func Step(c Connect, isSequence bool, coa CauseOfTransmission, ca CommonAddr, in
 		(coa.Cause >= InterrogatedByStation && coa.Cause <= InterrogatedByGroup16)) {
 		return ErrCmdCause
 	}
+
 	return SendStep(c, M_ST_NA_1, isSequence, coa, ca, infos...)
 }
 
@@ -351,6 +374,7 @@ func StepCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...
 		coa.Cause == ReturnInfoRemote || coa.Cause == ReturnInfoLocal) {
 		return ErrCmdCause
 	}
+
 	return SendStep(c, M_ST_TA_1, false, coa, ca, infos...)
 }
 
@@ -367,6 +391,7 @@ func StepCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...
 		coa.Cause == ReturnInfoRemote || coa.Cause == ReturnInfoLocal) {
 		return ErrCmdCause
 	}
+
 	return SendStep(c, M_SP_TB_1, false, coa, ca, infos...)
 }
 
@@ -399,6 +424,7 @@ func SendBitString32(c Connect, typeID TypeID, isSequence bool, coa CauseOfTrans
 	if err := u.SetVariableNumber(len(infos)); err != nil {
 		return err
 	}
+
 	once := false
 
 	for _, v := range infos {
@@ -421,6 +447,7 @@ func SendBitString32(c Connect, typeID TypeID, isSequence bool, coa CauseOfTrans
 			return ErrTypeIDNotMatch
 		}
 	}
+
 	return c.Send(u)
 }
 
@@ -440,6 +467,7 @@ func BitString32(c Connect, isSequence bool, coa CauseOfTransmission, ca CommonA
 		(coa.Cause >= InterrogatedByStation && coa.Cause <= InterrogatedByGroup16)) {
 		return ErrCmdCause
 	}
+
 	return SendBitString32(c, M_BO_NA_1, isSequence, coa, ca, infos...)
 }
 
@@ -453,10 +481,12 @@ func BitString32CP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, in
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
+
 	return SendBitString32(c, M_BO_TA_1, false, coa, ca, infos...)
 }
 
-// BitString32CP56Time2a sends a type identification [M_BO_TB_1]. BitString32CP56Time2a with timescale CP56Time2a, with only (SQ = 0) a single set of information elements
+// BitString32CP56Time2a sends a type identification [M_BO_TB_1].
+// BitString32CP56Time2a with timescale CP56Time2a, with only (SQ = 0) a single set of information elements
 // [M_ST_TB_1] See companion standard 101, subclass 7.3.1.25.
 // The reason for transmission (coa) is used in the
 // Monitoring direction:
@@ -466,6 +496,7 @@ func BitString32CP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, in
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
+
 	return SendBitString32(c, M_BO_TB_1, false, coa, ca, infos...)
 }
 
@@ -499,6 +530,7 @@ func SendMeasuredValueNormal(c Connect, typeID TypeID, isSequence bool, coa Caus
 	if err := u.SetVariableNumber(len(attrs)); err != nil {
 		return err
 	}
+
 	once := false
 
 	for _, v := range attrs {
@@ -522,6 +554,7 @@ func SendMeasuredValueNormal(c Connect, typeID TypeID, isSequence bool, coa Caus
 			return ErrTypeIDNotMatch
 		}
 	}
+
 	return c.Send(u)
 }
 
@@ -543,10 +576,12 @@ func MeasuredValueNormal(c Connect, isSequence bool, coa CauseOfTransmission, ca
 		(coa.Cause >= InterrogatedByStation && coa.Cause <= InterrogatedByGroup16)) {
 		return ErrCmdCause
 	}
+
 	return SendMeasuredValueNormal(c, M_ME_NA_1, isSequence, coa, ca, infos...)
 }
 
-// MeasuredValueNormalCP24Time2a sends a type identification [M_ME_TA_1]. Measured value with timescale CP24Time2a, normal value, only (SQ = 0) set of individual information elements
+// MeasuredValueNormalCP24Time2a sends a type identification [M_ME_TA_1].
+// Measured value with timescale CP24Time2a, normal value, only (SQ = 0) set of individual information elements
 // [M_ME_TA_1] See companion standard 101, subclass 7.3.1.10.
 // The reason for transmission (coa) is used in the
 // Monitoring direction:
@@ -557,10 +592,12 @@ func MeasuredValueNormalCP24Time2a(c Connect, coa CauseOfTransmission,
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
+
 	return SendMeasuredValueNormal(c, M_ME_TA_1, false, coa, ca, infos...)
 }
 
-// MeasuredValueNormalCP56Time2a sends a type identification [ M_ME_TD_1] Measured value with timescale CP57Time2a, normal value, set of only (SQ = 0) single information elements
+// MeasuredValueNormalCP56Time2a sends a type identification [ M_ME_TD_1]
+// Measured value with timescale CP57Time2a, normal value, set of only (SQ = 0) single information elements
 // [M_ME_TD_1] See companion standard 101, subclass 7.3.1.26.
 // The reason for transmission (coa) is used in the
 // Monitoring direction:
@@ -570,6 +607,7 @@ func MeasuredValueNormalCP56Time2a(c Connect, coa CauseOfTransmission, ca Common
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
+
 	return SendMeasuredValueNormal(c, M_ME_TD_1, false, coa, ca, infos...)
 }
 
@@ -592,6 +630,7 @@ func MeasuredValueNormalNoQuality(c Connect, isSequence bool, coa CauseOfTransmi
 		(coa.Cause >= InterrogatedByStation && coa.Cause <= InterrogatedByGroup16)) {
 		return ErrCmdCause
 	}
+
 	return SendMeasuredValueNormal(c, M_ME_ND_1, isSequence, coa, ca, infos...)
 }
 
@@ -624,6 +663,7 @@ func SendMeasuredValueScaled(c Connect, typeID TypeID, isSequence bool, coa Caus
 	if err := u.SetVariableNumber(len(infos)); err != nil {
 		return err
 	}
+
 	once := false
 
 	for _, v := range infos {
@@ -645,6 +685,7 @@ func SendMeasuredValueScaled(c Connect, typeID TypeID, isSequence bool, coa Caus
 			return ErrTypeIDNotMatch
 		}
 	}
+
 	return c.Send(u)
 }
 
@@ -666,10 +707,12 @@ func MeasuredValueScaled(c Connect, isSequence bool, coa CauseOfTransmission, ca
 		(coa.Cause >= InterrogatedByStation && coa.Cause <= InterrogatedByGroup16)) {
 		return ErrCmdCause
 	}
+
 	return SendMeasuredValueScaled(c, M_ME_NB_1, isSequence, coa, ca, infos...)
 }
 
-// MeasuredValueScaledCP24Time2a sends a type identification [M_ME_TB_1]. MeasuredValueScaledCP24Time2a sends a type identification [M_ME_TB_1]. MeasuredValueScaledCP24Time2a sends a type identification [M_ME_TB_2].
+// MeasuredValueScaledCP24Time2a sends a type identification [M_ME_TB_1]. MeasuredValueScaledCP24Time2a sends a type identification [M_ME_TB_1].
+// MeasuredValueScaledCP24Time2a sends a type identification [M_ME_TB_2].
 // [M_ME_TB_1] See companion standard 101, subclass 7.3.1.12.
 // The reason for transmission (coa) is used in the
 // monitoring direction:
@@ -679,10 +722,12 @@ func MeasuredValueScaledCP24Time2a(c Connect, coa CauseOfTransmission, ca Common
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
+
 	return SendMeasuredValueScaled(c, M_ME_TB_1, false, coa, ca, infos...)
 }
 
-// MeasuredValueScaledCP56Time2a sends a type identification [M_ME_TE_1]. MeasuredValueScaledCP56Time2a sends a type identification [M_ME_TE_1]. MeasuredValueScaledCP56Time2a sends a type identification [M_ME_TE_1].
+// MeasuredValueScaledCP56Time2a sends a type identification [M_ME_TE_1]. MeasuredValueScaledCP56Time2a sends a type identification [M_ME_TE_1].
+// MeasuredValueScaledCP56Time2a sends a type identification [M_ME_TE_1].
 // [M_ME_TE_1] See companion standard 101, subclass 7.3.1.27.
 // The reason for transmission (coa) is used in the
 // monitoring direction:
@@ -692,6 +737,7 @@ func MeasuredValueScaledCP56Time2a(c Connect, coa CauseOfTransmission, ca Common
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
+
 	return SendMeasuredValueScaled(c, M_ME_TE_1, false, coa, ca, infos...)
 }
 
@@ -724,6 +770,7 @@ func SendMeasuredValueFloat(c Connect, typeID TypeID, isSequence bool, coa Cause
 	if err := u.SetVariableNumber(len(infos)); err != nil {
 		return err
 	}
+
 	once := false
 
 	for _, v := range infos {
@@ -746,6 +793,7 @@ func SendMeasuredValueFloat(c Connect, typeID TypeID, isSequence bool, coa Cause
 			return ErrTypeIDNotMatch
 		}
 	}
+
 	return c.Send(u)
 }
 
@@ -767,10 +815,12 @@ func MeasuredValueFloat(c Connect, isSequence bool, coa CauseOfTransmission, ca 
 		(coa.Cause >= InterrogatedByStation && coa.Cause <= InterrogatedByGroup16)) {
 		return ErrCmdCause
 	}
+
 	return SendMeasuredValueFloat(c, M_ME_NC_1, isSequence, coa, ca, infos...)
 }
 
-// MeasuredValueFloatCP24Time2a sends a type identification [M_ME_TC_1]. MeasuredValueFloatCP24Time2a sends a type identification [M_ME_TC_1]. MeasuredValueFloatCP24Time2a sends a type identification [M_ME_TC_2].
+// MeasuredValueFloatCP24Time2a sends a type identification [M_ME_TC_1]. MeasuredValueFloatCP24Time2a sends a type identification [M_ME_TC_1].
+// MeasuredValueFloatCP24Time2a sends a type identification [M_ME_TC_2].
 // [M_ME_TC_1] See companion standard 101, subclass 7.3.1.14.
 // The reason for transmission (coa) is used in the
 // Monitoring direction:
@@ -780,10 +830,12 @@ func MeasuredValueFloatCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonA
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
+
 	return SendMeasuredValueFloat(c, M_ME_TC_1, false, coa, ca, infos...)
 }
 
-// MeasuredValueFloatCP56Time2a sends a type identification [M_ME_TF_1]. MeasuredValueFloatCP56Time2a sends a type identification [M_ME_TF_1]. MeasuredValueFloatCP56Time2a with timescale CP56Time2a is a short floating-point number with only (SQ = 0) a single set of information elements.
+// MeasuredValueFloatCP56Time2a sends a type identification [M_ME_TF_1]. MeasuredValueFloatCP56Time2a sends a type identification [M_ME_TF_1].
+// MeasuredValueFloatCP56Time2a with timescale CP56Time2a is a short floating-point number with only (SQ = 0) a single set of information elements.
 // [M_ME_TF_1] See companion standard 101, subclass 7.3.1.28.
 // The reason for transmission (coa) is used in the
 // Monitoring direction:
@@ -793,6 +845,7 @@ func MeasuredValueFloatCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonA
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
+
 	return SendMeasuredValueFloat(c, M_ME_TF_1, false, coa, ca, infos...)
 }
 
@@ -823,6 +876,7 @@ func integratedTotals(c Connect, typeID TypeID, isSequence bool, coa CauseOfTran
 	if err := u.SetVariableNumber(len(infos)); err != nil {
 		return err
 	}
+
 	once := false
 
 	for _, v := range infos {
@@ -844,6 +898,7 @@ func integratedTotals(c Connect, typeID TypeID, isSequence bool, coa CauseOfTran
 			return ErrTypeIDNotMatch
 		}
 	}
+
 	return c.Send(u)
 }
 
@@ -861,10 +916,12 @@ func IntegratedTotals(c Connect, isSequence bool, coa CauseOfTransmission, ca Co
 	if !(coa.Cause == Spontaneous || (coa.Cause >= RequestByGeneralCounter && coa.Cause <= RequestByGroup4Counter)) {
 		return ErrCmdCause
 	}
+
 	return integratedTotals(c, M_IT_NA_1, isSequence, coa, ca, infos...)
 }
 
-// IntegratedTotalsCP24Time2a sends a type identification [M_IT_TA_1]. The cumulative quantity with timescale CP24Time2a has only (SQ = 0) a single set of information elements.
+// IntegratedTotalsCP24Time2a sends a type identification [M_IT_TA_1].
+// The cumulative quantity with timescale CP24Time2a has only (SQ = 0) a single set of information elements.
 // [M_IT_TA_1] See companion standard 101, subclass 7.3.1.16.
 // The reason for transmission (coa) is used for the
 // Monitoring direction:
@@ -878,10 +935,12 @@ func IntegratedTotalsCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAdd
 	if !(coa.Cause == Spontaneous || (coa.Cause >= RequestByGeneralCounter && coa.Cause <= RequestByGroup4Counter)) {
 		return ErrCmdCause
 	}
+
 	return integratedTotals(c, M_IT_TA_1, false, coa, ca, infos...)
 }
 
-// IntegratedTotalsCP56Time2a sends a type identification [M_IT_TB_1]. Cumulative quantity with timescale CP56Time2a, with only (SQ = 0) a single set of information elements.
+// IntegratedTotalsCP56Time2a sends a type identification [M_IT_TB_1].
+// Cumulative quantity with timescale CP56Time2a, with only (SQ = 0) a single set of information elements.
 // [M_IT_TB_1] See companion standard 101, subclass 7.3.1.29.
 // The reason for transmission (coa) is used for the
 // Monitoring direction:
@@ -895,6 +954,7 @@ func IntegratedTotalsCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAdd
 	if !(coa.Cause == Spontaneous || (coa.Cause >= RequestByGeneralCounter && coa.Cause <= RequestByGroup4Counter)) {
 		return ErrCmdCause
 	}
+
 	return integratedTotals(c, M_IT_TB_1, false, coa, ca, infos...)
 }
 
@@ -915,6 +975,7 @@ func eventOfProtectionEquipment(c Connect, typeID TypeID, coa CauseOfTransmissio
 	if coa.Cause != Spontaneous {
 		return ErrCmdCause
 	}
+
 	if err := CheckValid(c, typeID, false, len(infos)); err != nil {
 		return err
 	}
@@ -934,8 +995,10 @@ func eventOfProtectionEquipment(c Connect, typeID TypeID, coa CauseOfTransmissio
 		if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
 			return err
 		}
+
 		u.AppendBytes(byte(v.Event&0x03) | byte(v.Qdp&0xf8))
 		u.AppendCP16Time2a(v.Msec)
+
 		switch typeID {
 		case M_EP_TA_1:
 			u.AppendCP24Time2a(v.Time, u.InfoObjTimeZone)
@@ -945,6 +1008,7 @@ func eventOfProtectionEquipment(c Connect, typeID TypeID, coa CauseOfTransmissio
 			return ErrTypeIDNotMatch
 		}
 	}
+
 	return c.Send(u)
 }
 
@@ -979,10 +1043,12 @@ type PackedStartEventsOfProtectionEquipmentInfo struct {
 // packedStartEventsOfProtectionEquipment sends a type identification [M_EP_TB_1], [M_EP_TE_1]. Relay protection equipment events
 // [M_EP_TB_1] See companion standard 101, subclass 7.3.1.18
 // [M_EP_TE_1] See companion standard 101, subclass 7.3.1.31
-func packedStartEventsOfProtectionEquipment(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, info PackedStartEventsOfProtectionEquipmentInfo) error {
+func packedStartEventsOfProtectionEquipment(c Connect, typeID TypeID, coa CauseOfTransmission,
+	ca CommonAddr, info PackedStartEventsOfProtectionEquipmentInfo) error {
 	if coa.Cause != Spontaneous {
 		return ErrCmdCause
 	}
+
 	if err := CheckValid(c, typeID, false, 1); err != nil {
 		return err
 	}
@@ -994,12 +1060,13 @@ func packedStartEventsOfProtectionEquipment(c Connect, typeID TypeID, coa CauseO
 		0,
 		ca,
 	})
-
 	if err := u.AppendInfoObjAddr(info.Ioa); err != nil {
 		return err
 	}
+
 	u.AppendBytes(byte(info.Event), byte(info.Qdp)&0xf1)
 	u.AppendCP16Time2a(info.Msec)
+
 	switch typeID {
 	case M_EP_TB_1:
 		u.AppendCP24Time2a(info.Time, u.InfoObjTimeZone)
@@ -1021,7 +1088,8 @@ func packedStartEventsOfProtectionEquipment(c Connect, typeID TypeID, coa CauseO
 // The cause of transmission (Coa) is used in the
 // Monitoring direction:
 // <3> := Burst (spontaneous)
-func PackedStartEventsOfProtectionEquipmentCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, info PackedStartEventsOfProtectionEquipmentInfo) error {
+func PackedStartEventsOfProtectionEquipmentCP24Time2a(c Connect, coa CauseOfTransmission,
+	ca CommonAddr, info PackedStartEventsOfProtectionEquipmentInfo) error {
 	return packedStartEventsOfProtectionEquipment(c, M_EP_TB_1, coa, ca, info)
 }
 
@@ -1030,7 +1098,8 @@ func PackedStartEventsOfProtectionEquipmentCP24Time2a(c Connect, coa CauseOfTran
 // The cause of transmission (Coa) is used in the
 // Monitoring direction:
 // <3> := Burst (spontaneous)
-func PackedStartEventsOfProtectionEquipmentCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, info PackedStartEventsOfProtectionEquipmentInfo) error {
+func PackedStartEventsOfProtectionEquipmentCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr,
+	info PackedStartEventsOfProtectionEquipmentInfo) error {
 	return packedStartEventsOfProtectionEquipment(c, M_EP_TE_1, coa, ca, info)
 }
 
@@ -1051,6 +1120,7 @@ func packedOutputCircuitInfo(c Connect, typeID TypeID, coa CauseOfTransmission, 
 	if coa.Cause != Spontaneous {
 		return ErrCmdCause
 	}
+
 	if err := CheckValid(c, typeID, false, 1); err != nil {
 		return err
 	}
@@ -1062,12 +1132,13 @@ func packedOutputCircuitInfo(c Connect, typeID TypeID, coa CauseOfTransmission, 
 		0,
 		ca,
 	})
-
 	if err := u.AppendInfoObjAddr(info.Ioa); err != nil {
 		return err
 	}
+
 	u.AppendBytes(byte(info.Oci), byte(info.Qdp)&0xf1)
 	u.AppendCP16Time2a(info.Msec)
+
 	switch typeID {
 	case M_EP_TC_1:
 		u.AppendCP24Time2a(info.Time, u.InfoObjTimeZone)
@@ -1128,6 +1199,7 @@ func PackedSinglePointWithSCD(c Connect, isSequence bool, coa CauseOfTransmissio
 		(coa.Cause >= InterrogatedByStation && coa.Cause <= InterrogatedByGroup16)) {
 		return ErrCmdCause
 	}
+
 	if err := CheckValid(c, M_PS_NA_1, isSequence, len(infos)); err != nil {
 		return err
 	}
@@ -1142,6 +1214,7 @@ func PackedSinglePointWithSCD(c Connect, isSequence bool, coa CauseOfTransmissio
 	if err := u.SetVariableNumber(len(infos)); err != nil {
 		return err
 	}
+
 	once := false
 
 	for _, v := range infos {
@@ -1155,6 +1228,7 @@ func PackedSinglePointWithSCD(c Connect, isSequence bool, coa CauseOfTransmissio
 		u.AppendStatusAndStatusChangeDetection(v.Scd)
 		u.AppendBytes(byte(v.Qds))
 	}
+
 	return c.Send(u)
 }
 
@@ -1170,6 +1244,7 @@ func (sf *ASDU) GetSinglePoint() []SinglePointInfo {
 		} else {
 			infoObjAddr++
 		}
+
 		value := sf.DecodeByte()
 
 		var t time.Time
@@ -1189,6 +1264,7 @@ func (sf *ASDU) GetSinglePoint() []SinglePointInfo {
 			Qds:   QualityDescriptor(value & 0xf0),
 			Time:  t})
 	}
+
 	return info
 }
 
@@ -1204,6 +1280,7 @@ func (sf *ASDU) GetDoublePoint() []DoublePointInfo {
 		} else {
 			infoObjAddr++
 		}
+
 		value := sf.DecodeByte()
 
 		var t time.Time
@@ -1223,6 +1300,7 @@ func (sf *ASDU) GetDoublePoint() []DoublePointInfo {
 			Qds:   QualityDescriptor(value & 0xf0),
 			Time:  t})
 	}
+
 	return info
 }
 
@@ -1238,6 +1316,7 @@ func (sf *ASDU) GetStepPosition() []StepPositionInfo {
 		} else {
 			infoObjAddr++
 		}
+
 		value := ParseStepPosition(sf.DecodeByte())
 		qds := QualityDescriptor(sf.DecodeByte())
 
@@ -1258,6 +1337,7 @@ func (sf *ASDU) GetStepPosition() []StepPositionInfo {
 			Qds:   qds,
 			Time:  t})
 	}
+
 	return info
 }
 
@@ -1294,6 +1374,7 @@ func (sf *ASDU) GetBitString32() []BitString32Info {
 			Qds:   qds,
 			Time:  t})
 	}
+
 	return info
 }
 
@@ -1323,7 +1404,7 @@ func (sf *ASDU) GetMeasuredValueNormal() []MeasuredValueNormalInfo {
 		case M_ME_TD_1:
 			qds = QualityDescriptor(sf.DecodeByte())
 			t = sf.DecodeCP56Time2a()
-		case M_ME_ND_1: // 不带品质
+		case M_ME_ND_1:
 		default:
 			panic(ErrTypeIDNotMatch)
 		}
@@ -1334,6 +1415,7 @@ func (sf *ASDU) GetMeasuredValueNormal() []MeasuredValueNormalInfo {
 			Qds:   qds,
 			Time:  t})
 	}
+
 	return info
 }
 
@@ -1370,6 +1452,7 @@ func (sf *ASDU) GetMeasuredValueScaled() []MeasuredValueScaledInfo {
 			Qds:   qds,
 			Time:  t})
 	}
+
 	return info
 }
 
@@ -1406,6 +1489,7 @@ func (sf *ASDU) GetMeasuredValueFloat() []MeasuredValueFloatInfo {
 			Qds:   QualityDescriptor(qua),
 			Time:  t})
 	}
+
 	return info
 }
 
@@ -1440,6 +1524,7 @@ func (sf *ASDU) GetIntegratedTotals() []BinaryCounterReadingInfo {
 			Value: value,
 			Time:  t})
 	}
+
 	return info
 }
 
@@ -1475,6 +1560,7 @@ func (sf *ASDU) GetEventOfProtectionEquipment() []EventOfProtectionEquipmentInfo
 			Msec:  msec,
 			Time:  t})
 	}
+
 	return info
 }
 
@@ -1498,6 +1584,7 @@ func (sf *ASDU) GetPackedStartEventsOfProtectionEquipment() PackedStartEventsOfP
 	default:
 		panic(ErrTypeIDNotMatch)
 	}
+
 	return info
 }
 
@@ -1521,6 +1608,7 @@ func (sf *ASDU) GetPackedOutputCircuitInfo() PackedOutputCircuitInfoInfo {
 	default:
 		panic(ErrTypeIDNotMatch)
 	}
+
 	return info
 }
 
@@ -1543,5 +1631,6 @@ func (sf *ASDU) GetPackedSinglePointWithSCD() []PackedSinglePointWithSCDInfo {
 			Scd: scd,
 			Qds: qds})
 	}
+
 	return info
 }
