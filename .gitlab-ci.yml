@@ -32,7 +32,7 @@ lint:
 test:
     stage: test
     needs: []
-    image: 'circutor/golang:1.21'
+    image: 'circutor/golang:1.23'
     script:
         - make test
     coverage: /total:.+\(statements\).+\d+.\d+%/
