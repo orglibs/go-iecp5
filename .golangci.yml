@@ -1,0 +1,164 @@
+linters:
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+    - copyloopvar
+    - decorder
+    - dogsled
+    - dupl
+    - dupword
+    - durationcheck
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - fatcontext
+    - forbidigo
+    - forcetypeassert
+    - ginkgolinter
+    - gocheckcompilerdirectives
+    - gochecknoinits
+    - gochecksumtype
+    - goconst
+    - gocritic
+    - gofmt
+    - goheader
+    - goimports
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - grouper
+    - iface
+    - importas
+    - inamedparam
+    - ineffassign
+    - intrange
+    - lll
+    - loggercheck
+    - maintidx
+    - makezero
+    - mirror
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - nlreturn
+    - noctx
+    - nolintlint
+    - nosprintfhostport
+    - perfsprint
+    - prealloc
+    - predeclared
+    - promlinter
+    - protogetter
+    - reassign
+    - revive
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
+    - staticcheck
+    - stylecheck
+    - tenv
+    - testableexamples
+    - testifylint
+    - testpackage
+    - thelper
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - zerologlint
+  disable:
+    - canonicalheader
+    - containedctx
+    - cyclop
+    - depguard
+    - err113
+    - exhaustive
+    - exhaustruct
+    - funlen
+    - gci
+    - gochecknoglobals
+    - gocognit
+    - gocyclo
+    - godot
+    - godox
+    - gofumpt
+    - gosmopolitan
+    - interfacebloat
+    - ireturn
+    - mnd
+    - musttag
+    - nonamedreturns
+    - paralleltest
+    - recvcheck
+    - tagalign
+    - tagliatelle
+    - varnamelen
+    - wrapcheck
+    - wsl
+linters-settings:
+  gosec:
+    excludes:
+      - G115 # Potential integer overflow when converting between integer types
+
+  lll:
+    # max line length, lines longer will be reported. Default is 120.
+    line-length: 160
+
+  nestif:
+    # Minimal complexity of if statements to report. Default is 5
+    min-complexity: 7
+
+  wsl:
+    # Allow assignments to be cuddled with other blocks as it generates unnecessary spaces between calls with assignment and warning/info log generation calls
+    allow-assign-and-anything: true
+    # Allow declaration of variables to be cuddled
+    allow-cuddle-declarations: true
+
+  testifylint:
+    disable:
+      - require-error
+
+  cyclop:
+    max-complexity: 20
+
+  revive:
+    rules:
+      - name: time-naming
+        disabled: true
+      - name: var-naming
+        disabled: true
+issues:
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    - path: (.+)_test.go
+      linters:
+        - dupl
+        - forcetypeassert
+        - funlen
+        - goconst
+        - lll
+        - gochecknoglobals
+    - path: asdu/mproc.go
+      linters:
+        - gofumpt
+        - dupl
+    - path: asdu/asdu.go
+      linters:
+        - dupword
+    - linters:
+      - stylecheck
+      text: "ST1003"
+ 

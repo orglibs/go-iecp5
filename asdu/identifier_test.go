@@ -1,13 +1,15 @@
-package asdu
+package asdu_test
 
 import (
 	"reflect"
 	"testing"
+
+	"gitlab.com/circutor-library/go-iecp5/asdu"
 )
 
 func TestGetInfoObjSize(t *testing.T) {
 	type args struct {
-		id TypeID
+		id asdu.TypeID
 	}
 	tests := []struct {
 		name    string
@@ -15,16 +17,19 @@ func TestGetInfoObjSize(t *testing.T) {
 		want    int
 		wantErr bool
 	}{
-		{"defined", args{F_DR_TA_1}, 13, false},
-		{"no defined", args{F_SG_NA_1}, 0, true},
+		{"defined", args{asdu.F_DR_TA_1}, 13, false},
+		{"no defined", args{asdu.F_SG_NA_1}, 0, true},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetInfoObjSize(tt.args.id)
+			got, err := asdu.GetInfoObjSize(tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetInfoObjSize() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
+
 			if got != tt.want {
 				t.Errorf("GetInfoObjSize() = %v, want %v", got, tt.want)
 			}
@@ -35,19 +40,19 @@ func TestGetInfoObjSize(t *testing.T) {
 func TestTypeID_String(t *testing.T) {
 	tests := []struct {
 		name string
-		this TypeID
+		this asdu.TypeID
 		want string
 	}{
-		{"M_SP_NA_1", M_SP_NA_1, "TID<M_SP_NA_1>"},
-		{"M_SP_TB_1", M_SP_TB_1, "TID<M_SP_TB_1>"},
-		{"C_SC_NA_1", C_SC_NA_1, "TID<C_SC_NA_1>"},
-		{"C_SC_TA_1", C_SC_TA_1, "TID<C_SC_TA_1>"},
-		{"M_EI_NA_1", M_EI_NA_1, "TID<M_EI_NA_1>"},
-		{"S_CH_NA_1", S_CH_NA_1, "TID<S_CH_NA_1>"},
-		{"S_US_NA_1", S_US_NA_1, "TID<S_US_NA_1>"},
-		{"C_IC_NA_1", C_IC_NA_1, "TID<C_IC_NA_1>"},
-		{"P_ME_NA_1", P_ME_NA_1, "TID<P_ME_NA_1>"},
-		{"F_FR_NA_1", F_FR_NA_1, "TID<F_FR_NA_1>"},
+		{"M_SP_NA_1", asdu.M_SP_NA_1, "TID<M_SP_NA_1>"},
+		{"M_SP_TB_1", asdu.M_SP_TB_1, "TID<M_SP_TB_1>"},
+		{"C_SC_NA_1", asdu.C_SC_NA_1, "TID<C_SC_NA_1>"},
+		{"C_SC_TA_1", asdu.C_SC_TA_1, "TID<C_SC_TA_1>"},
+		{"M_EI_NA_1", asdu.M_EI_NA_1, "TID<M_EI_NA_1>"},
+		{"S_CH_NA_1", asdu.S_CH_NA_1, "TID<S_CH_NA_1>"},
+		{"S_US_NA_1", asdu.S_US_NA_1, "TID<S_US_NA_1>"},
+		{"C_IC_NA_1", asdu.C_IC_NA_1, "TID<C_IC_NA_1>"},
+		{"P_ME_NA_1", asdu.P_ME_NA_1, "TID<P_ME_NA_1>"},
+		{"F_FR_NA_1", asdu.F_FR_NA_1, "TID<F_FR_NA_1>"},
 		{"no defined", 0, "TID<0>"},
 	}
 	for _, tt := range tests {
@@ -66,14 +71,15 @@ func TestParseVariableStruct(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want VariableStruct
+		want asdu.VariableStruct
 	}{
-		{"no sequence", args{0x0a}, VariableStruct{Number: 0x0a}},
-		{"with sequence", args{0x8a}, VariableStruct{Number: 0x0a, IsSequence: true}},
+		{"no sequence", args{0x0a}, asdu.VariableStruct{Number: 0x0a}},
+		{"with sequence", args{0x8a}, asdu.VariableStruct{Number: 0x0a, IsSequence: true}},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ParseVariableStruct(tt.args.b); !reflect.DeepEqual(got, tt.want) {
+			if got := asdu.ParseVariableStruct(tt.args.b); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ParseVariableStruct() = %v, want %v", got, tt.want)
 			}
 		})
@@ -83,11 +89,11 @@ func TestParseVariableStruct(t *testing.T) {
 func TestVariableStruct_Value(t *testing.T) {
 	tests := []struct {
 		name string
-		this VariableStruct
+		this asdu.VariableStruct
 		want byte
 	}{
-		{"no sequence", VariableStruct{Number: 0x0a}, 0x0a},
-		{"with sequence", VariableStruct{Number: 0x0a, IsSequence: true}, 0x8a},
+		{"no sequence", asdu.VariableStruct{Number: 0x0a}, 0x0a},
+		{"with sequence", asdu.VariableStruct{Number: 0x0a, IsSequence: true}, 0x8a},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -101,11 +107,11 @@ func TestVariableStruct_Value(t *testing.T) {
 func TestVariableStruct_String(t *testing.T) {
 	tests := []struct {
 		name string
-		this VariableStruct
+		this asdu.VariableStruct
 		want string
 	}{
-		{"no sequence", VariableStruct{Number: 100}, "VSQ<100>"},
-		{"with sequence", VariableStruct{Number: 100, IsSequence: true}, "VSQ<sq,100>"},
+		{"no sequence", asdu.VariableStruct{Number: 100}, "VSQ<100>"},
+		{"with sequence", asdu.VariableStruct{Number: 100, IsSequence: true}, "VSQ<sq,100>"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -123,16 +129,17 @@ func TestParseCauseOfTransmission(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want CauseOfTransmission
+		want asdu.CauseOfTransmission
 	}{
-		{"no test and neg", args{0x01}, CauseOfTransmission{Cause: Periodic}},
-		{"with test", args{0x81}, CauseOfTransmission{Cause: Periodic, IsTest: true}},
-		{"with neg", args{0x41}, CauseOfTransmission{Cause: Periodic, IsNegative: true}},
-		{"with test and neg", args{0xc1}, CauseOfTransmission{Cause: Periodic, IsTest: true, IsNegative: true}},
+		{"no test and neg", args{0x01}, asdu.CauseOfTransmission{Cause: asdu.Periodic}},
+		{"with test", args{0x81}, asdu.CauseOfTransmission{Cause: asdu.Periodic, IsTest: true}},
+		{"with neg", args{0x41}, asdu.CauseOfTransmission{Cause: asdu.Periodic, IsNegative: true}},
+		{"with test and neg", args{0xc1}, asdu.CauseOfTransmission{Cause: asdu.Periodic, IsTest: true, IsNegative: true}},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ParseCauseOfTransmission(tt.args.b); !reflect.DeepEqual(got, tt.want) {
+			if got := asdu.ParseCauseOfTransmission(tt.args.b); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ParseCauseOfTransmission() = %v, want %v", got, tt.want)
 			}
 		})
@@ -142,13 +149,13 @@ func TestParseCauseOfTransmission(t *testing.T) {
 func TestCauseOfTransmission_Value(t *testing.T) {
 	tests := []struct {
 		name string
-		this CauseOfTransmission
+		this asdu.CauseOfTransmission
 		want byte
 	}{
-		{"no test and neg", CauseOfTransmission{Cause: Periodic}, 0x01},
-		{"with test", CauseOfTransmission{Cause: Periodic, IsTest: true}, 0x81},
-		{"with neg", CauseOfTransmission{Cause: Periodic, IsNegative: true}, 0x41},
-		{"with test and neg", CauseOfTransmission{Cause: Periodic, IsTest: true, IsNegative: true}, 0xc1},
+		{"no test and neg", asdu.CauseOfTransmission{Cause: asdu.Periodic}, 0x01},
+		{"with test", asdu.CauseOfTransmission{Cause: asdu.Periodic, IsTest: true}, 0x81},
+		{"with neg", asdu.CauseOfTransmission{Cause: asdu.Periodic, IsNegative: true}, 0x41},
+		{"with test and neg", asdu.CauseOfTransmission{Cause: asdu.Periodic, IsTest: true, IsNegative: true}, 0xc1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -162,13 +169,13 @@ func TestCauseOfTransmission_Value(t *testing.T) {
 func TestCauseOfTransmission_String(t *testing.T) {
 	tests := []struct {
 		name string
-		this CauseOfTransmission
+		this asdu.CauseOfTransmission
 		want string
 	}{
-		{"no test and neg", CauseOfTransmission{Cause: Periodic}, "COT<Periodic>"},
-		{"with test", CauseOfTransmission{Cause: Periodic, IsTest: true}, "COT<Periodic,test>"},
-		{"with neg", CauseOfTransmission{Cause: Periodic, IsNegative: true}, "COT<Periodic,neg>"},
-		{"with test and neg", CauseOfTransmission{Cause: Periodic, IsTest: true, IsNegative: true}, "COT<Periodic,neg,test>"},
+		{"no test and neg", asdu.CauseOfTransmission{Cause: asdu.Periodic}, "COT<Periodic>"},
+		{"with test", asdu.CauseOfTransmission{Cause: asdu.Periodic, IsTest: true}, "COT<Periodic,test>"},
+		{"with neg", asdu.CauseOfTransmission{Cause: asdu.Periodic, IsNegative: true}, "COT<Periodic,neg>"},
+		{"with test and neg", asdu.CauseOfTransmission{Cause: asdu.Periodic, IsTest: true, IsNegative: true}, "COT<Periodic,neg,test>"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

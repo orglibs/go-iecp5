@@ -66,6 +66,7 @@ func (sf Params) Valid() error {
 		(sf.InfoObjTimeZone == nil) {
 		return ErrParam
 	}
+
 	return nil
 }
 
@@ -74,15 +75,17 @@ func (sf Params) ValidCommonAddr(addr CommonAddr) error {
 	if addr == InvalidCommonAddr {
 		return ErrCommonAddrZero
 	}
+
 	if bits.Len(uint(addr)) > sf.CommonAddrSize*8 {
 		return ErrCommonAddrFit
 	}
+
 	return nil
 }
 
 // IdentifierSize return the application service data unit identifies size
 func (sf Params) IdentifierSize() int {
-	return 2 + int(sf.CauseSize) + int(sf.CommonAddrSize)
+	return 2 + sf.CauseSize + sf.CommonAddrSize
 }
 
 // Identifier the application service data unit identifies.
@@ -107,6 +110,7 @@ func (id Identifier) String() string {
 	if id.OrigAddr == 0 {
 		return fmt.Sprintf("%s %s @%d", id.Type, id.Coa, id.CommonAddr)
 	}
+
 	return fmt.Sprintf("%s %s %d@%d ", id.Type, id.Coa, id.OrigAddr, id.CommonAddr)
 }
 
@@ -114,15 +118,16 @@ func (id Identifier) String() string {
 type ASDU struct {
 	*Params
 	Identifier
-	infoObj   []byte            // information object serial
-	bootstrap [ASDUSizeMax]byte // prevents Info malloc
+	InfoObj   []byte            // information object serial
+	Bootstrap [ASDUSizeMax]byte // prevents Info malloc
 }
 
 // NewEmptyASDU new empty asdu with special params
 func NewEmptyASDU(p *Params) *ASDU {
 	a := &ASDU{Params: p}
 	lenDUI := a.IdentifierSize()
-	a.infoObj = a.bootstrap[lenDUI:lenDUI]
+	a.InfoObj = a.Bootstrap[lenDUI:lenDUI]
+
 	return a
 }
 
@@ -130,13 +135,15 @@ func NewEmptyASDU(p *Params) *ASDU {
 func NewASDU(p *Params, identifier Identifier) *ASDU {
 	a := NewEmptyASDU(p)
 	a.Identifier = identifier
+
 	return a
 }
 
 // Clone deep clone asdu
 func (sf *ASDU) Clone() *ASDU {
 	r := NewASDU(sf.Params, sf.Identifier)
-	r.infoObj = append(r.infoObj, sf.infoObj...)
+	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
 	return r
 }
 
@@ -146,11 +153,12 @@ func (sf *ASDU) SetVariableNumber(n int) error {
 		return ErrInfoObjIndexFit
 	}
 	sf.Variable.Number = byte(n)
+
 	return nil
 }
 
 // Respond returns a new "responding" ASDU which addresses "initiating" u.
-//func (u *ASDU) Respond(t TypeID, c Cause) *ASDU {
+// func (u *ASDU) Respond(t TypeID, c Cause) *ASDU {
 //	return NewASDU(u.Params, Identifier{
 //		CommonAddr: u.CommonAddr,
 //		OrigAddr:   u.OrigAddr,
@@ -164,7 +172,8 @@ func (sf *ASDU) Reply(c Cause, addr CommonAddr) *ASDU {
 	sf.CommonAddr = addr
 	r := NewASDU(sf.Params, sf.Identifier)
 	r.Coa.Cause = c
-	r.infoObj = append(r.infoObj, sf.infoObj...)
+	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
 	return r
 }
 
@@ -172,12 +181,13 @@ func (sf *ASDU) Reply(c Cause, addr CommonAddr) *ASDU {
 func (sf *ASDU) SendReplyMirror(c Connect, cause Cause) error {
 	r := NewASDU(sf.Params, sf.Identifier)
 	r.Coa.Cause = cause
-	r.infoObj = append(r.infoObj, sf.infoObj...)
+	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
 	return c.Send(r)
 }
 
 //// String returns a full description.
-//func (u *ASDU) String() string {
+// func (u *ASDU) String() string {
 //	dataSize, err := GetInfoObjSize(u.Type)
 //	if err != nil {
 //		if !u.InfoSeq {
@@ -243,7 +253,7 @@ func (sf *ASDU) MarshalBinary() (data []byte, err error) {
 		return nil, ErrParam
 	}
 
-	raw := sf.bootstrap[:(sf.IdentifierSize() + len(sf.infoObj))]
+	raw := sf.Bootstrap[:(sf.IdentifierSize() + len(sf.InfoObj))]
 	raw[0] = byte(sf.Type)
 	raw[1] = sf.Variable.Value()
 	raw[2] = sf.Coa.Value()
@@ -263,6 +273,7 @@ func (sf *ASDU) MarshalBinary() (data []byte, err error) {
 		offset++
 		raw[offset] = byte(sf.CommonAddr >> 8)
 	}
+
 	return raw, nil
 }
 
@@ -298,7 +309,8 @@ func (sf *ASDU) UnmarshalBinary(rawAsdu []byte) error {
 		sf.CommonAddr = CommonAddr(rawAsdu[lenDUI-2]) | CommonAddr(rawAsdu[lenDUI-1])<<8
 	}
 	// information object
-	sf.infoObj = append(sf.bootstrap[lenDUI:lenDUI], rawAsdu[lenDUI:]...)
+	sf.InfoObj = append(sf.Bootstrap[lenDUI:lenDUI], rawAsdu[lenDUI:]...)
+
 	return sf.fixInfoObjSize()
 }
 
@@ -321,10 +333,10 @@ func (sf *ASDU) fixInfoObjSize() error {
 	switch {
 	case size == 0:
 		return ErrInfoObjIndexFit
-	case size > len(sf.infoObj):
+	case size > len(sf.InfoObj):
 		return io.EOF
-	case size < len(sf.infoObj): // not explicitly prohibited
-		sf.infoObj = sf.infoObj[:size]
+	case size < len(sf.InfoObj): // not explicitly prohibited
+		sf.InfoObj = sf.InfoObj[:size]
 	}
 
 	return nil

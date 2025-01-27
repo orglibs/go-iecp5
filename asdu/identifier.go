@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-//data unit identification: Application service data unit -data unit identifier
+// data unit identification: Application service data unit -data unit identifier
 
 // TypeID is the ASDU type identification.
 // See companion standard 101, subclass 7.2.1.
@@ -237,11 +237,13 @@ func GetInfoObjSize(id TypeID) (int, error) {
 	if !exists {
 		return 0, ErrTypeIdentifier
 	}
+
 	return size, nil
 }
 
 const (
-	_TypeIDName0 = "M_SP_NA_1M_SP_TA_1M_DP_NA_1M_DP_TA_1M_ST_NA_1M_ST_TA_1M_BO_NA_1M_BO_TA_1M_ME_NA_1M_ME_TA_1M_ME_NB_1M_ME_TB_1M_ME_NC_1M_ME_TC_1M_IT_NA_1M_IT_TA_1M_EP_TA_1M_EP_TB_1M_EP_TC_1M_PS_NA_1M_ME_ND_1"
+	_TypeIDName0 = "M_SP_NA_1M_SP_TA_1M_DP_NA_1M_DP_TA_1M_ST_NA_1M_ST_TA_1M_BO_NA_1M_BO_TA_1M_ME_NA_1M_ME_TA_1M_ME_NB_" +
+		"1M_ME_TB_1M_ME_NC_1M_ME_TC_1M_IT_NA_1M_IT_TA_1M_EP_TA_1M_EP_TB_1M_EP_TC_1M_PS_NA_1M_ME_ND_1"
 	_TypeIDName1 = "M_SP_TB_1M_DP_TB_1M_ST_TB_1M_BO_TB_1M_ME_TD_1M_ME_TE_1M_ME_TF_1M_IT_TB_1M_EP_TD_1M_EP_TE_1M_EP_TF_1S_IT_TC_1"
 	_TypeIDName2 = "C_SC_NA_1C_DC_NA_1C_RC_NA_1C_SE_NA_1C_SE_NB_1C_SE_NC_1C_BO_NA_1"
 	_TypeIDName3 = "C_SC_TA_1C_DC_TA_1C_RC_TA_1C_SE_TA_1C_SE_TB_1C_SE_TC_1C_BO_TA_1"
@@ -255,6 +257,7 @@ const (
 
 func (sf TypeID) String() string {
 	var s string
+
 	switch {
 	case 1 <= sf && sf <= 21:
 		sf--
@@ -288,6 +291,7 @@ func (sf TypeID) String() string {
 	default:
 		s = strconv.FormatInt(int64(sf), 10)
 	}
+
 	return "TID<" + s + ">"
 }
 
@@ -315,6 +319,7 @@ func (sf VariableStruct) Value() byte {
 	if sf.IsSequence {
 		return sf.Number | 0x80
 	}
+
 	return sf.Number
 }
 
@@ -323,6 +328,7 @@ func (sf VariableStruct) String() string {
 	if sf.IsSequence {
 		return fmt.Sprintf("VSQ<sq,%d>", sf.Number)
 	}
+
 	return fmt.Sprintf("VSQ<%d>", sf.Number)
 }
 
@@ -332,7 +338,8 @@ func (sf VariableStruct) String() string {
 // T = test, the cause of transmission for testing, 0: not tested, 1: tested
 // P/N indicates the negative (or positive) confirmation.
 // Cause is the cause of transmission. bit5 - bit0
-// Positive or negative confirmation of the activation requested by the activation of the application function 0: Positive confirmation, 1: Negative confirmation
+// Positive or negative confirmation of the activation requested by the activation of the application function
+// 0: Positive confirmation, 1: Negative confirmation
 type CauseOfTransmission struct {
 	IsTest     bool
 	IsNegative bool
@@ -491,12 +498,14 @@ func (sf CauseOfTransmission) Value() byte {
 	if sf.IsTest {
 		v |= 0x80
 	}
+
 	return byte(v)
 }
 
 // String Returns the string of the Cause, containing the ",neg" and ",test" of the corresponding application.
 func (sf CauseOfTransmission) String() string {
 	s := "COT<" + causeSemantics[sf.Cause]
+
 	switch {
 	case sf.IsNegative && sf.IsTest:
 		s += ",neg,test"
@@ -505,6 +514,7 @@ func (sf CauseOfTransmission) String() string {
 	case sf.IsTest:
 		s += ",test"
 	}
+
 	return s + ">"
 }
 

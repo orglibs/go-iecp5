@@ -7,6 +7,7 @@ package cs104
 import (
 	"context"
 	"crypto/tls"
+	"log/slog"
 	"net"
 	"sync"
 	"time"
@@ -31,18 +32,18 @@ type Server struct {
 	listen         net.Listener
 	onConnection   func(asdu.Connect)
 	connectionLost func(asdu.Connect)
-	clog.Clog
+
 	wg sync.WaitGroup
 }
 
 // NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
 func NewServer(handler ServerHandlerInterface) *Server {
+	clog.NewLogger()
 	server104 := &Server{
 		config:   DefaultConfig(),
 		params:   *asdu.ParamsWide,
 		handler:  handler,
 		sessions: make(map[*SrvSession]struct{}),
-		Clog:     clog.NewLogger("cs104 server => "),
 	}
 
 	return server104
@@ -55,6 +56,7 @@ func (sf *Server) SetConfig(cfg Config) *Server {
 	} else {
 		sf.config = cfg
 	}
+
 	return sf
 }
 
@@ -65,6 +67,7 @@ func (sf *Server) SetParams(p *asdu.Params) *Server {
 	} else {
 		sf.params = *p
 	}
+
 	return sf
 }
 
@@ -72,9 +75,11 @@ func (sf *Server) SetParams(p *asdu.Params) *Server {
 func (sf *Server) ListenAndServer(addr string) {
 	listen, err := net.Listen("tcp", addr)
 	if err != nil {
-		sf.Error("server run failed, %v", err)
+		slog.Error("server run failed", "error", err)
+
 		return
 	}
+
 	sf.mux.Lock()
 	sf.listen = listen
 	sf.mux.Unlock()
@@ -83,17 +88,22 @@ func (sf *Server) ListenAndServer(addr string) {
 	defer func() {
 		cancel()
 		_ = sf.Close()
-		sf.Debug("server stop")
+
+		slog.Debug("server stop")
 	}()
-	sf.Debug("server run")
+
+	slog.Debug("server run")
+
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
-			sf.Error("server run failed, %v", err)
+			slog.Error("server run failed", "error", err)
+
 			return
 		}
 
 		sf.wg.Add(1)
+
 		go func() {
 			sess := &SrvSession{
 				config:   &sf.config,
@@ -107,8 +117,8 @@ func (sf *Server) ListenAndServer(addr string) {
 
 				onConnection:   sf.onConnection,
 				connectionLost: sf.connectionLost,
-				Clog:           sf.Clog,
 			}
+
 			sf.mux.Lock()
 			sf.sessions[sess] = struct{}{}
 			sf.mux.Unlock()
@@ -126,22 +136,28 @@ func (sf *Server) Close() error {
 	var err error
 
 	sf.mux.Lock()
+
 	if sf.listen != nil {
 		err = sf.listen.Close()
 		sf.listen = nil
 	}
+
 	sf.mux.Unlock()
 	sf.wg.Wait()
+
 	return err
 }
 
 // Send imp interface Connect
 func (sf *Server) Send(a *asdu.ASDU) error {
 	sf.mux.Lock()
+
 	for k := range sf.sessions {
 		_ = k.Send(a.Clone())
 	}
+
 	sf.mux.Unlock()
+
 	return nil
 }
 

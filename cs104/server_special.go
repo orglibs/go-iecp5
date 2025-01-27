@@ -6,8 +6,10 @@ package cs104
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
-	"math/rand"
+	"log/slog"
+	"math/big"
 	"sync/atomic"
 	"time"
 
@@ -26,9 +28,6 @@ type ServerSpecial interface {
 
 	SetOnConnectHandler(f func(c asdu.Connect))
 	SetConnectionLostHandler(f func(c asdu.Connect))
-
-	LogMode(enable bool)
-	SetLogProvider(p clog.LogProvider)
 }
 
 type serverSpec struct {
@@ -39,6 +38,8 @@ type serverSpec struct {
 
 // NewServerSpecial new special server
 func NewServerSpecial(handler ServerHandlerInterface, o *ClientOption) ServerSpecial {
+	clog.NewLogger()
+
 	return &serverSpec{
 		SrvSession: SrvSession{
 			config:  &o.config,
@@ -50,7 +51,6 @@ func NewServerSpecial(handler ServerHandlerInterface, o *ClientOption) ServerSpe
 			rcvRaw:   make(chan []byte, 1024),
 			sendRaw:  make(chan []byte, 1024), // may not block!
 
-			Clog: clog.NewLogger("cs104 serverSpec => "),
 		},
 		option: *o,
 	}
@@ -73,6 +73,7 @@ func (sf *serverSpec) Start() error {
 	}
 
 	go sf.running()
+
 	return nil
 }
 
@@ -83,10 +84,13 @@ func (sf *serverSpec) running() {
 	sf.rwMux.Lock()
 	if !atomic.CompareAndSwapUint32(&sf.status, initial, disconnected) {
 		sf.rwMux.Unlock()
+
 		return
 	}
+
 	ctx, sf.closeCancel = context.WithCancel(context.Background())
 	sf.rwMux.Unlock()
+
 	defer sf.setConnectStatus(initial)
 
 	for {
@@ -96,26 +100,35 @@ func (sf *serverSpec) running() {
 		default:
 		}
 
-		sf.Debug("connecting server %+v", sf.option.server)
+		slog.Debug("connecting server", "server", sf.option.server)
+
 		conn, err := openConnection(sf.option.server, sf.option.TLSConfig, sf.config.ConnectTimeout0)
 		if err != nil {
-			sf.Error("connect failed, %v", err)
+			slog.Error("connect failed", "error", err)
 			if !sf.option.autoReconnect {
 				return
 			}
+
 			time.Sleep(sf.option.reconnectInterval)
+
 			continue
 		}
-		sf.Debug("connect success")
+		slog.Debug("connect success")
 		sf.conn = conn
 		sf.run(ctx)
-		sf.Debug("disconnected server %+v", sf.option.server)
+		slog.Debug("disconnected server", "server", sf.option.server)
+
 		select {
 		case <-ctx.Done():
 			return
 		default:
 			// Random 500ms-1s retries to avoid fast retries causing many invalid connections to the server
-			time.Sleep(time.Millisecond * time.Duration(500+rand.Intn(500)))
+			rnd, err := rand.Int(rand.Reader, big.NewInt(500))
+			if err != nil {
+				rnd = big.NewInt(0)
+			}
+
+			time.Sleep(time.Millisecond * time.Duration(500+rnd.Int64()))
 		}
 	}
 }
@@ -126,9 +139,12 @@ func (sf *serverSpec) IsClosed() bool {
 
 func (sf *serverSpec) Close() error {
 	sf.rwMux.Lock()
+
 	if sf.closeCancel != nil {
 		sf.closeCancel()
 	}
+
 	sf.rwMux.Unlock()
+
 	return nil
 }

@@ -32,6 +32,7 @@ func ParameterNormal(c Connect, coa CauseOfTransmission, ca CommonAddr, p Parame
 	if coa.Cause != Activation {
 		return ErrCmdCause
 	}
+
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
@@ -46,8 +47,10 @@ func ParameterNormal(c Connect, coa CauseOfTransmission, ca CommonAddr, p Parame
 	if err := u.AppendInfoObjAddr(p.Ioa); err != nil {
 		return err
 	}
+
 	u.AppendNormalize(p.Value)
 	u.AppendBytes(p.Qpm.Value())
+
 	return c.Send(u)
 }
 
@@ -91,7 +94,9 @@ func ParameterScaled(c Connect, coa CauseOfTransmission, ca CommonAddr, p Parame
 	if err := u.AppendInfoObjAddr(p.Ioa); err != nil {
 		return err
 	}
+
 	u.AppendScaled(p.Value).AppendBytes(p.Qpm.Value())
+
 	return c.Send(u)
 }
 
@@ -123,6 +128,7 @@ func ParameterFloat(c Connect, coa CauseOfTransmission, ca CommonAddr, p Paramet
 	if coa.Cause != Activation {
 		return ErrCmdCause
 	}
+
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
@@ -137,7 +143,9 @@ func ParameterFloat(c Connect, coa CauseOfTransmission, ca CommonAddr, p Paramet
 	if err := u.AppendInfoObjAddr(p.Ioa); err != nil {
 		return err
 	}
+
 	u.AppendFloat32(p.Value).AppendBytes(p.Qpm.Value())
+
 	return c.Send(u)
 }
 
@@ -164,6 +172,7 @@ func ParameterActivation(c Connect, coa CauseOfTransmission, ca CommonAddr, p Pa
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
+
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
@@ -178,7 +187,9 @@ func ParameterActivation(c Connect, coa CauseOfTransmission, ca CommonAddr, p Pa
 	if err := u.AppendInfoObjAddr(p.Ioa); err != nil {
 		return err
 	}
+
 	u.AppendBytes(byte(p.Qpa))
+
 	return c.Send(u)
 }
 
@@ -187,7 +198,7 @@ func (sf *ASDU) GetParameterNormal() ParameterNormalInfo {
 	return ParameterNormalInfo{
 		sf.DecodeInfoObjAddr(),
 		sf.DecodeNormalize(),
-		ParseQualifierOfParamMV(sf.infoObj[0]),
+		ParseQualifierOfParamMV(sf.InfoObj[0]),
 	}
 }
 
@@ -196,7 +207,7 @@ func (sf *ASDU) GetParameterScaled() ParameterScaledInfo {
 	return ParameterScaledInfo{
 		sf.DecodeInfoObjAddr(),
 		sf.DecodeScaled(),
-		ParseQualifierOfParamMV(sf.infoObj[0]),
+		ParseQualifierOfParamMV(sf.InfoObj[0]),
 	}
 }
 
@@ -205,7 +216,7 @@ func (sf *ASDU) GetParameterFloat() ParameterFloatInfo {
 	return ParameterFloatInfo{
 		sf.DecodeInfoObjAddr(),
 		sf.DecodeFloat32(),
-		ParseQualifierOfParamMV(sf.infoObj[0]),
+		ParseQualifierOfParamMV(sf.InfoObj[0]),
 	}
 }
 
@@ -213,6 +224,6 @@ func (sf *ASDU) GetParameterFloat() ParameterFloatInfo {
 func (sf *ASDU) GetParameterActivation() ParameterActivationInfo {
 	return ParameterActivationInfo{
 		sf.DecodeInfoObjAddr(),
-		QualifierOfParameterAct(sf.infoObj[0]),
+		QualifierOfParameterAct(sf.InfoObj[0]),
 	}
 }
