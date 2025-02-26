@@ -168,10 +168,11 @@ func (sf *ASDU) SetVariableNumber(n int) error {
 //}
 
 // Reply returns a new "responding" ASDU which addresses "initiating" addr with a copy of Info.
-func (sf *ASDU) Reply(c Cause, addr CommonAddr) *ASDU {
+func (sf *ASDU) Reply(c Cause, addr CommonAddr, ioa InfoObjAddr) *ASDU {
 	sf.CommonAddr = addr
 	r := NewASDU(sf.Params, sf.Identifier)
 	r.Coa.Cause = c
+	r.AppendInfoObjAddr(ioa)
 	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
 
 	return r
