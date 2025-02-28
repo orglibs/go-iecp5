@@ -1,9 +1,7 @@
-# go-iecp5(Archived)
-## NOTE: Archived, not maintain. 
+# go-iecp5
 
 go-iecp5 library for IEC 60870-5 based protocols in pure go.
 The current implementation contains code for IEC 60870-5-104 (protocool over TCP/IP) specifications.
-
 
 
 [![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white)](https://pkg.go.dev/gitlab.com/circutor-library/go-iecp5?tab=doc)
