@@ -489,6 +489,10 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		err = sf.handler.InterrogationHandler(sf, asduPack, qoi)
+		if err == nil {
+			actConRep := asduPack.Reply(asdu.ActivationTerm, asduPack.CommonAddr, 0)
+			err = sf.Send(actConRep)
+		}
 
 		return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
 	case asdu.C_CI_NA_1: // CounterInterrogationCmd
