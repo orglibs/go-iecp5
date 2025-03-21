@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"gitlab.com/circutor-library/go-iecp5/asdu"
-	"gitlab.com/circutor-library/go-iecp5/clog"
 )
 
 const (
@@ -67,8 +66,6 @@ type Client struct {
 
 // NewClient returns an IEC104 master,default config and default asdu.ParamsWide params
 func NewClient(handler ClientHandlerInterface, o *ClientOption) *Client {
-	clog.NewLogger()
-
 	return &Client{
 		option:           *o,
 		handler:          handler,

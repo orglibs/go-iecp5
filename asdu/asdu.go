@@ -8,6 +8,7 @@ package asdu
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"math/bits"
 	"time"
 )
@@ -172,7 +173,11 @@ func (sf *ASDU) Reply(c Cause, addr CommonAddr, ioa InfoObjAddr) *ASDU {
 	sf.CommonAddr = addr
 	r := NewASDU(sf.Params, sf.Identifier)
 	r.Coa.Cause = c
-	r.AppendInfoObjAddr(ioa)
+
+	if err := r.AppendInfoObjAddr(ioa); err != nil {
+		slog.Warn("failed to append info object address", "error", err)
+	}
+
 	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
 
 	return r

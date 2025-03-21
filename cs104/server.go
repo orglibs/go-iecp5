@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"gitlab.com/circutor-library/go-iecp5/asdu"
-	"gitlab.com/circutor-library/go-iecp5/clog"
 )
 
 // timeoutResolution is seconds according to companion standard 104,
@@ -38,7 +37,6 @@ type Server struct {
 
 // NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
 func NewServer(handler ServerHandlerInterface) *Server {
-	clog.NewLogger()
 	server104 := &Server{
 		config:   DefaultConfig(),
 		params:   *asdu.ParamsWide,

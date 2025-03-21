@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"gitlab.com/circutor-library/go-iecp5/asdu"
-	"gitlab.com/circutor-library/go-iecp5/clog"
 )
 
 // ServerSpecial server special interface
@@ -38,8 +37,6 @@ type serverSpec struct {
 
 // NewServerSpecial new special server
 func NewServerSpecial(handler ServerHandlerInterface, o *ClientOption) ServerSpecial {
-	clog.NewLogger()
-
 	return &serverSpec{
 		SrvSession: SrvSession{
 			config:  &o.config,

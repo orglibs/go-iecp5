@@ -133,7 +133,7 @@ func TestASDU_Reply(t *testing.T) {
 				InfoObj:    tt.fields.InfoObj,
 				Bootstrap:  tt.fields.bootstrap,
 			}
-			if got := this.Reply(tt.args.c, tt.args.addr); !reflect.DeepEqual(got, tt.want) {
+			if got := this.Reply(tt.args.c, tt.args.addr, 0); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ASDU.Reply() = %v, want %v", got, tt.want)
 			}
 		})
