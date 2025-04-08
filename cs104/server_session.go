@@ -684,7 +684,10 @@ func (sf *SrvSession) Send(u *asdu.ASDU) error {
 			return ErrBufferFull
 		}
 	} else {
-		sf.queue.Enqueue(sf, *u)
+		err := sf.queue.Enqueue(sf, *u)
+		if err != nil {
+			return fmt.Errorf("error %w", err)
+		}
 	}
 
 	return nil

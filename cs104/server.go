@@ -20,6 +20,8 @@ import (
 // of a second make this system much more responsive i.c.w. S-frames.
 const timeoutResolution = 100 * time.Millisecond
 
+const ErrQueueEmpty = "queue empty"
+
 // Server struct type for the common server
 type Server struct {
 	config         Config
@@ -197,9 +199,12 @@ func (sf *Server) processQueue() {
 	for {
 		con, data, err := sf.queue.Dequeue()
 		if err == nil {
-			con.SendQueuedASDU(data.Clone())
-		} else {
-			slog.Debug("queue dequeue failed", "error", err)
+			err = con.SendQueuedASDU(data.Clone())
+			if err != nil {
+				slog.Debug("queue data send failed", "error", err)
+			}
+		} else if err.Error() == ErrQueueEmpty {
+			time.Sleep(timeoutResolution)
 		}
 	}
 }
