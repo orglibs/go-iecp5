@@ -25,6 +25,8 @@ type Server struct {
 	config         Config
 	params         asdu.Params
 	handler        ServerHandlerInterface
+	queue          ServerQueueInterface
+	useQueue       bool
 	TLSConfig      *tls.Config
 	mux            sync.Mutex
 	sessions       map[*SrvSession]struct{}
@@ -36,11 +38,13 @@ type Server struct {
 }
 
 // NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
-func NewServer(handler ServerHandlerInterface) *Server {
+func NewServer(handler ServerHandlerInterface, queue ServerQueueInterface, useQueue bool) *Server {
 	server104 := &Server{
 		config:   DefaultConfig(),
 		params:   *asdu.ParamsWide,
 		handler:  handler,
+		queue:    queue,
+		useQueue: useQueue,
 		sessions: make(map[*SrvSession]struct{}),
 	}
 
@@ -92,6 +96,10 @@ func (sf *Server) ListenAndServer(addr string) {
 
 	slog.Debug("server run")
 
+	if sf.useQueue {
+		go sf.processQueue()
+	}
+
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
@@ -107,6 +115,8 @@ func (sf *Server) ListenAndServer(addr string) {
 				config:   &sf.config,
 				params:   &sf.params,
 				handler:  sf.handler,
+				queue:    sf.queue,
+				useQueue: sf.useQueue,
 				conn:     conn,
 				rcvASDU:  make(chan []byte, sf.config.RecvUnAckLimitW<<4),
 				sendASDU: make(chan []byte, sf.config.SendUnAckLimitK<<4),
@@ -117,6 +127,9 @@ func (sf *Server) ListenAndServer(addr string) {
 				connectionLost: sf.connectionLost,
 			}
 
+			if sf.useQueue {
+				sess.queue = sf.queue
+			}
 			sf.mux.Lock()
 			sf.sessions[sess] = struct{}{}
 			sf.mux.Unlock()
@@ -178,4 +191,15 @@ func (sf *Server) SetOnConnectionHandler(f func(asdu.Connect)) {
 // SetConnectionLostHandler set connect lost handler
 func (sf *Server) SetConnectionLostHandler(f func(asdu.Connect)) {
 	sf.connectionLost = f
+}
+
+func (sf *Server) processQueue() {
+	for {
+		con, data, err := sf.queue.Dequeue()
+		if err == nil {
+			con.SendQueuedASDU(data.Clone())
+		} else {
+			slog.Debug("queue dequeue failed", "error", err)
+		}
+	}
 }

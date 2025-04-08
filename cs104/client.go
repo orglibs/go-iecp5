@@ -570,9 +570,13 @@ func (sf *Client) Send(a *asdu.ASDU) error {
 	select {
 	case sf.sendASDU <- data:
 	default:
-		return ErrBufferFulled
+		return ErrBufferFull
 	}
 
+	return nil
+}
+
+func (sf *Client) SendQueuedASDU(a *asdu.ASDU) error {
 	return nil
 }
 

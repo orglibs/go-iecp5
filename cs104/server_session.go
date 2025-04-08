@@ -27,10 +27,12 @@ const (
 
 // SrvSession the cs104 server session
 type SrvSession struct {
-	config  *Config
-	params  *asdu.Params
-	conn    net.Conn
-	handler ServerHandlerInterface
+	config   *Config
+	params   *asdu.Params
+	conn     net.Conn
+	handler  ServerHandlerInterface
+	queue    ServerQueueInterface
+	useQueue bool
 
 	rcvASDU  chan []byte // for received asdu
 	sendASDU chan []byte // for send asdu
@@ -670,6 +672,29 @@ func (sf *SrvSession) Send(u *asdu.ASDU) error {
 		return ErrUseClosedConnection
 	}
 
+	if !sf.useQueue {
+		data, err := u.MarshalBinary()
+		if err != nil {
+			return fmt.Errorf("error %w", err)
+		}
+
+		select {
+		case sf.sendASDU <- data:
+		default:
+			return ErrBufferFull
+		}
+	} else {
+		sf.queue.Enqueue(sf, *u)
+	}
+
+	return nil
+}
+
+func (sf *SrvSession) SendQueuedASDU(u *asdu.ASDU) error {
+	if !sf.IsConnected() {
+		return ErrUseClosedConnection
+	}
+
 	data, err := u.MarshalBinary()
 	if err != nil {
 		return fmt.Errorf("error %w", err)
@@ -678,7 +703,7 @@ func (sf *SrvSession) Send(u *asdu.ASDU) error {
 	select {
 	case sf.sendASDU <- data:
 	default:
-		return ErrBufferFulled
+		return ErrBufferFull
 	}
 
 	return nil

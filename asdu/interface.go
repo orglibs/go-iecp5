@@ -12,5 +12,6 @@ import (
 type Connect interface {
 	Params() *Params
 	Send(a *ASDU) error
+	SendQueuedASDU(a *ASDU) error
 	UnderlyingConn() net.Conn
 }
