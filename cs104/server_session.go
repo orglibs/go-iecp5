@@ -321,7 +321,7 @@ func (sf *SrvSession) handlerLoop() {
 			}
 
 			if err := sf.serverHandler(asduPack); err != nil {
-				slog.Error("serverHandler falied", "error", err)
+				slog.Error("serverHandler failed", "error", err)
 			}
 		}
 	}
@@ -412,57 +412,83 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		cmd := asduPack.GetSingleCmd()
-		err = sf.handler.SingleCommandHandler(sf, asduPack, cmd)
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
+		err = sf.handler.SingleCommandHandler(sf, asduPack, cmd)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
+		}
+
+		return nil
 	case asdu.C_DC_NA_1: // DoubleCommand without timeStamp
 		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
+			return fmt.Errorf("error with %s type, %w", asdu.C_DC_NA_1, err)
 		}
 
 		cmd := asduPack.GetDoubleCmd()
-		err = sf.handler.DoubleCommandHandler(sf, asduPack, cmd)
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_DC_NA_1, err)
+		err = sf.handler.DoubleCommandHandler(sf, asduPack, cmd)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_DC_NA_1, err)
+		}
+
+		return nil
 	case asdu.C_DC_TA_1: // DoubleCommand with timeStamp
 		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
+			return fmt.Errorf("error with %s type, %w", asdu.C_DC_TA_1, err)
 		}
 
 		cmd := asduPack.GetDoubleCmd()
-		err = sf.handler.DoubleCommandHandler(sf, asduPack, cmd)
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_DC_TA_1, err)
+		err = sf.handler.DoubleCommandHandler(sf, asduPack, cmd)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_DC_TA_1, err)
+		}
+
+		return nil
 	case asdu.C_SC_TA_1: // SingleCommand with timeStamp
 		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
+			return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
 		}
 
 		cmd := asduPack.GetSingleCmd()
-		err = sf.handler.SingleCommandHandler(sf, asduPack, cmd)
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
+		err = sf.handler.SingleCommandHandler(sf, asduPack, cmd)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
+		}
+
+		return nil
 	case asdu.C_SE_NA_1: // SetPointCommandNormalized
 		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
+			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NA_1, err)
 		}
-		cmd := asduPack.GetSetpointNormalCmd()
-		err = sf.handler.SetPointCommandNormalHandler(sf, asduPack, cmd)
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_SE_NA_1, err)
+		cmd := asduPack.GetSetpointNormalCmd()
+
+		err = sf.handler.SetPointCommandNormalHandler(sf, asduPack, cmd)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NA_1, err)
+		}
+
+		return nil
 	case asdu.C_SE_NB_1: // SetPointCommandScaled
 		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
+			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
 		}
-		cmd := asduPack.GetSetpointCmdScaled()
-		err = sf.handler.SetPointCommandScaledHandler(sf, asduPack, cmd)
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
+		cmd := asduPack.GetSetpointCmdScaled()
+
+		err = sf.handler.SetPointCommandScaledHandler(sf, asduPack, cmd)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
+		}
+
+		return nil
 	case asdu.C_IC_NA_1: // InterrogationCmd
 		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
 			asduPack.Identifier.Coa.Cause == asdu.Deactivation) {
@@ -493,10 +519,16 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		err = sf.handler.InterrogationHandler(sf, asduPack, qoi)
 		if err == nil {
 			actConRep := asduPack.Reply(asdu.ActivationTerm, asduPack.CommonAddr, 0)
+
 			err = sf.Send(actConRep)
+			if err != nil {
+				return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
+			}
+		} else {
+			return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
 		}
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
+		return nil
 	case asdu.C_CI_NA_1: // CounterInterrogationCmd
 		if asduPack.Identifier.Coa.Cause != asdu.Activation {
 			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
@@ -518,8 +550,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		err := sf.handler.CounterInterrogationHandler(sf, asduPack, qcc)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_CI_NA_1, err)
+		}
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_CI_NA_1, err)
+		return nil
 	case asdu.C_RD_NA_1: // ReadCmd
 		if asduPack.Identifier.Coa.Cause != asdu.Request {
 			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
@@ -534,8 +569,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		err := sf.handler.ReadHandler(sf, asduPack, asduPack.GetReadCmd())
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_RD_NA_1, err)
+		}
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_RD_NA_1, err)
+		return nil
 	case asdu.C_CS_NA_1: // ClockSynchronizationCmd
 		if asduPack.Identifier.Coa.Cause != asdu.Activation {
 			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
@@ -557,8 +595,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		err := sf.handler.ClockSyncHandler(sf, asduPack, tm)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_CS_NA_1, err)
+		}
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_CS_NA_1, err)
+		return nil
 	case asdu.C_TS_NA_1: // TestCommand
 		if asduPack.Identifier.Coa.Cause != asdu.Activation {
 			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
@@ -580,9 +621,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		err := asduPack.SendReplyMirror(sf, asdu.ActivationCon)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_TS_NA_1, err)
+		}
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_TS_NA_1, err)
-
+		return nil
 	case asdu.C_RP_NA_1: // ResetProcessCmd
 		if asduPack.Identifier.Coa.Cause != asdu.Activation {
 			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
@@ -604,8 +647,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		err := sf.handler.ResetProcessHandler(sf, asduPack, qrp)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_RP_NA_1, err)
+		}
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_RP_NA_1, err)
+		return nil
 	case asdu.C_CD_NA_1: // DelayAcquireCommand
 		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
 			asduPack.Identifier.Coa.Cause == asdu.Spontaneous) {
@@ -629,7 +675,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		err := sf.handler.DelayAcquisitionHandler(sf, asduPack, msec)
 
-		return fmt.Errorf("error with %s type, %w", asdu.C_CD_NA_1, err)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_CD_NA_1, err)
+		}
+
+		return nil
 	}
 
 	if err := sf.handler.ASDUHandler(sf, asduPack); err != nil {
