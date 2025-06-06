@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"log/slog"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -27,7 +28,7 @@ type Server struct {
 	config         Config
 	params         asdu.Params
 	handler        ServerHandlerInterface
-	queue          ServerQueueInterface
+	qm             ServerQueueManagerInterface
 	useQueue       bool
 	TLSConfig      *tls.Config
 	mux            sync.Mutex
@@ -40,12 +41,12 @@ type Server struct {
 }
 
 // NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
-func NewServer(handler ServerHandlerInterface, queue ServerQueueInterface, useQueue bool) *Server {
+func NewServer(handler ServerHandlerInterface, qm ServerQueueManagerInterface, useQueue bool) *Server {
 	server104 := &Server{
 		config:   DefaultConfig(),
 		params:   *asdu.ParamsWide,
 		handler:  handler,
-		queue:    queue,
+		qm:       qm,
 		useQueue: useQueue,
 		sessions: make(map[*SrvSession]struct{}),
 	}
@@ -98,10 +99,6 @@ func (sf *Server) ListenAndServer(addr string) {
 
 	slog.Debug("server run")
 
-	if sf.useQueue {
-		go sf.processQueue()
-	}
-
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
@@ -117,7 +114,7 @@ func (sf *Server) ListenAndServer(addr string) {
 				config:   &sf.config,
 				params:   &sf.params,
 				handler:  sf.handler,
-				queue:    sf.queue,
+				queue:    nil,
 				useQueue: sf.useQueue,
 				conn:     conn,
 				rcvASDU:  make(chan []byte, sf.config.RecvUnAckLimitW<<4),
@@ -129,15 +126,29 @@ func (sf *Server) ListenAndServer(addr string) {
 				connectionLost: sf.connectionLost,
 			}
 
+			remoteAddr := strings.Split(conn.RemoteAddr().String(), ":")[0]
+			
 			if sf.useQueue {
-				sess.queue = sf.queue
+				q := sf.qm.NewQueue(remoteAddr)
+				if q == nil {
+					slog.Warn("queue not created correctly, closing connection", "addr", conn.RemoteAddr().String())
+					sf.wg.Done()
+					return
+				}
+				
+				sess.queue = q
+				go sess.processQueue()
 			}
+
 			sf.mux.Lock()
 			sf.sessions[sess] = struct{}{}
 			sf.mux.Unlock()
 			sess.run(ctx)
 			sf.mux.Lock()
 			delete(sf.sessions, sess)
+			if sf.useQueue {
+				sf.qm.DeleteQueue(remoteAddr)
+			}
 			sf.mux.Unlock()
 			sf.wg.Done()
 		}()
@@ -193,18 +204,4 @@ func (sf *Server) SetOnConnectionHandler(f func(asdu.Connect)) {
 // SetConnectionLostHandler set connect lost handler
 func (sf *Server) SetConnectionLostHandler(f func(asdu.Connect)) {
 	sf.connectionLost = f
-}
-
-func (sf *Server) processQueue() {
-	for {
-		con, data, err := sf.queue.Dequeue()
-		if err == nil {
-			err = con.SendQueuedASDU(data.Clone())
-			if err != nil {
-				slog.Debug("queue data send failed", "error", err)
-			}
-		} else if err.Error() == ErrQueueEmpty {
-			time.Sleep(timeoutResolution)
-		}
-	}
 }

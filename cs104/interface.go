@@ -25,7 +25,13 @@ type ServerHandlerInterface interface {
 	SetPointCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.SetpointCommandScaledInfo) error
 }
 
-// ServerQueueInterface is the interface of server queue
+// ServerQueueManagerInterface is the manager of connection queues
+type ServerQueueManagerInterface interface {
+	NewQueue(remoteAddr string) ServerQueueInterface
+	DeleteQueue(remoteAddr string)
+}
+
+// ServerQueueInterface is the interface of connection queue
 type ServerQueueInterface interface {
 	Enqueue(con asdu.Connect, frame asdu.ASDU) error
 	Dequeue() (asdu.Connect, asdu.ASDU, error)

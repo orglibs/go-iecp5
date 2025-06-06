@@ -766,3 +766,17 @@ func (sf *SrvSession) SendQueuedASDU(u *asdu.ASDU) error {
 func (sf *SrvSession) UnderlyingConn() net.Conn {
 	return sf.conn
 }
+
+func (sf *SrvSession) processQueue() {
+	for {
+		con, data, err := sf.queue.Dequeue()
+		if err == nil {
+			err = con.SendQueuedASDU(data.Clone())
+			if err != nil {
+				slog.Debug("queue data send failed", "error", err)
+			}
+		} else if err.Error() == ErrQueueEmpty {
+			time.Sleep(timeoutResolution)
+		}
+	}
+}
