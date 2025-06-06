@@ -127,15 +127,16 @@ func (sf *Server) ListenAndServer(addr string) {
 			}
 
 			remoteAddr := strings.Split(conn.RemoteAddr().String(), ":")[0]
-			
+
 			if sf.useQueue {
 				q := sf.qm.NewQueue(remoteAddr)
 				if q == nil {
 					slog.Warn("queue not created correctly, closing connection", "addr", conn.RemoteAddr().String())
 					sf.wg.Done()
+
 					return
 				}
-				
+
 				sess.queue = q
 				go sess.processQueue()
 			}
