@@ -19,11 +19,11 @@ type ServerHandlerInterface interface {
 	ResetProcessHandler(con asdu.Connect, asdu *asdu.ASDU, resetQuaifier asdu.QualifierOfResetProcessCmd) error
 	DelayAcquisitionHandler(con asdu.Connect, asdu *asdu.ASDU, delay uint16) error
 	ASDUHandler(con asdu.Connect, asdu *asdu.ASDU) error
-	DoubleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, doubleCom asdu.DoubleCommandInfo) error
-	SingleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, singleCom asdu.SingleCommandInfo) error
-	SetPointCommandNormalHandler(con asdu.Connect, asdu *asdu.ASDU, setNormal asdu.SetpointCommandNormalInfo) error
-	SetPointCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.SetpointCommandScaledInfo) error
-	SetStepPositionCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.StepCommandInfo) error
+	DoubleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, doubleCom asdu.DoubleCommandInfo, cmdInfo asdu.InfoObjAddr) error
+	SingleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, singleCom asdu.SingleCommandInfo, cmdInfo asdu.InfoObjAddr) error
+	SetPointCommandNormalHandler(con asdu.Connect, asdu *asdu.ASDU, setNormal asdu.SetpointCommandNormalInfo, cmdInfo asdu.InfoObjAddr) error
+	SetPointCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.SetpointCommandScaledInfo, cmdInfo asdu.InfoObjAddr) error
+	SetStepPositionCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.StepCommandInfo, cmdInfo asdu.InfoObjAddr) error
 }
 
 // ServerQueueManagerInterface is the manager of connection queues

@@ -413,7 +413,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		cmd := asduPack.GetSingleCmd()
 
-		err = sf.handler.SingleCommandHandler(sf, asduPack, cmd)
+		err = sf.handler.SingleCommandHandler(sf, asduPack, cmd, asduPack.GetAllCmd())
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
 		}
@@ -427,7 +427,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		cmd := asduPack.GetDoubleCmd()
 
-		err = sf.handler.DoubleCommandHandler(sf, asduPack, cmd)
+		err = sf.handler.DoubleCommandHandler(sf, asduPack, cmd, asduPack.GetAllCmd())
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_DC_NA_1, err)
 		}
@@ -441,7 +441,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		cmd := asduPack.GetDoubleCmd()
 
-		err = sf.handler.DoubleCommandHandler(sf, asduPack, cmd)
+		err = sf.handler.DoubleCommandHandler(sf, asduPack, cmd, asduPack.GetAllCmd())
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_DC_TA_1, err)
 		}
@@ -455,7 +455,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		cmd := asduPack.GetSingleCmd()
 
-		err = sf.handler.SingleCommandHandler(sf, asduPack, cmd)
+		err = sf.handler.SingleCommandHandler(sf, asduPack, cmd, asduPack.GetAllCmd())
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
 		}
@@ -469,7 +469,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		cmd := asduPack.GetSetpointNormalCmd()
 
-		err = sf.handler.SetPointCommandNormalHandler(sf, asduPack, cmd)
+		err = sf.handler.SetPointCommandNormalHandler(sf, asduPack, cmd, asduPack.GetAllCmd())
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NA_1, err)
 		}
@@ -483,7 +483,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		cmd := asduPack.GetSetpointCmdScaled()
 
-		err = sf.handler.SetPointCommandScaledHandler(sf, asduPack, cmd)
+		err = sf.handler.SetPointCommandScaledHandler(sf, asduPack, cmd, asduPack.GetAllCmd())
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
 		}
@@ -693,7 +693,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s type, %w", asdu.C_RC_NA_1, err)
 		}
 
-		err = sf.handler.SetStepPositionCommandScaledHandler(sf, asduPack, cmd)
+		err = sf.handler.SetStepPositionCommandScaledHandler(sf, asduPack, cmd, asduPack.GetAllCmd())
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_RD_NA_1, err)
 		}
