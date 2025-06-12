@@ -23,6 +23,7 @@ type ServerHandlerInterface interface {
 	SingleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, singleCom asdu.SingleCommandInfo) error
 	SetPointCommandNormalHandler(con asdu.Connect, asdu *asdu.ASDU, setNormal asdu.SetpointCommandNormalInfo) error
 	SetPointCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.SetpointCommandScaledInfo) error
+	SetStepPositionCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.StepCommandInfo) error
 }
 
 // ServerQueueManagerInterface is the manager of connection queues

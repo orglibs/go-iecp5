@@ -680,6 +680,25 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		return nil
+	case asdu.C_RC_NA_1: // Step Position Command
+		err := replyError(asduPack, sf)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
+		}
+
+		cmd := asduPack.GetStepPositionCmd()
+		if cmd.Value != asdu.SCOStepDown && cmd.Value != asdu.SCOStepUp {
+			err := asduPack.SendReplyMirror(sf, asdu.UnknownTypeID)
+
+			return fmt.Errorf("error with %s type, %w", asdu.C_RC_NA_1, err)
+		}
+
+		err = sf.handler.SetStepPositionCommandScaledHandler(sf, asduPack, cmd)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_RD_NA_1, err)
+		}
+
+		return nil
 	}
 
 	if err := sf.handler.ASDUHandler(sf, asduPack); err != nil {

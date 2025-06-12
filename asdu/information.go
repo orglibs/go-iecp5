@@ -236,9 +236,13 @@ type StepCommand byte
 const (
 	SCONotAllow0 StepCommand = iota
 	SCOStepDown
-	SCOStepUP
+	SCOStepUp
 	SCONotAllow3
 )
+
+func ParseStepCommand(b byte) StepCommand {
+	return StepCommand(b)
+}
 
 // COICause Initialization reason
 // See companion standard 101, subclass 7.2.6.21.

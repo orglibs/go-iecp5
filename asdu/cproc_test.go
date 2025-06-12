@@ -236,7 +236,7 @@ func TestStepCmd(t *testing.T) {
 				0x1234,
 				asdu.StepCommandInfo{
 					0x567890,
-					asdu.SCOStepUP,
+					asdu.SCOStepUp,
 					asdu.QualifierOfCommand{asdu.QOCShortPulseDuration, false},
 					tm0}},
 			false},
@@ -663,7 +663,7 @@ func TestASDU_GetStepCmd(t *testing.T) {
 				append([]byte{0x90, 0x78, 0x56, 0x06}, tm0CP56Time2aBytes...)},
 			asdu.StepCommandInfo{
 				0x567890,
-				asdu.SCOStepUP,
+				asdu.SCOStepUp,
 				asdu.QualifierOfCommand{asdu.QOCShortPulseDuration, false},
 				tm0},
 		},
