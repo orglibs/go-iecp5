@@ -326,8 +326,3 @@ func (sf *ASDU) GetDelayAcquireCommand() (InfoObjAddr, uint16) {
 func (sf *ASDU) GetTestCommandCP56Time2a() (InfoObjAddr, bool, time.Time) {
 	return sf.DecodeInfoObjAddr(), sf.DecodeUint16() == FBPTestWord, sf.DecodeCP56Time2a()
 }
-
-// GetAllCmd Get all other commands message address
-func (sf *ASDU) GetAllCmd() InfoObjAddr {
-	return sf.DecodeInfoObjAddr()
-}

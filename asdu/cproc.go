@@ -554,22 +554,3 @@ func (sf *ASDU) GetBitsString32Cmd() BitsString32CommandInfo {
 
 	return cmd
 }
-
-// GetStepPositionCmd [C_RC_NA_1] or [C_RC_TA_1] Get the setting command, standardized value information body
-func (sf *ASDU) GetStepPositionCmd() StepCommandInfo {
-	var cmd StepCommandInfo
-
-	cmd.Ioa = sf.DecodeInfoObjAddr()
-	cmd.Value = ParseStepCommand(sf.DecodeByte())
-	cmd.Qoc = ParseQualifierOfCommand(sf.DecodeByte())
-
-	switch sf.Type {
-	case C_RC_NA_1:
-	case C_RC_TA_1:
-		cmd.Time = sf.DecodeCP56Time2a()
-	default:
-		panic(ErrTypeIDNotMatch)
-	}
-
-	return cmd
-}
