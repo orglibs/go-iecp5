@@ -414,7 +414,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		cmd := asduPack.GetSingleCmd()
 
-		actConRep := asduPack.ReplyCmd(asdu.ActivationCon, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, 0)
+		actConRep := asduPack.ReplyCmd(asdu.ActivationCon, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, boolToByte(cmd.Value))
 		err = sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
@@ -495,7 +495,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		cmd := asduPack.GetSingleCmd()
 
-		actConRep := asduPack.ReplyCmd(asdu.ActivationCon, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, 0)
+		actConRep := asduPack.ReplyCmd(asdu.ActivationCon, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, boolToByte(cmd.Value))
 		err = sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
@@ -503,7 +503,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		err = sf.handler.SingleCommandHandler(sf, asduPack, cmd, cmd.Ioa)
 		if err == nil {
-			actConRep := asduPack.ReplyCmd(asdu.ActivationTerm, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, 0)
+			actConRep := asduPack.ReplyCmd(asdu.ActivationTerm, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, boolToByte(cmd.Value))
 
 			err = sf.Send(actConRep)
 			if err != nil {
@@ -925,4 +925,11 @@ func (sf *SrvSession) processQueue() {
 			time.Sleep(timeoutResolution)
 		}
 	}
+}
+
+func boolToByte(b bool) byte {
+	if b {
+		return 1
+	}
+	return 0
 }
