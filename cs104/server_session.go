@@ -2,6 +2,7 @@
 // Use of this source code is governed by a version 3 of the GNU General
 // Public License, license that can be found in the LICENSE file.
 
+//nolint:dupl
 package cs104
 
 import (
