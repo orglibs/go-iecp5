@@ -183,6 +183,24 @@ func (sf *ASDU) Reply(c Cause, addr CommonAddr, ioa InfoObjAddr) *ASDU {
 	return r
 }
 
+func (sf *ASDU) ReplyCmd(c Cause, addr CommonAddr, ioa InfoObjAddr, qoc QualifierOfCommand) *ASDU {
+	sf.CommonAddr = addr
+	r := NewASDU(sf.Params, sf.Identifier)
+	r.Coa.Cause = c
+
+	if err := r.AppendInfoObjAddr(ioa); err != nil {
+		slog.Warn("failed to append info object address", "error", err)
+	}
+
+	if err := r.AppendBytes(byte(qoc.Qual)); err != nil {
+		slog.Warn("failed to append command qualifier", "error", err)
+	}
+
+	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
+	return r
+}
+
 // SendReplyMirror send a reply of the mirror request but cause different
 func (sf *ASDU) SendReplyMirror(c Connect, cause Cause) error {
 	r := NewASDU(sf.Params, sf.Identifier)
