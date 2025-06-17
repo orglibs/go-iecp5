@@ -113,7 +113,7 @@ func TestASDU_Reply(t *testing.T) {
 		bootstrap  [asdu.ASDUSizeMax]byte
 	}
 	type args struct {
-		c    asdu.Cause
+		c    asdu.CauseOfTransmission
 		addr asdu.CommonAddr
 	}
 	tests := []struct {
