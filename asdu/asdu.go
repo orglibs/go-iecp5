@@ -192,10 +192,7 @@ func (sf *ASDU) ReplyCmd(coa CauseOfTransmission, addr CommonAddr, ioa InfoObjAd
 		slog.Warn("failed to append info object address", "error", err)
 	}
 
-	if err := r.AppendBytes(byte(qoc.Qual)<<2 | val); err != nil {
-		slog.Warn("failed to append command qualifier", "error", err)
-	}
-
+	r.AppendBytes(byte(qoc.Qual)<<2 | val)
 	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
 
 	return r
@@ -210,10 +207,7 @@ func (sf *ASDU) ReplySetPointCmd(coa CauseOfTransmission, addr CommonAddr, ioa I
 		slog.Warn("failed to append info object address", "error", err)
 	}
 
-	if err := r.AppendUint16(uint16(qos.Qual)<<10 | uint16(val)); err != nil {
-		slog.Warn("failed to append command qualifier", "error", err)
-	}
-
+	r.AppendUint16(uint16(qos.Qual)<<10 | uint16(val))
 	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
 
 	return r
