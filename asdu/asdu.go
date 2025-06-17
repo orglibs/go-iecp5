@@ -169,10 +169,10 @@ func (sf *ASDU) SetVariableNumber(n int) error {
 //}
 
 // Reply returns a new "responding" ASDU which addresses "initiating" addr with a copy of Info.
-func (sf *ASDU) Reply(c Cause, addr CommonAddr, ioa InfoObjAddr) *ASDU {
+func (sf *ASDU) Reply(coa CauseOfTransmission, addr CommonAddr, ioa InfoObjAddr) *ASDU {
 	sf.CommonAddr = addr
 	r := NewASDU(sf.Params, sf.Identifier)
-	r.Coa.Cause = c
+	r.Coa = coa
 
 	if err := r.AppendInfoObjAddr(ioa); err != nil {
 		slog.Warn("failed to append info object address", "error", err)

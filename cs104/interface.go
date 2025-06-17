@@ -12,18 +12,18 @@ import (
 
 // ServerHandlerInterface is the interface of server handler
 type ServerHandlerInterface interface {
-	InterrogationHandler(con asdu.Connect, asdu *asdu.ASDU, qualifierInt asdu.QualifierOfInterrogation) error
-	CounterInterrogationHandler(con asdu.Connect, asdu *asdu.ASDU, counterInt asdu.QualifierCountCall) error
+	InterrogationHandler(con asdu.Connect, asdu *asdu.ASDU, qualifierInt asdu.QualifierOfInterrogation) asdu.CauseOfTransmission
+	CounterInterrogationHandler(con asdu.Connect, asdu *asdu.ASDU, counterInt asdu.QualifierCountCall) asdu.CauseOfTransmission
 	ReadHandler(con asdu.Connect, asdu *asdu.ASDU, readInfo asdu.InfoObjAddr) error
-	ClockSyncHandler(con asdu.Connect, asdu *asdu.ASDU, time time.Time) error
-	ResetProcessHandler(con asdu.Connect, asdu *asdu.ASDU, resetQuaifier asdu.QualifierOfResetProcessCmd) error
+	ClockSyncHandler(con asdu.Connect, asdu *asdu.ASDU, time time.Time) asdu.CauseOfTransmission
+	ResetProcessHandler(con asdu.Connect, asdu *asdu.ASDU, resetQualifier asdu.QualifierOfResetProcessCmd) asdu.CauseOfTransmission
 	DelayAcquisitionHandler(con asdu.Connect, asdu *asdu.ASDU, delay uint16) error
 	ASDUHandler(con asdu.Connect, asdu *asdu.ASDU) error
-	DoubleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, doubleCom asdu.DoubleCommandInfo, cmdInfo asdu.InfoObjAddr) error
-	SingleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, singleCom asdu.SingleCommandInfo, cmdInfo asdu.InfoObjAddr) error
-	SetPointCommandNormalHandler(con asdu.Connect, asdu *asdu.ASDU, setNormal asdu.SetpointCommandNormalInfo, cmdInfo asdu.InfoObjAddr) error
-	SetPointCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.SetpointCommandScaledInfo, cmdInfo asdu.InfoObjAddr) error
-	SetStepPositionCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.StepCommandInfo, cmdInfo asdu.InfoObjAddr) error
+	DoubleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, doubleCom asdu.DoubleCommandInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
+	SingleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, singleCom asdu.SingleCommandInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
+	SetPointCommandNormalHandler(con asdu.Connect, asdu *asdu.ASDU, setNormal asdu.SetpointCommandNormalInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
+	SetPointCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.SetpointCommandScaledInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
+	SetStepPositionCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.StepCommandInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
 }
 
 // ServerQueueManagerInterface is the manager of connection queues
