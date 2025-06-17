@@ -183,16 +183,34 @@ func (sf *ASDU) Reply(coa CauseOfTransmission, addr CommonAddr, ioa InfoObjAddr)
 	return r
 }
 
-func (sf *ASDU) ReplyCmd(c Cause, addr CommonAddr, ioa InfoObjAddr, qoc QualifierOfCommand, val byte) *ASDU {
+func (sf *ASDU) ReplyCmd(coa CauseOfTransmission, addr CommonAddr, ioa InfoObjAddr, qoc QualifierOfCommand, val byte) *ASDU {
 	sf.CommonAddr = addr
 	r := NewASDU(sf.Params, sf.Identifier)
-	r.Coa.Cause = c
+	r.Coa = coa
 
 	if err := r.AppendInfoObjAddr(ioa); err != nil {
 		slog.Warn("failed to append info object address", "error", err)
 	}
 
 	if err := r.AppendBytes(byte(qoc.Qual)<<2 | val); err != nil {
+		slog.Warn("failed to append command qualifier", "error", err)
+	}
+
+	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
+	return r
+}
+
+func (sf *ASDU) ReplySetPointCmd(coa CauseOfTransmission, addr CommonAddr, ioa InfoObjAddr, qos QualifierOfSetpointCmd, val int16) *ASDU {
+	sf.CommonAddr = addr
+	r := NewASDU(sf.Params, sf.Identifier)
+	r.Coa = coa
+
+	if err := r.AppendInfoObjAddr(ioa); err != nil {
+		slog.Warn("failed to append info object address", "error", err)
+	}
+
+	if err := r.AppendUint16(uint16(qos.Qual)<<10 | uint16(val)); err != nil {
 		slog.Warn("failed to append command qualifier", "error", err)
 	}
 
