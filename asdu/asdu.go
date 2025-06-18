@@ -207,7 +207,9 @@ func (sf *ASDU) ReplySetPointCmd(coa CauseOfTransmission, addr CommonAddr, ioa I
 		slog.Warn("failed to append info object address", "error", err)
 	}
 
-	r.AppendUint16(uint16(qos.Qual)<<10 | uint16(val))
+	r.AppendUint16(uint16(val))
+	r.AppendBytes(byte(qos.Qual))
+
 	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
 
 	return r
