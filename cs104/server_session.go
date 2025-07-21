@@ -421,14 +421,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
 		}
 
-		if !resp.IsNegative {
-			actConRep := asduPack.ReplyCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, boolToByte(cmd.Value))
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
-			}
-		} else {
+		if resp.IsNegative {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
 		}
 
@@ -448,14 +441,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s type, %w", asdu.C_DC_NA_1, err)
 		}
 
-		if !resp.IsNegative {
-			actConRep := asduPack.ReplyCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_DC_NA_1, err)
-			}
-		} else {
+		if resp.IsNegative {
 			return fmt.Errorf("error with %s type, %w", asdu.C_DC_NA_1, err)
 		}
 
@@ -475,14 +461,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s type, %w", asdu.C_DC_TA_1, err)
 		}
 
-		if !resp.IsNegative {
-			actConRep := asduPack.ReplyCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_DC_TA_1, err)
-			}
-		} else {
+		if resp.IsNegative {
 			return fmt.Errorf("error with %s type, %w", asdu.C_DC_TA_1, err)
 		}
 
@@ -502,14 +481,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
 		}
 
-		if !resp.IsNegative {
-			actConRep := asduPack.ReplyCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, boolToByte(cmd.Value))
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
-			}
-		} else {
+		if resp.IsNegative {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
 		}
 
@@ -813,14 +785,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s type, %w", asdu.C_RC_NA_1, err)
 		}
 
-		if !resp.IsNegative {
-			actConRep := asduPack.ReplyCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_RC_NA_1, err)
-			}
-		} else {
+		if resp.IsNegative {
 			return fmt.Errorf("error with %s type, %w", asdu.C_RC_NA_1, err)
 		}
 
