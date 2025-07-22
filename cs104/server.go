@@ -9,7 +9,6 @@ import (
 	"crypto/tls"
 	"log/slog"
 	"net"
-	"strings"
 	"sync"
 	"time"
 
@@ -126,18 +125,8 @@ func (sf *Server) ListenAndServer(addr string) {
 				connectionLost: sf.connectionLost,
 			}
 
-			remoteAddr := strings.Split(conn.RemoteAddr().String(), ":")[0]
-
 			if sf.useQueue {
-				q := sf.qm.NewQueue(remoteAddr)
-				if q == nil {
-					slog.Warn("queue not created correctly, closing connection", "addr", conn.RemoteAddr().String())
-					sf.wg.Done()
-
-					return
-				}
-
-				sess.queue = q
+				sess.queue = sf.qm.GetQueue()
 				go sess.processQueue()
 			}
 
@@ -147,9 +136,6 @@ func (sf *Server) ListenAndServer(addr string) {
 			sess.run(ctx)
 			sf.mux.Lock()
 			delete(sf.sessions, sess)
-			if sf.useQueue {
-				sf.qm.DeleteQueue(remoteAddr)
-			}
 			sf.mux.Unlock()
 			sf.wg.Done()
 		}()

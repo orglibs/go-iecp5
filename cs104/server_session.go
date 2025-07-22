@@ -279,7 +279,12 @@ func (sf *SrvSession) run(ctx context.Context) {
 				case UStartDtActive:
 					sendUFrame(UStartDtConfirm)
 					isActive = true
-				// case uStartDtConfirm:
+					//TODOCGT: AQUI ENVIAR EVENTO M_EI_NA_1
+					asduPack := asdu.NewEmptyASDU(sf.params)
+					asduPack.Reply(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, asdu.InfoObjAddrIrrelevant)
+					//poner ese tipo dato, como?
+
+				//  case uStartDtConfirm:
 				// 	isActive = true
 				// 	startDtActiveSendSince = willNotTimeout
 				case UStopDtActive:
@@ -523,6 +528,33 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		resp := sf.handler.SetPointCommandScaledHandler(sf, asduPack, cmd, cmd.Ioa)
 		actConRep := asduPack.ReplySetPointCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
+		err = sf.Send(actConRep)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
+		}
+
+		if !resp.IsNegative {
+			actConRep := asduPack.ReplySetPointCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
+
+			err = sf.Send(actConRep)
+			if err != nil {
+				return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
+			}
+		} else {
+			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
+		}
+
+		return nil
+	case asdu.C_SE_NC_1: // SetPointCommandShort
+		err := replyError(asduPack, sf)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
+		}
+
+		cmd := asduPack.GetSetpointFloatCmd()
+
+		resp := sf.handler.SetPointCommandFloatHandler(sf, asduPack, cmd, cmd.Ioa)
+		actConRep := asduPack.ReplySetFloatCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
 		err = sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)

@@ -215,6 +215,23 @@ func (sf *ASDU) ReplySetPointCmd(coa CauseOfTransmission, addr CommonAddr, ioa I
 	return r
 }
 
+func (sf *ASDU) ReplySetFloatCmd(coa CauseOfTransmission, addr CommonAddr, ioa InfoObjAddr, qos QualifierOfSetpointCmd, val float32) *ASDU {
+	sf.CommonAddr = addr
+	r := NewASDU(sf.Params, sf.Identifier)
+	r.Coa = coa
+
+	if err := r.AppendInfoObjAddr(ioa); err != nil {
+		slog.Warn("failed to append info object address", "error", err)
+	}
+
+	r.AppendFloat32(val)
+	r.AppendBytes(byte(qos.Qual))
+
+	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
+	return r
+}
+
 // SendReplyMirror send a reply of the mirror request but cause different
 func (sf *ASDU) SendReplyMirror(c Connect, cause Cause) error {
 	r := NewASDU(sf.Params, sf.Identifier)

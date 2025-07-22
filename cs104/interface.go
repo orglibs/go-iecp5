@@ -23,13 +23,15 @@ type ServerHandlerInterface interface {
 	SingleCommandHandler(con asdu.Connect, asdu *asdu.ASDU, singleCom asdu.SingleCommandInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
 	SetPointCommandNormalHandler(con asdu.Connect, asdu *asdu.ASDU, setNormal asdu.SetpointCommandNormalInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
 	SetPointCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.SetpointCommandScaledInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
+	SetPointCommandFloatHandler(con asdu.Connect, asdu *asdu.ASDU, setFloat asdu.SetpointCommandFloatInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
 	SetStepPositionCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.StepCommandInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
 }
 
 // ServerQueueManagerInterface is the manager of connection queues
 type ServerQueueManagerInterface interface {
-	NewQueue(remoteAddr string) ServerQueueInterface
-	DeleteQueue(remoteAddr string)
+	NewQueue()
+	GetQueue() ServerQueueInterface
+	DeleteQueue()
 }
 
 // ServerQueueInterface is the interface of connection queue
