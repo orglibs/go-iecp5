@@ -279,9 +279,28 @@ func (sf *SrvSession) run(ctx context.Context) {
 				case UStartDtActive:
 					sendUFrame(UStartDtConfirm)
 					isActive = true
-					//TODOCGT: AQUI ENVIAR EVENTO M_EI_NA_1
-					asduPack := asdu.NewEmptyASDU(sf.params)
-					asduPack.Reply(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, asdu.InfoObjAddrIrrelevant)
+					// We send M_EI_NA_1 end of initialization event
+					endOfInit := asdu.NewEmptyASDU(sf.params)
+					endOfInit.Identifier = asdu.Identifier{
+						Type: asdu.M_EI_NA_1,
+						Coa: asdu.CauseOfTransmission{
+							IsTest:     false,
+							IsNegative: false,
+							Cause:      asdu.Initialized,
+						},
+					}
+
+					/*	if err := endOfInit.AppendInfoObjAddr(asdu.InfoObjAddrIrrelevant); err != nil {
+							slog.Warn("failed to append info object address", "error", err)
+						}
+					*/
+					//endOfInit.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
+					//endOfIdnit := endOfInit.Reply(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, asdu.InfoObjAddrIrrelevant)
+					err := sf.Send(endOfInit)
+					if err != nil {
+						slog.Error("error with %s type, %w", asdu.C_IC_NA_1, err)
+					}
 					//poner ese tipo dato, como?
 
 				//  case uStartDtConfirm:
