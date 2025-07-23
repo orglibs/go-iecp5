@@ -280,28 +280,31 @@ func (sf *SrvSession) run(ctx context.Context) {
 					sendUFrame(UStartDtConfirm)
 					isActive = true
 					// We send M_EI_NA_1 end of initialization event
-					endOfInit := asdu.NewEmptyASDU(sf.params)
-					endOfInit.Identifier = asdu.Identifier{
-						Type: asdu.M_EI_NA_1,
+					slog.Info("Trying to send end of initialization event")
+					identifier := asdu.Identifier{
+						Type:     asdu.M_EI_NA_1,
+						Variable: asdu.VariableStruct{IsSequence: false, Number: 1},
 						Coa: asdu.CauseOfTransmission{
 							IsTest:     false,
 							IsNegative: false,
 							Cause:      asdu.Initialized,
 						},
+						OrigAddr:   0,
+						CommonAddr: asdu.CommonAddr(asdu.GlobalCommonAddr),
+					}
+					endOfInit := asdu.NewASDU(sf.params, identifier)
+
+					if err := endOfInit.AppendInfoObjAddr(asdu.InfoObjAddrIrrelevant); err != nil {
+						slog.Warn("failed to append info object address", "error", err)
 					}
 
-					/*	if err := endOfInit.AppendInfoObjAddr(asdu.InfoObjAddrIrrelevant); err != nil {
-							slog.Warn("failed to append info object address", "error", err)
-						}
-					*/
-					//endOfInit.InfoObj = append(r.InfoObj, sf.InfoObj...)
+					// No value
+					endOfInit.AppendBytes(byte(0))
 
-					//endOfIdnit := endOfInit.Reply(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, asdu.InfoObjAddrIrrelevant)
 					err := sf.Send(endOfInit)
 					if err != nil {
-						slog.Error("error with %s type, %w", asdu.C_IC_NA_1, err)
+						slog.Error("error sending end of initialization event: ", "err", err)
 					}
-					//poner ese tipo dato, como?
 
 				//  case uStartDtConfirm:
 				// 	isActive = true
@@ -580,7 +583,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		if !resp.IsNegative {
-			actConRep := asduPack.ReplySetPointCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
+			actConRep := asduPack.ReplySetFloatCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
 
 			err = sf.Send(actConRep)
 			if err != nil {
