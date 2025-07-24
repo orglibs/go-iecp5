@@ -279,6 +279,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 				case UStartDtActive:
 					sendUFrame(UStartDtConfirm)
 					isActive = true
+
 					// We send M_EI_NA_1 end of initialization event
 					slog.Info("Trying to send end of initialization event")
 					identifier := asdu.Identifier{
@@ -290,7 +291,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 							Cause:      asdu.Initialized,
 						},
 						OrigAddr:   0,
-						CommonAddr: asdu.CommonAddr(asdu.GlobalCommonAddr),
+						CommonAddr: asdu.GlobalCommonAddr,
 					}
 					endOfInit := asdu.NewASDU(sf.params, identifier)
 
