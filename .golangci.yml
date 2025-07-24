@@ -41,7 +41,6 @@ linters:
     - intrange
     - lll
     - loggercheck
-    - maintidx
     - makezero
     - mirror
     - misspell
@@ -98,6 +97,7 @@ linters:
     - gosmopolitan
     - interfacebloat
     - ireturn
+    - maintidx
     - mnd
     - musttag
     - nonamedreturns
