@@ -12,7 +12,7 @@ import (
 
 // ServerHandlerInterface is the interface of server handler
 type ServerHandlerInterface interface {
-	InterrogationHandler(con asdu.Connect, asdu *asdu.ASDU, qualifierInt asdu.QualifierOfInterrogation) asdu.CauseOfTransmission
+	InterrogationHandler(con asdu.Connect, asdu *asdu.ASDU, qualifierInt asdu.QualifierOfInterrogation) (cot asdu.CauseOfTransmission, ASDUAddr int)
 	CounterInterrogationHandler(con asdu.Connect, asdu *asdu.ASDU, counterInt asdu.QualifierCountCall) asdu.CauseOfTransmission
 	ReadHandler(con asdu.Connect, asdu *asdu.ASDU, readInfo asdu.InfoObjAddr) error
 	ClockSyncHandler(con asdu.Connect, asdu *asdu.ASDU, time time.Time) asdu.CauseOfTransmission
@@ -25,13 +25,6 @@ type ServerHandlerInterface interface {
 	SetPointCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.SetpointCommandScaledInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
 	SetPointCommandFloatHandler(con asdu.Connect, asdu *asdu.ASDU, setFloat asdu.SetpointCommandFloatInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
 	SetStepPositionCommandScaledHandler(con asdu.Connect, asdu *asdu.ASDU, setScaled asdu.StepCommandInfo, cmdInfo asdu.InfoObjAddr) asdu.CauseOfTransmission
-}
-
-// ServerQueueManagerInterface is the manager of connection queues
-type ServerQueueManagerInterface interface {
-	NewQueue()
-	GetQueue() ServerQueueInterface
-	DeleteQueue()
 }
 
 // ServerQueueInterface is the interface of connection queue

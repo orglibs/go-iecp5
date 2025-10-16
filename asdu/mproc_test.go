@@ -539,7 +539,7 @@ func TestStepCP56Time2a(t *testing.T) {
 		{
 			"M_SP_TB_1 CP56Time2a Number = 2",
 			args{
-				newConn(t, append(append([]byte{byte(asdu.M_SP_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
+				newConn(t, append(append([]byte{byte(asdu.M_ST_TB_1), 0x02, 0x03, 0x00, 0x34, 0x12},
 					append([]byte{0x01, 0x00, 0x00, 0x01, 0x10}, tm0CP56Time2aBytes...)...),
 					append([]byte{0x02, 0x00, 0x00, 0x02, 0x10}, tm0CP56Time2aBytes...)...)),
 				asdu.CauseOfTransmission{Cause: asdu.Spontaneous},

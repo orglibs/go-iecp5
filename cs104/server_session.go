@@ -2,7 +2,7 @@
 // Use of this source code is governed by a version 3 of the GNU General
 // Public License, license that can be found in the LICENSE file.
 
-//nolint:dupl,lll
+//nolint:lll
 package cs104
 
 import (
@@ -58,6 +58,8 @@ type SrvSession struct {
 	wg     sync.WaitGroup
 	cancel context.CancelFunc
 	ctx    context.Context
+
+	isActive bool // connection is active after startdt activated
 }
 
 // RecvLoop feeds t.rcvRaw.
@@ -126,7 +128,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 	go sf.handlerLoop()
 
 	// default: STOPDT, when connected establish and not enable "data transfer" yet
-	isActive := false
+	sf.isActive = false
 	checkTicker := time.NewTicker(timeoutResolution)
 
 	// transmission timestamps for timeout calculation
@@ -182,7 +184,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 	}()
 
 	for {
-		if isActive && seqNoCount(sf.ackNoSend, sf.seqNoSend) <= sf.config.SendUnAckLimitK {
+		if sf.isActive && seqNoCount(sf.ackNoSend, sf.seqNoSend) <= sf.config.SendUnAckLimitK {
 			select {
 			case o := <-sf.sendASDU:
 				sendIFrame(o)
@@ -249,10 +251,10 @@ func (sf *SrvSession) run(ctx context.Context) {
 
 			case IAPCI:
 				slog.Debug("RX iFrame", "rx iFrame", head)
-				if !isActive {
+				if !sf.isActive {
 					slog.Warn("station not active")
 
-					break // not active, discard apdu
+					return // not active, close connection
 				}
 
 				if !sf.updateAckNoOut(head.RcvSN) || head.SendSN != sf.seqNoRcv {
@@ -278,41 +280,13 @@ func (sf *SrvSession) run(ctx context.Context) {
 				switch head.Function {
 				case UStartDtActive:
 					sendUFrame(UStartDtConfirm)
-					isActive = true
-
-					// We send M_EI_NA_1 end of initialization event
-					slog.Info("Trying to send end of initialization event")
-					identifier := asdu.Identifier{
-						Type:     asdu.M_EI_NA_1,
-						Variable: asdu.VariableStruct{IsSequence: false, Number: 1},
-						Coa: asdu.CauseOfTransmission{
-							IsTest:     false,
-							IsNegative: false,
-							Cause:      asdu.Initialized,
-						},
-						OrigAddr:   0,
-						CommonAddr: asdu.GlobalCommonAddr,
-					}
-					endOfInit := asdu.NewASDU(sf.params, identifier)
-
-					if err := endOfInit.AppendInfoObjAddr(asdu.InfoObjAddrIrrelevant); err != nil {
-						slog.Warn("failed to append info object address", "error", err)
-					}
-
-					// No value
-					endOfInit.AppendBytes(byte(0))
-
-					err := sf.Send(endOfInit)
-					if err != nil {
-						slog.Error("error sending end of initialization event: ", "err", err)
-					}
-
+					sf.isActive = true
 				//  case uStartDtConfirm:
 				// 	isActive = true
 				// 	startDtActiveSendSince = willNotTimeout
 				case UStopDtActive:
 					sendUFrame(UStopDtConfirm)
-					isActive = false
+					sf.isActive = false
 				// case uStopDtConfirm:
 				// 	isActive = false
 				// 	stopDtActiveSendSince = willNotTimeout
@@ -446,11 +420,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, boolToByte(cmd.Value))
 		err = sf.Send(actConRep)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
+			return fmt.Errorf("error with %s type, %v", asdu.C_SC_NA_1, err.Error())
 		}
 
 		if resp.IsNegative {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
+			return fmt.Errorf("error with %s type", asdu.C_SC_NA_1)
 		}
 
 		return nil
@@ -571,7 +545,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 	case asdu.C_SE_NC_1: // SetPointCommandShort
 		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
+			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NC_1, err)
 		}
 
 		cmd := asduPack.GetSetpointFloatCmd()
@@ -580,7 +554,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		actConRep := asduPack.ReplySetFloatCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
 		err = sf.Send(actConRep)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
+			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NC_1, err)
 		}
 
 		if !resp.IsNegative {
@@ -591,7 +565,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 				return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
 			}
 		} else {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
+			return fmt.Errorf("error with %s type", asdu.C_SE_NB_1)
 		}
 
 		return nil
@@ -609,6 +583,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
 		}
 
+		slog.Info("InterrogationCmd", "commonAddr", asduPack.CommonAddr, "coa", asduPack.Identifier.Coa.Cause)
 		ioa, qoi := asduPack.GetInterrogationCmd()
 		if ioa != asdu.InfoObjAddrIrrelevant {
 			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
@@ -616,15 +591,16 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
 		}
 
-		resp := sf.handler.InterrogationHandler(sf, asduPack, qoi)
-		actConRep := asduPack.Reply(resp, asduPack.CommonAddr, ioa)
+		resp, ca := sf.handler.InterrogationHandler(sf, asduPack, qoi)
+		actConRep := asduPack.Reply(resp, asdu.CommonAddr(ca), ioa)
+		slog.Info("InterrogationCmd 2", "commonAddr", asduPack.CommonAddr, "coa", asduPack.Identifier.Coa.Cause)
 		err := sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
 		}
 
 		if !resp.IsNegative {
-			actConRep := asduPack.Reply(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, ioa)
+			actConRep := asduPack.Reply(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asdu.CommonAddr(ca), ioa)
 
 			err = sf.Send(actConRep)
 			if err != nil {
@@ -828,20 +804,24 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 	case asdu.C_RC_NA_1: // Step Position Command
 		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_RC_NA_1, err)
+			return fmt.Errorf("error with %s type, %v", asdu.C_RC_NA_1, err.Error())
 		}
 
+		slog.Info("C_RC_NA_1 received", "asdu", asduPack)
 		cmd := asduPack.GetStepCmd()
 
 		resp := sf.handler.SetStepPositionCommandScaledHandler(sf, asduPack, cmd, cmd.Ioa)
 		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
 		err = sf.Send(actConRep)
+		slog.Info("C_RC_NA_1 sent", "asdu", asduPack)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_RC_NA_1, err)
+			slog.Warn("error sending C_RC_NA_1 reply", "error", err)
+
+			return fmt.Errorf("error with %s type, %v", asdu.C_RC_NA_1, err.Error())
 		}
 
 		if resp.IsNegative {
-			return fmt.Errorf("error with %s type, %w", asdu.C_RC_NA_1, err)
+			return fmt.Errorf("error with %s type", asdu.C_RC_NA_1)
 		}
 
 		return nil

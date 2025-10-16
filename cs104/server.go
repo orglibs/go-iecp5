@@ -27,7 +27,7 @@ type Server struct {
 	config         Config
 	params         asdu.Params
 	handler        ServerHandlerInterface
-	qm             ServerQueueManagerInterface
+	queue          ServerQueueInterface
 	useQueue       bool
 	TLSConfig      *tls.Config
 	mux            sync.Mutex
@@ -40,12 +40,12 @@ type Server struct {
 }
 
 // NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
-func NewServer(handler ServerHandlerInterface, qm ServerQueueManagerInterface, useQueue bool) *Server {
+func NewServer(handler ServerHandlerInterface, queue ServerQueueInterface, useQueue bool) *Server {
 	server104 := &Server{
 		config:   DefaultConfig(),
 		params:   *asdu.ParamsWide,
 		handler:  handler,
-		qm:       qm,
+		queue:    queue,
 		useQueue: useQueue,
 		sessions: make(map[*SrvSession]struct{}),
 	}
@@ -108,6 +108,8 @@ func (sf *Server) ListenAndServer(addr string) {
 
 		sf.wg.Add(1)
 
+		slog.Info("new connection accepted", "remote", conn.RemoteAddr().String())
+
 		go func() {
 			sess := &SrvSession{
 				config:   &sf.config,
@@ -126,7 +128,7 @@ func (sf *Server) ListenAndServer(addr string) {
 			}
 
 			if sf.useQueue {
-				sess.queue = sf.qm.GetQueue()
+				sess.queue = sf.queue
 				go sess.processQueue()
 			}
 
