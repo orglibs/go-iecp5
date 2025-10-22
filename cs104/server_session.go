@@ -2,7 +2,7 @@
 // Use of this source code is governed by a version 3 of the GNU General
 // Public License, license that can be found in the LICENSE file.
 
-//nolint:lll
+//nolint:dupl,lll
 package cs104
 
 import (
@@ -184,7 +184,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 	}()
 
 	for {
-		if sf.isActive && seqNoCount(sf.ackNoSend, sf.seqNoSend) <= sf.config.SendUnAckLimitK {
+		if sf.isActive && seqNoCount(sf.ackNoSend, sf.seqNoSend) < sf.config.SendUnAckLimitK {
 			select {
 			case o := <-sf.sendASDU:
 				sendIFrame(o)
