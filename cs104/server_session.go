@@ -2,7 +2,7 @@
 // Use of this source code is governed by a version 3 of the GNU General
 // Public License, license that can be found in the LICENSE file.
 
-//nolint:dupl,lll
+//nolint:lll
 package cs104
 
 import (
@@ -232,8 +232,9 @@ func (sf *SrvSession) run(ctx context.Context) {
 			// Send TestFrActive frame when idle time is up.
 			if now.Sub(idleTimeout3Sine) >= sf.config.IdleTimeout3 {
 				sendUFrame(UTestFrActive)
-				testFrAliveSendSince = time.Now()
-				idleTimeout3Sine = testFrAliveSendSince
+				//testFrAliveSendSince = time.Now()
+				//idleTimeout3Sine = testFrAliveSendSince
+				idleTimeout3Sine = time.Now()
 			}
 
 		case apdu := <-sf.rcvRaw:
@@ -243,6 +244,12 @@ func (sf *SrvSession) run(ctx context.Context) {
 			switch head := apci.(type) {
 			case SAPCI:
 				slog.Debug("RX sFrame", "rx sFrame", head)
+				if !sf.isActive {
+					slog.Warn("station not active")
+
+					return // not active, close connection
+				}
+
 				if !sf.updateAckNoOut(head.RcvSN) {
 					slog.Error("fatal incoming acknowledge either earlier than previous or later than sendTime")
 
