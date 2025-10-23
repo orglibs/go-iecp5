@@ -921,14 +921,16 @@ func (sf *SrvSession) UnderlyingConn() net.Conn {
 
 func (sf *SrvSession) processQueue() {
 	for {
-		con, data, err := sf.queue.Dequeue()
-		if err == nil {
-			err = con.SendQueuedASDU(data.Clone())
-			if err != nil {
-				slog.Debug("queue data send failed", "error", err)
+		if sf.isActive {
+			con, data, err := sf.queue.Dequeue()
+			if err == nil {
+				err = con.SendQueuedASDU(data.Clone())
+				if err != nil {
+					slog.Debug("queue data send failed", "error", err)
+				}
+			} else if err.Error() == ErrQueueEmpty {
+				time.Sleep(timeoutResolution)
 			}
-		} else if err.Error() == ErrQueueEmpty {
-			time.Sleep(timeoutResolution)
 		}
 	}
 }
