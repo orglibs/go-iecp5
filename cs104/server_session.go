@@ -590,7 +590,6 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
 		}
 
-		slog.Info("InterrogationCmd", "commonAddr", asduPack.CommonAddr, "coa", asduPack.Identifier.Coa.Cause)
 		ioa, qoi := asduPack.GetInterrogationCmd()
 		if ioa != asdu.InfoObjAddrIrrelevant {
 			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
@@ -600,20 +599,12 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		resp, ca := sf.handler.InterrogationHandler(sf, asduPack, qoi)
 		actConRep := asduPack.Reply(resp, asdu.CommonAddr(ca), ioa)
-		slog.Info("InterrogationCmd 2", "commonAddr", asduPack.CommonAddr, "coa", asduPack.Identifier.Coa.Cause)
 		err := sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
 		}
 
-		if !resp.IsNegative {
-			actConRep := asduPack.Reply(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asdu.CommonAddr(ca), ioa)
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
-			}
-		} else {
+		if resp.IsNegative {
 			return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
 		}
 
@@ -900,6 +891,7 @@ func (sf *SrvSession) SendQueuedASDU(u *asdu.ASDU) error {
 		return ErrUseClosedConnection
 	}
 
+	// modify SendQueuedASDU to allow multiple ASDU send and pass all to marshal?
 	data, err := u.MarshalBinary()
 	if err != nil {
 		return fmt.Errorf("error %w", err)
@@ -925,6 +917,11 @@ func (sf *SrvSession) processQueue() {
 			con, data, err := sf.queue.Dequeue()
 			if err == nil {
 				err = con.SendQueuedASDU(data.Clone())
+				/*
+				   // check how to pass multiple ASDU
+				   				as := make([]asdu.ASDU, 0)
+				   				as = append(as, *data.Clone())
+				   				err = con.SendQueuedASDU(&as)*/
 				if err != nil {
 					slog.Debug("queue data send failed", "error", err)
 				}
