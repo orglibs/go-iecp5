@@ -294,6 +294,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 				case UStopDtActive:
 					sendUFrame(UStopDtConfirm)
 					sf.isActive = false
+					slog.Debug("data transfer stopped by remote")
 				// case uStopDtConfirm:
 				// 	isActive = false
 				// 	stopDtActiveSendSince = willNotTimeout
@@ -912,21 +913,49 @@ func (sf *SrvSession) UnderlyingConn() net.Conn {
 }
 
 func (sf *SrvSession) processQueue() {
+	var sendData *asdu.ASDU
+	var lastConn asdu.Connect
+
 	for {
 		if sf.isActive {
 			con, data, err := sf.queue.Dequeue()
-			if err == nil {
-				err = con.SendQueuedASDU(data.Clone())
-				/*
-				   // check how to pass multiple ASDU
-				   				as := make([]asdu.ASDU, 0)
-				   				as = append(as, *data.Clone())
-				   				err = con.SendQueuedASDU(&as)*/
-				if err != nil {
-					slog.Debug("queue data send failed", "error", err)
+			if err != nil && err.Error() == ErrQueueEmpty {
+				if sendData != nil {
+					err = lastConn.SendQueuedASDU(sendData)
+					if err != nil {
+						slog.Warn("queue data send failed", "error", err)
+					}
+
+					time.Sleep(1 * time.Millisecond)
+					sendData = nil
 				}
-			} else if err.Error() == ErrQueueEmpty {
+
 				time.Sleep(timeoutResolution)
+				continue
+			}
+
+			if sendData == nil {
+				sendData = data.Clone()
+				lastConn = con
+				continue
+			} else {
+				if sendData.Identifier.Type == data.Identifier.Type {
+					combinedASDU, err := combineASDUs(*sendData, data)
+					if err == nil {
+						sendData = combinedASDU
+						lastConn = con
+						continue
+					}
+
+				}
+
+				err = con.SendQueuedASDU(sendData)
+				if err != nil {
+					slog.Warn("queue data send failed", "error", err)
+				}
+
+				time.Sleep(1 * time.Millisecond)
+				sendData = data.Clone()
 			}
 		}
 	}
@@ -938,4 +967,66 @@ func boolToByte(b bool) byte {
 	}
 
 	return 0
+}
+
+func combineASDUs(asduCombined asdu.ASDU, NewASDU asdu.ASDU) (*asdu.ASDU, error) {
+	a := asdu.NewASDU(asduCombined.Params, asdu.Identifier{
+		Type:       asduCombined.Identifier.Type,
+		Variable:   asdu.VariableStruct{IsSequence: false},
+		Coa:        asduCombined.Identifier.Coa,
+		OrigAddr:   0,
+		CommonAddr: asduCombined.Identifier.CommonAddr,
+	})
+
+	if err := a.SetVariableNumber(int(asduCombined.Variable.Number + 1)); err != nil {
+		return nil, fmt.Errorf("error trying to set variable number: %v", err.Error())
+	}
+
+	a.InfoObj = append(a.InfoObj, asduCombined.InfoObj...)
+	a.InfoObj = append(a.InfoObj, NewASDU.InfoObj...)
+
+	return a, nil
+	/*
+
+			//I need sth like dis
+
+		// First redo asdu necessary??
+
+			// This we have to put again with new length (asduCombined.InfoObj len + newASDU.InfoObj len)
+			if err := u.SetVariableNumber(len(infos)); err != nil {
+				return err
+			}
+
+			// Y aqui no hacer esto, simplemente un append de los dos InfoObj y a correr
+			once := false
+
+			for _, v := range infos {
+				if !isSequence || !once {
+					once = true
+
+					if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
+						return err
+					}
+				}
+
+				value := byte(0)
+				if v.Value {
+					value = 0x01
+				}
+
+				u.AppendBytes(value | byte(v.Qds&0xf0))
+				switch typeID {
+				case M_SP_NA_1:
+				case M_SP_TA_1:
+					u.AppendBytes(CP24Time2a(v.Time, u.InfoObjTimeZone)...)
+				case M_SP_TB_1:
+					u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone)...)
+				default:
+					return ErrTypeIDNotMatch
+				}
+			}
+
+			return nil
+
+	*/
 }

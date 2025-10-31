@@ -25,7 +25,7 @@ import (
 // <46>: = Unknown application service data unit public address
 // <47>: = Unknown information object address
 func InterrogationCmd(c Connect, coa CauseOfTransmission, ca CommonAddr, qoi QualifierOfInterrogation) error {
-	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
+	if !(coa.Cause == Activation || coa.Cause == Deactivation || coa.Cause == ActivationTerm) {
 		return ErrCmdCause
 	}
 
