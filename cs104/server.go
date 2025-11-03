@@ -36,18 +36,20 @@ type Server struct {
 	onConnection   func(asdu.Connect)
 	connectionLost func(asdu.Connect)
 
-	wg sync.WaitGroup
+	wg           sync.WaitGroup
+	stopSessions chan struct{}
 }
 
 // NewServer starts a new server instance, default config and default asdu.ParamsWide params are used.
 func NewServer(handler ServerHandlerInterface, queue ServerQueueInterface, useQueue bool) *Server {
 	server104 := &Server{
-		config:   DefaultConfig(),
-		params:   *asdu.ParamsWide,
-		handler:  handler,
-		queue:    queue,
-		useQueue: useQueue,
-		sessions: make(map[*SrvSession]struct{}),
+		config:       DefaultConfig(),
+		params:       *asdu.ParamsWide,
+		handler:      handler,
+		queue:        queue,
+		useQueue:     useQueue,
+		sessions:     make(map[*SrvSession]struct{}),
+		stopSessions: make(chan struct{}),
 	}
 
 	return server104
@@ -98,6 +100,8 @@ func (sf *Server) ListenAndServer(addr string) {
 
 	slog.Debug("server run")
 
+	go sf.watchActiveSessions()
+
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
@@ -125,6 +129,8 @@ func (sf *Server) ListenAndServer(addr string) {
 
 				onConnection:   sf.onConnection,
 				connectionLost: sf.connectionLost,
+
+				stopSessions: sf.stopSessions,
 			}
 
 			if sf.useQueue {
@@ -193,4 +199,17 @@ func (sf *Server) SetOnConnectionHandler(f func(asdu.Connect)) {
 // SetConnectionLostHandler set connect lost handler
 func (sf *Server) SetConnectionLostHandler(f func(asdu.Connect)) {
 	sf.connectionLost = f
+}
+
+func (sf *Server) watchActiveSessions() {
+	for {
+		<-sf.stopSessions
+		for sess := range sf.sessions {
+			if sess.isActive {
+				slog.Info("new active session detected, stopping others")
+				sess.sendRaw <- NewUFrame(UStopDtActive)
+				sess.isActive = false
+			}
+		}
+	}
 }

@@ -59,7 +59,8 @@ type SrvSession struct {
 	cancel context.CancelFunc
 	ctx    context.Context
 
-	isActive bool // connection is active after startdt activated
+	isActive     bool // connection is active after startdt activated
+	stopSessions chan struct{}
 }
 
 // RecvLoop feeds t.rcvRaw.
@@ -286,6 +287,8 @@ func (sf *SrvSession) run(ctx context.Context) {
 				slog.Debug("RX uFrame", "rx uFrame", head)
 				switch head.Function {
 				case UStartDtActive:
+					sf.stopSessions <- struct{}{}
+					time.Sleep(1000 * time.Millisecond)
 					sendUFrame(UStartDtConfirm)
 					sf.isActive = true
 				//  case uStartDtConfirm:
@@ -892,7 +895,6 @@ func (sf *SrvSession) SendQueuedASDU(u *asdu.ASDU) error {
 		return ErrUseClosedConnection
 	}
 
-	// modify SendQueuedASDU to allow multiple ASDU send and pass all to marshal?
 	data, err := u.MarshalBinary()
 	if err != nil {
 		return fmt.Errorf("error %w", err)
