@@ -233,8 +233,8 @@ func (sf *SrvSession) run(ctx context.Context) {
 			// Send TestFrActive frame when idle time is up.
 			if now.Sub(idleTimeout3Sine) >= sf.config.IdleTimeout3 {
 				sendUFrame(UTestFrActive)
-				//testFrAliveSendSince = time.Now()
-				//idleTimeout3Sine = testFrAliveSendSince
+				// testFrAliveSendSince = time.Now()
+				// idleTimeout3Sine = testFrAliveSendSince
 				idleTimeout3Sine = time.Now()
 			}
 
@@ -914,6 +914,7 @@ func (sf *SrvSession) UnderlyingConn() net.Conn {
 	return sf.conn
 }
 
+//nolint:nestif
 func (sf *SrvSession) processQueue() {
 	var sendData *asdu.ASDU
 	var lastConn asdu.Connect
@@ -933,12 +934,14 @@ func (sf *SrvSession) processQueue() {
 				}
 
 				time.Sleep(timeoutResolution)
+
 				continue
 			}
 
 			if sendData == nil {
 				sendData = data.Clone()
 				lastConn = con
+
 				continue
 			} else {
 				if sendData.Identifier.Type == data.Identifier.Type {
@@ -946,9 +949,9 @@ func (sf *SrvSession) processQueue() {
 					if err == nil {
 						sendData = combinedASDU
 						lastConn = con
+
 						continue
 					}
-
 				}
 
 				err = con.SendQueuedASDU(sendData)
@@ -971,7 +974,7 @@ func boolToByte(b bool) byte {
 	return 0
 }
 
-func combineASDUs(asduCombined asdu.ASDU, NewASDU asdu.ASDU) (*asdu.ASDU, error) {
+func combineASDUs(asduCombined asdu.ASDU, newASDU asdu.ASDU) (*asdu.ASDU, error) {
 	a := asdu.NewASDU(asduCombined.Params, asdu.Identifier{
 		Type:       asduCombined.Identifier.Type,
 		Variable:   asdu.VariableStruct{IsSequence: false},
@@ -985,50 +988,7 @@ func combineASDUs(asduCombined asdu.ASDU, NewASDU asdu.ASDU) (*asdu.ASDU, error)
 	}
 
 	a.InfoObj = append(a.InfoObj, asduCombined.InfoObj...)
-	a.InfoObj = append(a.InfoObj, NewASDU.InfoObj...)
+	a.InfoObj = append(a.InfoObj, newASDU.InfoObj...)
 
 	return a, nil
-	/*
-
-			//I need sth like dis
-
-		// First redo asdu necessary??
-
-			// This we have to put again with new length (asduCombined.InfoObj len + newASDU.InfoObj len)
-			if err := u.SetVariableNumber(len(infos)); err != nil {
-				return err
-			}
-
-			// Y aqui no hacer esto, simplemente un append de los dos InfoObj y a correr
-			once := false
-
-			for _, v := range infos {
-				if !isSequence || !once {
-					once = true
-
-					if err := u.AppendInfoObjAddr(v.Ioa); err != nil {
-						return err
-					}
-				}
-
-				value := byte(0)
-				if v.Value {
-					value = 0x01
-				}
-
-				u.AppendBytes(value | byte(v.Qds&0xf0))
-				switch typeID {
-				case M_SP_NA_1:
-				case M_SP_TA_1:
-					u.AppendBytes(CP24Time2a(v.Time, u.InfoObjTimeZone)...)
-				case M_SP_TB_1:
-					u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone)...)
-				default:
-					return ErrTypeIDNotMatch
-				}
-			}
-
-			return nil
-
-	*/
 }
