@@ -89,6 +89,7 @@ func (sf *SrvSession) sendLoop() {
 			return
 		case apdu := <-sf.sendRaw:
 			slog.Debug("TX Raw", "tx", apdu)
+			// TODCGT: shouldnt here be some check for the confirmation of the send frame? si it can resend if no confirmation present
 
 			for wrCnt := 0; len(apdu) > wrCnt; {
 				byteCount, err := sf.conn.Write(apdu[wrCnt:])
@@ -287,10 +288,11 @@ func (sf *SrvSession) run(ctx context.Context) {
 				slog.Debug("RX uFrame", "rx uFrame", head)
 				switch head.Function {
 				case UStartDtActive:
-					sf.stopSessions <- struct{}{}
-					time.Sleep(1000 * time.Millisecond)
-					sendUFrame(UStartDtConfirm)
-					sf.isActive = true
+					if !sf.isActive {
+						sf.stopSessions <- struct{}{}
+						time.Sleep(500 * time.Millisecond)
+						sf.isActive = true
+					}
 				//  case uStartDtConfirm:
 				// 	isActive = true
 				// 	startDtActiveSendSince = willNotTimeout
