@@ -89,7 +89,6 @@ func (sf *SrvSession) sendLoop() {
 			return
 		case apdu := <-sf.sendRaw:
 			slog.Debug("TX Raw", "tx", apdu)
-			// TODCGT: shouldnt here be some check for the confirmation of the send frame? si it can resend if no confirmation present
 
 			for wrCnt := 0; len(apdu) > wrCnt; {
 				byteCount, err := sf.conn.Write(apdu[wrCnt:])
@@ -283,7 +282,6 @@ func (sf *SrvSession) run(ctx context.Context) {
 					sendSFrame(sf.seqNoRcv)
 					sf.ackNoRcv = sf.seqNoRcv
 				}
-
 			case UAPCI:
 				slog.Debug("RX uFrame", "rx uFrame", head)
 				switch head.Function {
@@ -293,6 +291,8 @@ func (sf *SrvSession) run(ctx context.Context) {
 						time.Sleep(500 * time.Millisecond)
 						sf.isActive = true
 					}
+
+					sendUFrame(UStartDtConfirm)
 				//  case uStartDtConfirm:
 				// 	isActive = true
 				// 	startDtActiveSendSince = willNotTimeout
@@ -919,14 +919,13 @@ func (sf *SrvSession) UnderlyingConn() net.Conn {
 //nolint:nestif
 func (sf *SrvSession) processQueue() {
 	var sendData *asdu.ASDU
-	var lastConn asdu.Connect
 
 	for {
 		if sf.isActive {
-			con, data, err := sf.queue.Dequeue()
+			data, err := sf.queue.Dequeue()
 			if err != nil && err.Error() == ErrQueueEmpty {
 				if sendData != nil {
-					err = lastConn.SendQueuedASDU(sendData)
+					err = sf.SendQueuedASDU(sendData)
 					if err != nil {
 						slog.Warn("queue data send failed", "error", err)
 					}
@@ -942,7 +941,6 @@ func (sf *SrvSession) processQueue() {
 
 			if sendData == nil {
 				sendData = data.Clone()
-				lastConn = con
 
 				continue
 			} else {
@@ -950,13 +948,12 @@ func (sf *SrvSession) processQueue() {
 					combinedASDU, err := combineASDUs(*sendData, data)
 					if err == nil {
 						sendData = combinedASDU
-						lastConn = con
 
 						continue
 					}
 				}
 
-				err = con.SendQueuedASDU(sendData)
+				err = sf.SendQueuedASDU(sendData)
 				if err != nil {
 					slog.Warn("queue data send failed", "error", err)
 				}
