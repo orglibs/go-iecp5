@@ -974,20 +974,45 @@ func boolToByte(b bool) byte {
 }
 
 func combineASDUs(asduCombined asdu.ASDU, newASDU asdu.ASDU) (*asdu.ASDU, error) {
+	isSeq := false
+
+	if asduCombined.Variable.IsSequence == false {
+		newIoa := newASDU.DecodeInfoObjAddr()
+		oldIoa := asduCombined.DecodeInfoObjAddr()
+
+		if asduCombined.Variable.Number == 1 && newIoa == oldIoa+1 {
+			isSeq = true
+		}
+	} else {
+		newIoa := newASDU.DecodeInfoObjAddr()
+		oldIoa := asduCombined.DecodeInfoObjAddr()
+
+		if newIoa != oldIoa+asdu.InfoObjAddr(asduCombined.Variable.Number) {
+			return nil, fmt.Errorf("Cannot combine non contiguous IOA in isSequence package")
+		}
+
+		isSeq = true
+	}
+
+	num := asduCombined.Variable.Number
 	a := asdu.NewASDU(asduCombined.Params, asdu.Identifier{
 		Type:       asduCombined.Identifier.Type,
-		Variable:   asdu.VariableStruct{IsSequence: false},
+		Variable:   asdu.VariableStruct{IsSequence: isSeq},
 		Coa:        asduCombined.Identifier.Coa,
 		OrigAddr:   0,
 		CommonAddr: asduCombined.Identifier.CommonAddr,
 	})
 
-	if err := a.SetVariableNumber(int(asduCombined.Variable.Number + 1)); err != nil {
+	if err := a.SetVariableNumber(int(num + 1)); err != nil {
 		return nil, fmt.Errorf("error trying to set variable number: %v", err.Error())
 	}
 
 	a.InfoObj = append(a.InfoObj, asduCombined.InfoObj...)
-	a.InfoObj = append(a.InfoObj, newASDU.InfoObj...)
+	if isSeq {
+		a.InfoObj = append(a.InfoObj, newASDU.InfoObj[:newASDU.Params.InfoObjAddrSize]...)
+	} else {
+		a.InfoObj = append(a.InfoObj, newASDU.InfoObj...)
+	}
 
 	return a, nil
 }
