@@ -585,6 +585,10 @@ func (sf *Client) UnderlyingConn() net.Conn {
 	return sf.conn
 }
 
+func (sf *Client) IsActive() bool {
+	return true
+}
+
 // Close close all
 func (sf *Client) Close() error {
 	sf.rwMux.Lock()

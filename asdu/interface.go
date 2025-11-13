@@ -14,4 +14,5 @@ type Connect interface {
 	Send(a *ASDU) error
 	SendQueuedASDU(a *ASDU) error
 	UnderlyingConn() net.Conn
+	IsActive() bool
 }

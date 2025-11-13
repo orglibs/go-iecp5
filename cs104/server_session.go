@@ -883,7 +883,7 @@ func (sf *SrvSession) Send(u *asdu.ASDU) error {
 			return ErrBufferFull
 		}
 	} else {
-		err := sf.queue.Enqueue(sf, *u)
+		err := sf.queue.Enqueue(*u)
 		if err != nil {
 			return fmt.Errorf("error %w", err)
 		}
@@ -909,6 +909,10 @@ func (sf *SrvSession) SendQueuedASDU(u *asdu.ASDU) error {
 	}
 
 	return nil
+}
+
+func (sf *SrvSession) IsActive() bool {
+	return sf.isActive
 }
 
 // UnderlyingConn got under net.conn

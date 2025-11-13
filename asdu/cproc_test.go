@@ -44,6 +44,10 @@ func (sf *conn) SendQueuedASDU(u *asdu.ASDU) error {
 	return nil
 }
 
+func (sf *conn) IsActive() bool {
+	return true
+}
+
 func TestSingleCmd(t *testing.T) {
 	type args struct {
 		c      asdu.Connect
