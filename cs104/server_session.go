@@ -74,6 +74,8 @@ func (sf *SrvSession) recvLoop() {
 }
 
 // sendLoop drains t.sendTime.
+//
+//nolint:nestif
 func (sf *SrvSession) sendLoop() {
 	slog.Debug("sendLoop started!")
 
@@ -113,7 +115,10 @@ func (sf *SrvSession) sendLoop() {
 								continue
 							}
 
-							sf.queue.Enqueue(*asduPack)
+							err = sf.queue.Enqueue(*asduPack)
+							if err != nil {
+								slog.Error("enqueue unconfirmed asdu failed", "error", err)
+							}
 						}
 
 						return
@@ -945,6 +950,7 @@ func (sf *SrvSession) processQueue() {
 						slog.Warn("queue data send failed", "error", err)
 						if errors.Is(err, ErrUseClosedConnection) {
 							slog.Warn("connection closed, stopping queue processing")
+
 							return
 						}
 					}
@@ -977,6 +983,7 @@ func (sf *SrvSession) processQueue() {
 					slog.Warn("queue data send failed", "error", err)
 					if errors.Is(err, ErrUseClosedConnection) {
 						slog.Warn("connection closed, stopping queue processing")
+
 						return
 					}
 				}
