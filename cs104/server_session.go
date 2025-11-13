@@ -105,6 +105,17 @@ func (sf *SrvSession) sendLoop() {
 					if e, ok := err.(net.Error); !ok || !e.Timeout() {
 						slog.Error("sendRaw failed", "error", err)
 
+						if sf.useQueue {
+							asduPack := asdu.NewEmptyASDU(sf.params)
+							if err := asduPack.UnmarshalBinary(apdu); err != nil {
+								slog.Error("trying to resend unconfirmed asdu failed", "error", err)
+
+								continue
+							}
+
+							sf.queue.Enqueue(*asduPack)
+						}
+
 						return
 					}
 				}
@@ -867,11 +878,11 @@ func (sf *SrvSession) Params() *asdu.Params {
 
 // Send asdu frame
 func (sf *SrvSession) Send(u *asdu.ASDU) error {
-	if !sf.IsConnected() {
-		return ErrUseClosedConnection
-	}
-
 	if !sf.useQueue {
+		if !sf.IsConnected() {
+			return ErrUseClosedConnection
+		}
+
 		data, err := u.MarshalBinary()
 		if err != nil {
 			return fmt.Errorf("error %w", err)
@@ -927,11 +938,15 @@ func (sf *SrvSession) processQueue() {
 	for {
 		if sf.isActive {
 			data, err := sf.queue.Dequeue()
-			if err != nil && err.Error() == ErrQueueEmpty {
-				if sendData != nil {
+			if err != nil {
+				if err.Error() == ErrQueueEmpty && sendData != nil {
 					err = sf.SendQueuedASDU(sendData)
 					if err != nil {
 						slog.Warn("queue data send failed", "error", err)
+						if errors.Is(err, ErrUseClosedConnection) {
+							slog.Warn("connection closed, stopping queue processing")
+							return
+						}
 					}
 
 					time.Sleep(1 * time.Millisecond)
@@ -960,6 +975,10 @@ func (sf *SrvSession) processQueue() {
 				err = sf.SendQueuedASDU(sendData)
 				if err != nil {
 					slog.Warn("queue data send failed", "error", err)
+					if errors.Is(err, ErrUseClosedConnection) {
+						slog.Warn("connection closed, stopping queue processing")
+						return
+					}
 				}
 
 				time.Sleep(1 * time.Millisecond)
@@ -981,15 +1000,15 @@ func combineASDUs(asduCombined asdu.ASDU, newASDU asdu.ASDU) (*asdu.ASDU, error)
 	isSeq := false
 
 	if !asduCombined.Variable.IsSequence {
-		newIoa := newASDU.DecodeInfoObjAddr()
-		oldIoa := asduCombined.DecodeInfoObjAddr()
+		newIoa := newASDU.ReadInfoObjAddr()
+		oldIoa := asduCombined.ReadInfoObjAddr()
 
 		if asduCombined.Variable.Number == 1 && newIoa == oldIoa+1 {
 			isSeq = true
 		}
 	} else {
-		newIoa := newASDU.DecodeInfoObjAddr()
-		oldIoa := asduCombined.DecodeInfoObjAddr()
+		newIoa := newASDU.ReadInfoObjAddr()
+		oldIoa := asduCombined.ReadInfoObjAddr()
 
 		if newIoa != oldIoa+asdu.InfoObjAddr(asduCombined.Variable.Number) {
 			return nil, errors.New("cannot combine non contiguous IOA in isSequence package")
@@ -1013,9 +1032,13 @@ func combineASDUs(asduCombined asdu.ASDU, newASDU asdu.ASDU) (*asdu.ASDU, error)
 
 	a.InfoObj = append(a.InfoObj, asduCombined.InfoObj...)
 	if isSeq {
-		a.InfoObj = append(a.InfoObj, newASDU.InfoObj[:newASDU.Params.InfoObjAddrSize]...)
+		a.InfoObj = append(a.InfoObj, newASDU.InfoObj[newASDU.Params.InfoObjAddrSize:]...)
 	} else {
 		a.InfoObj = append(a.InfoObj, newASDU.InfoObj...)
+	}
+
+	if len(a.InfoObj) > asdu.ASDUSizeMax-a.IdentifierSize() {
+		return nil, fmt.Errorf("ASDU size exceeded: size=%d, max=%d", len(a.InfoObj), asdu.ASDUSizeMax-a.IdentifierSize())
 	}
 
 	return a, nil

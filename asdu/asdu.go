@@ -308,6 +308,10 @@ func (sf *ASDU) MarshalBinary() (data []byte, err error) {
 		return nil, ErrParam
 	}
 
+	if len(sf.InfoObj) > ASDUSizeMax-sf.IdentifierSize() {
+		return nil, fmt.Errorf("ASDU size exceeded: size=%d, max=%d", len(sf.InfoObj), ASDUSizeMax-sf.IdentifierSize())
+	}
+
 	raw := sf.Bootstrap[:(sf.IdentifierSize() + len(sf.InfoObj))]
 	raw[0] = byte(sf.Type)
 	raw[1] = sf.Variable.Value()

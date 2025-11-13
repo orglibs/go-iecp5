@@ -88,6 +88,23 @@ func (sf *ASDU) DecodeInfoObjAddr() InfoObjAddr {
 	return ioa
 }
 
+// ReadInfoObjAddr only read info object address then the pass it
+func (sf *ASDU) ReadInfoObjAddr() InfoObjAddr {
+	var ioa InfoObjAddr
+	switch sf.InfoObjAddrSize {
+	case 1:
+		ioa = InfoObjAddr(sf.InfoObj[0])
+	case 2:
+		ioa = InfoObjAddr(sf.InfoObj[0]) | (InfoObjAddr(sf.InfoObj[1]) << 8)
+	case 3:
+		ioa = InfoObjAddr(sf.InfoObj[0]) | (InfoObjAddr(sf.InfoObj[1]) << 8) | (InfoObjAddr(sf.InfoObj[2]) << 16)
+	default:
+		panic(ErrParam)
+	}
+
+	return ioa
+}
+
 // AppendNormalize append a Normalize value to info object
 func (sf *ASDU) AppendNormalize(n Normalize) *ASDU {
 	sf.InfoObj = append(sf.InfoObj, byte(n), byte(n>>8))
