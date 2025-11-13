@@ -980,7 +980,7 @@ func boolToByte(b bool) byte {
 func combineASDUs(asduCombined asdu.ASDU, newASDU asdu.ASDU) (*asdu.ASDU, error) {
 	isSeq := false
 
-	if asduCombined.Variable.IsSequence == false {
+	if !asduCombined.Variable.IsSequence {
 		newIoa := newASDU.DecodeInfoObjAddr()
 		oldIoa := asduCombined.DecodeInfoObjAddr()
 
@@ -992,7 +992,7 @@ func combineASDUs(asduCombined asdu.ASDU, newASDU asdu.ASDU) (*asdu.ASDU, error)
 		oldIoa := asduCombined.DecodeInfoObjAddr()
 
 		if newIoa != oldIoa+asdu.InfoObjAddr(asduCombined.Variable.Number) {
-			return nil, fmt.Errorf("Cannot combine non contiguous IOA in isSequence package")
+			return nil, errors.New("cannot combine non contiguous IOA in isSequence package")
 		}
 
 		isSeq = true
