@@ -88,6 +88,22 @@ func (sf *SrvSession) sendLoop() {
 	for {
 		select {
 		case <-sf.ctx.Done():
+			if len(sf.pending) > 0 {
+				for _, pend := range sf.pending {
+					asduPack := asdu.NewEmptyASDU(sf.params)
+					if err := asduPack.UnmarshalBinary(pend.asduPending); err != nil {
+						slog.Error("trying to resend unconfirmed asdu failed", "error", err)
+
+						continue
+					}
+
+					err := sf.queue.Enqueue(*asduPack)
+					if err != nil {
+						slog.Error("enqueue unconfirmed asdu failed", "error", err)
+					}
+					//sf.pending = sf.pending[1:]
+				}
+			}
 			return
 		case apdu := <-sf.sendRaw:
 			slog.Debug("TX Raw", "tx", apdu)
@@ -178,7 +194,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 
 		sf.ackNoRcv = sf.seqNoRcv
 		sf.seqNoSend = (seqNo + 1) & 32767
-		sf.pending = append(sf.pending, seqPending{seqNo & 32767, time.Now()})
+		sf.pending = append(sf.pending, seqPending{seqNo & 32767, time.Now(), asdu1})
 
 		slog.Debug("TX iFrame", "tx iFrame", IAPCI{seqNo, sf.seqNoRcv})
 		sf.sendRaw <- iframe
@@ -555,6 +571,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		if !resp.IsNegative {
+			time.Sleep(timeoutResolution * 2)
 			actConRep := asduPack.ReplySetFloatCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
 
 			err = sf.Send(actConRep)
@@ -815,6 +832,7 @@ func (sf *SrvSession) processQueue() {
 	for {
 		select {
 		case <-sf.ctx.Done():
+			slog.Info("queue process finished!")
 			return
 		default:
 			if sf.isActive {
@@ -845,7 +863,8 @@ func (sf *SrvSession) processQueue() {
 
 					continue
 				} else {
-					if sendData.Identifier.Type == data.Identifier.Type {
+					if sendData.Identifier.Type == data.Identifier.Type && data.Identifier.Coa.Cause != asdu.Spontaneous &&
+						sendData.Identifier.Coa.Cause == data.Identifier.Coa.Cause {
 						combinedASDU, err := combineASDUs(*sendData, data)
 						if err == nil {
 							sendData = combinedASDU
@@ -887,7 +906,8 @@ func combineASDUs(asduCombined asdu.ASDU, newASDU asdu.ASDU) (*asdu.ASDU, error)
 		newIoa := newASDU.ReadInfoObjAddr()
 		oldIoa := asduCombined.ReadInfoObjAddr()
 
-		if asduCombined.Variable.Number == 1 && newIoa == oldIoa+1 {
+		if asduCombined.Variable.Number == 1 && newIoa == oldIoa+1 &&
+			newASDU.Identifier.Coa.Cause == asdu.InterrogatedByStation {
 			isSeq = true
 		}
 	} else {

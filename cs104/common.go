@@ -20,8 +20,9 @@ import (
 const DefaultReconnectInterval = 1 * time.Minute
 
 type seqPending struct {
-	seq      uint16
-	sendTime time.Time
+	seq         uint16
+	sendTime    time.Time
+	asduPending []byte
 }
 
 func openConnection(uri *url.URL, tlsc *tls.Config, timeout time.Duration) (net.Conn, error) {

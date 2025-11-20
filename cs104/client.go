@@ -253,7 +253,7 @@ func (sf *Client) run(ctx context.Context) {
 
 		sf.ackNoRcv = sf.seqNoRcv
 		sf.seqNoSend = (seqNo + 1) & 32767
-		sf.pending = append(sf.pending, seqPending{seqNo & 32767, time.Now()})
+		sf.pending = append(sf.pending, seqPending{seqNo & 32767, time.Now(), asdu1})
 
 		slog.Debug("TX iFrame", "tx iFrame", IAPCI{seqNo, sf.seqNoRcv})
 		sf.sendRaw <- iframe
