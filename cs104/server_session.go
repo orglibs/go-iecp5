@@ -813,55 +813,60 @@ func (sf *SrvSession) processQueue() {
 	var sendData *asdu.ASDU
 
 	for {
-		if sf.isActive {
-			data, err := sf.queue.Dequeue()
-			if err != nil {
-				if err.Error() == ErrQueueEmpty && sendData != nil {
+		select {
+		case <-sf.ctx.Done():
+			return
+		default:
+			if sf.isActive {
+				data, err := sf.queue.Dequeue()
+				if err != nil {
+					if err.Error() == ErrQueueEmpty && sendData != nil {
+						err = sf.SendQueuedASDU(sendData)
+						if err != nil {
+							slog.Warn("queue data send failed", "error", err)
+							if errors.Is(err, ErrUseClosedConnection) {
+								sf.queue.Enqueue(*sendData)
+
+								continue
+							}
+						}
+
+						time.Sleep(1 * time.Millisecond)
+						sendData = nil
+					}
+
+					time.Sleep(timeoutResolution)
+
+					continue
+				}
+
+				if sendData == nil {
+					sendData = data.Clone()
+
+					continue
+				} else {
+					if sendData.Identifier.Type == data.Identifier.Type {
+						combinedASDU, err := combineASDUs(*sendData, data)
+						if err == nil {
+							sendData = combinedASDU
+
+							continue
+						}
+					}
+
 					err = sf.SendQueuedASDU(sendData)
 					if err != nil {
 						slog.Warn("queue data send failed", "error", err)
 						if errors.Is(err, ErrUseClosedConnection) {
-							slog.Warn("connection closed, stopping queue processing")
+							sf.queue.Enqueue(*sendData)
 
-							return
+							continue
 						}
 					}
 
 					time.Sleep(1 * time.Millisecond)
-					sendData = nil
+					sendData = data.Clone()
 				}
-
-				time.Sleep(timeoutResolution)
-
-				continue
-			}
-
-			if sendData == nil {
-				sendData = data.Clone()
-
-				continue
-			} else {
-				if sendData.Identifier.Type == data.Identifier.Type {
-					combinedASDU, err := combineASDUs(*sendData, data)
-					if err == nil {
-						sendData = combinedASDU
-
-						continue
-					}
-				}
-
-				err = sf.SendQueuedASDU(sendData)
-				if err != nil {
-					slog.Warn("queue data send failed", "error", err)
-					if errors.Is(err, ErrUseClosedConnection) {
-						slog.Warn("connection closed, stopping queue processing")
-
-						return
-					}
-				}
-
-				time.Sleep(1 * time.Millisecond)
-				sendData = data.Clone()
 			}
 		}
 	}
