@@ -437,10 +437,10 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 	slog.Debug("ASDU", "asdu", asduPack)
 
 	switch asduPack.Identifier.Type {
-	case asdu.C_SC_NA_1: // SingleCommand without timeStamp
+	case asdu.C_SC_NA_1: // Single Command without timeStamp
 		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_NA_1, err)
+			return fmt.Errorf("error with %s type, %s", asdu.C_SC_NA_1, err.Error())
 		}
 
 		cmd := asduPack.GetSingleCmd()
@@ -449,58 +449,18 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, boolToByte(cmd.Value))
 		err = sf.Send(actConRep)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %v", asdu.C_SC_NA_1, err.Error())
+			return fmt.Errorf("error with %s type, %s", asdu.C_SC_NA_1, err.Error())
 		}
 
 		if resp.IsNegative {
-			return fmt.Errorf("error with %s type", asdu.C_SC_NA_1)
+			return fmt.Errorf("error with %s type, negative response", asdu.C_SC_NA_1)
 		}
 
 		return nil
-	case asdu.C_DC_NA_1: // DoubleCommand without timeStamp
+	case asdu.C_SC_TA_1: // Single Command with timeStamp
 		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_DC_NA_1, err)
-		}
-
-		cmd := asduPack.GetDoubleCmd()
-
-		resp := sf.handler.DoubleCommandHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
-		err = sf.Send(actConRep)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_DC_NA_1, err)
-		}
-
-		if resp.IsNegative {
-			return fmt.Errorf("error with %s type, %w", asdu.C_DC_NA_1, err)
-		}
-
-		return nil
-	case asdu.C_DC_TA_1: // DoubleCommand with timeStamp
-		err := replyError(asduPack, sf)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_DC_TA_1, err)
-		}
-
-		cmd := asduPack.GetDoubleCmd()
-
-		resp := sf.handler.DoubleCommandHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
-		err = sf.Send(actConRep)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_DC_TA_1, err)
-		}
-
-		if resp.IsNegative {
-			return fmt.Errorf("error with %s type, %w", asdu.C_DC_TA_1, err)
-		}
-
-		return nil
-	case asdu.C_SC_TA_1: // SingleCommand with timeStamp
-		err := replyError(asduPack, sf)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
+			return fmt.Errorf("error with %s type, %s", asdu.C_SC_TA_1, err.Error())
 		}
 
 		cmd := asduPack.GetSingleCmd()
@@ -509,315 +469,51 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, boolToByte(cmd.Value))
 		err = sf.Send(actConRep)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
+			return fmt.Errorf("error with %s type, %s", asdu.C_SC_TA_1, err.Error())
 		}
 
 		if resp.IsNegative {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SC_TA_1, err)
+			return fmt.Errorf("error with %s type, negative response", asdu.C_SC_TA_1)
 		}
 
 		return nil
-	case asdu.C_SE_NA_1: // SetPointCommandNormalized
+	case asdu.C_DC_NA_1: // Double Command without timeStamp
 		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NA_1, err)
+			return fmt.Errorf("error with %s type, %s", asdu.C_DC_NA_1, err.Error())
 		}
 
-		cmd := asduPack.GetSetpointNormalCmd()
+		cmd := asduPack.GetDoubleCmd()
 
-		resp := sf.handler.SetPointCommandNormalHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplySetPointCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, int16(cmd.Value))
+		resp := sf.handler.DoubleCommandHandler(sf, asduPack, cmd, cmd.Ioa)
+		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
 		err = sf.Send(actConRep)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NA_1, err)
-		}
-
-		if !resp.IsNegative {
-			actConRep := asduPack.ReplySetPointCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, int16(cmd.Value))
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_SE_NA_1, err)
-			}
-		} else {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NA_1, err)
-		}
-
-		return nil
-	case asdu.C_SE_NB_1: // SetPointCommandScaled
-		err := replyError(asduPack, sf)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
-		}
-
-		cmd := asduPack.GetSetpointCmdScaled()
-
-		resp := sf.handler.SetPointCommandScaledHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplySetPointCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
-		err = sf.Send(actConRep)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
-		}
-
-		if !resp.IsNegative {
-			actConRep := asduPack.ReplySetPointCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
-			}
-		} else {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
-		}
-
-		return nil
-	case asdu.C_SE_NC_1: // SetPointCommandShort
-		err := replyError(asduPack, sf)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NC_1, err)
-		}
-
-		cmd := asduPack.GetSetpointFloatCmd()
-
-		resp := sf.handler.SetPointCommandFloatHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplySetFloatCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
-		err = sf.Send(actConRep)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_SE_NC_1, err)
-		}
-
-		if !resp.IsNegative {
-			actConRep := asduPack.ReplySetFloatCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_SE_NB_1, err)
-			}
-		} else {
-			return fmt.Errorf("error with %s type", asdu.C_SE_NB_1)
-		}
-
-		return nil
-	case asdu.C_IC_NA_1: // InterrogationCmd
-		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
-			asduPack.Identifier.Coa.Cause == asdu.Deactivation) {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
-
-			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
-		}
-
-		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
-
-			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
-		}
-
-		ioa, qoi := asduPack.GetInterrogationCmd()
-		if ioa != asdu.InfoObjAddrIrrelevant {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
-
-			return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
-		}
-
-		resp, ca := sf.handler.InterrogationHandler(sf, asduPack, qoi)
-		actConRep := asduPack.Reply(resp, asdu.CommonAddr(ca), ioa)
-		err := sf.Send(actConRep)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
+			return fmt.Errorf("error with %s type, %s", asdu.C_DC_NA_1, err.Error())
 		}
 
 		if resp.IsNegative {
-			return fmt.Errorf("error with %s type, %w", asdu.C_IC_NA_1, err)
+			return fmt.Errorf("error with %s type, negative response", asdu.C_DC_NA_1)
 		}
 
 		return nil
-	case asdu.C_CI_NA_1: // CounterInterrogationCmd
-		if asduPack.Identifier.Coa.Cause != asdu.Activation {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
-
-			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
-		}
-
-		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
-
-			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
-		}
-
-		ioa, qcc := asduPack.GetCounterInterrogationCmd()
-		if ioa != asdu.InfoObjAddrIrrelevant {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
-
-			return fmt.Errorf("error with %s type, %w", asdu.C_CI_NA_1, err)
-		}
-
-		resp := sf.handler.CounterInterrogationHandler(sf, asduPack, qcc)
-		actConRep := asduPack.Reply(resp, asduPack.CommonAddr, ioa)
-		err := sf.Send(actConRep)
+	case asdu.C_DC_TA_1: // Double Command with timeStamp
+		err := replyError(asduPack, sf)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_CI_NA_1, err)
+			return fmt.Errorf("error with %s type, %s", asdu.C_DC_TA_1, err.Error())
 		}
 
-		if !resp.IsNegative {
-			actConRep := asduPack.Reply(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, ioa)
+		cmd := asduPack.GetDoubleCmd()
 
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_CI_NA_1, err)
-			}
-		} else {
-			return fmt.Errorf("error with %s type, %w", asdu.C_CI_NA_1, err)
-		}
-
-		return nil
-	case asdu.C_RD_NA_1: // ReadCmd
-		if asduPack.Identifier.Coa.Cause != asdu.Request {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
-
-			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
-		}
-
-		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
-
-			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
-		}
-
-		err := sf.handler.ReadHandler(sf, asduPack, asduPack.GetReadCmd())
+		resp := sf.handler.DoubleCommandHandler(sf, asduPack, cmd, cmd.Ioa)
+		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
+		err = sf.Send(actConRep)
 		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_RD_NA_1, err)
+			return fmt.Errorf("error with %s type, %s", asdu.C_DC_TA_1, err.Error())
 		}
 
-		return nil
-	case asdu.C_CS_NA_1: // ClockSynchronizationCmd
-		if asduPack.Identifier.Coa.Cause != asdu.Activation {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
-
-			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
-		}
-
-		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
-
-			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
-		}
-
-		ioa, tm := asduPack.GetClockSynchronizationCmd()
-		if ioa != asdu.InfoObjAddrIrrelevant {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
-
-			return fmt.Errorf("error with %s type, %w", asdu.C_CS_NA_1, err)
-		}
-
-		resp := sf.handler.ClockSyncHandler(sf, asduPack, tm)
-		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, ioa, asdu.QualifierOfCommand{Qual: asdu.QOCNoAdditionalDefinition, InSelect: false}, 0)
-		err := sf.Send(actConRep)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_CI_NA_1, err)
-		}
-
-		if !resp.IsNegative {
-			actConRep := asduPack.ReplyCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, ioa, asdu.QualifierOfCommand{Qual: asdu.QOCNoAdditionalDefinition, InSelect: false}, 0)
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_CS_NA_1, err)
-			}
-		} else {
-			return fmt.Errorf("error with %s type, %w", asdu.C_CS_NA_1, err)
-		}
-
-		return nil
-	case asdu.C_TS_NA_1: // TestCommand
-		if asduPack.Identifier.Coa.Cause != asdu.Activation {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
-
-			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
-		}
-
-		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
-
-			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
-		}
-
-		ioa, _ := asduPack.GetTestCommand()
-		if ioa != asdu.InfoObjAddrIrrelevant {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
-
-			return fmt.Errorf("error with %s type, %w", asdu.C_TS_NA_1, err)
-		}
-
-		err := asduPack.SendReplyMirror(sf, asdu.ActivationCon)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_TS_NA_1, err)
-		}
-
-		return nil
-	case asdu.C_RP_NA_1: // ResetProcessCmd
-		if asduPack.Identifier.Coa.Cause != asdu.Activation {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
-
-			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
-		}
-
-		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
-
-			return fmt.Errorf("error with %s type, %w", asdu.C_RP_NA_1, err)
-		}
-
-		ioa, qrp := asduPack.GetResetProcessCmd()
-		if ioa != asdu.InfoObjAddrIrrelevant {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
-
-			return fmt.Errorf("error with %s type, %w", asdu.C_RP_NA_1, err)
-		}
-
-		resp := sf.handler.ResetProcessHandler(sf, asduPack, qrp)
-		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, ioa, asdu.QualifierOfCommand{Qual: asdu.QOCNoAdditionalDefinition, InSelect: false}, 0)
-		err := sf.Send(actConRep)
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_CI_NA_1, err)
-		}
-
-		if !resp.IsNegative {
-			actConRep := asduPack.ReplyCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, ioa, asdu.QualifierOfCommand{Qual: asdu.QOCNoAdditionalDefinition, InSelect: false}, 0)
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %w", asdu.C_RP_NA_1, err)
-			}
-		} else {
-			return fmt.Errorf("error with %s type, %w", asdu.C_RP_NA_1, err)
-		}
-
-		return nil
-	case asdu.C_CD_NA_1: // DelayAcquireCommand
-		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
-			asduPack.Identifier.Coa.Cause == asdu.Spontaneous) {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
-
-			return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
-		}
-
-		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
-
-			return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
-		}
-
-		ioa, msec := asduPack.GetDelayAcquireCommand()
-		if ioa != asdu.InfoObjAddrIrrelevant {
-			err := asduPack.SendReplyMirror(sf, asdu.UnknownIOA)
-
-			return fmt.Errorf("error with %s type, %w", asdu.C_CD_NA_1, err)
-		}
-
-		err := sf.handler.DelayAcquisitionHandler(sf, asduPack, msec)
-
-		if err != nil {
-			return fmt.Errorf("error with %s type, %w", asdu.C_CD_NA_1, err)
+		if resp.IsNegative {
+			return fmt.Errorf("error with %s type, negative response", asdu.C_DC_TA_1)
 		}
 
 		return nil
@@ -827,13 +523,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s type, %v", asdu.C_RC_NA_1, err.Error())
 		}
 
-		slog.Info("C_RC_NA_1 received", "asdu", asduPack)
 		cmd := asduPack.GetStepCmd()
 
-		resp := sf.handler.SetStepPositionCommandScaledHandler(sf, asduPack, cmd, cmd.Ioa)
+		resp := sf.handler.StepPositionCommandHandler(sf, asduPack, cmd, cmd.Ioa)
 		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
 		err = sf.Send(actConRep)
-		slog.Info("C_RC_NA_1 sent", "asdu", asduPack)
 		if err != nil {
 			slog.Warn("error sending C_RC_NA_1 reply", "error", err)
 
@@ -845,12 +539,190 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		return nil
+	case asdu.C_SE_NC_1: // Set Point Command Short
+		err := replyError(asduPack, sf)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %s", asdu.C_SE_NC_1, err.Error())
+		}
+
+		cmd := asduPack.GetSetpointFloatCmd()
+
+		resp := sf.handler.SetPointCommandFloatHandler(sf, asduPack, cmd, cmd.Ioa)
+		actConRep := asduPack.ReplySetFloatCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
+		err = sf.Send(actConRep)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %s", asdu.C_SE_NC_1, err.Error())
+		}
+
+		if !resp.IsNegative {
+			actConRep := asduPack.ReplySetFloatCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
+
+			err = sf.Send(actConRep)
+			if err != nil {
+				return fmt.Errorf("error with %s type, %s", asdu.C_SE_NB_1, err.Error())
+			}
+		} else {
+			return fmt.Errorf("error with %s type, negative response", asdu.C_SE_NB_1)
+		}
+
+		return nil
+	case asdu.C_IC_NA_1: // Interrogation Command
+		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
+			asduPack.Identifier.Coa.Cause == asdu.Deactivation) {
+			_ = asduPack.SendReplyError(sf, asdu.UnknownCOT)
+
+			return fmt.Errorf("error with %s cause of transmission", string(asduPack.Identifier.Coa.Cause))
+		}
+
+		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+			_ = asduPack.SendReplyError(sf, asdu.UnknownCA)
+
+			return fmt.Errorf("error with %s common address", fmt.Sprint(asduPack.CommonAddr))
+		}
+
+		ioa, qoi := asduPack.GetInterrogationCmd()
+		if ioa != asdu.InfoObjAddrIrrelevant {
+			_ = asduPack.SendReplyError(sf, asdu.UnknownIOA)
+
+			return fmt.Errorf("error with %s type", asdu.C_IC_NA_1)
+		}
+
+		resp, ca := sf.handler.InterrogationHandler(sf, asduPack, qoi)
+		actConRep := asduPack.Reply(resp, asdu.CommonAddr(ca), ioa)
+		err := sf.Send(actConRep)
+		if err != nil {
+			return fmt.Errorf("error with %s type, %s", asdu.C_IC_NA_1, err.Error())
+		}
+
+		if resp.IsNegative {
+			return fmt.Errorf("error with %s type, negative response", asdu.C_IC_NA_1)
+		}
+
+		return nil
+	case asdu.C_RD_NA_1: // Read Command
+		if asduPack.Identifier.Coa.Cause != asdu.Request {
+			_ = asduPack.SendReplyError(sf, asdu.UnknownCOT)
+
+			return fmt.Errorf("error with %s cause of transmission", string(asduPack.Identifier.Coa.Cause))
+		}
+
+		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+			_ = asduPack.SendReplyError(sf, asdu.UnknownCA)
+
+			return fmt.Errorf("error with %s common address", fmt.Sprint(asduPack.CommonAddr))
+		}
+
+		err := sf.handler.ReadHandler(sf, asduPack, asduPack.GetReadCmd())
+		if err != nil {
+			return fmt.Errorf("error with %s type, %s", asdu.C_RD_NA_1, err.Error())
+		}
+
+		return nil
+	case asdu.C_RP_NA_1: // Reset Process Command
+		if asduPack.Identifier.Coa.Cause != asdu.Activation {
+			_ = asduPack.SendReplyError(sf, asdu.UnknownCOT)
+
+			return fmt.Errorf("error with %s cause of transmission", string(asduPack.Identifier.Coa.Cause))
+		}
+
+		if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+			_ = asduPack.SendReplyError(sf, asdu.UnknownCA)
+
+			return fmt.Errorf("error with %s type", asdu.C_RP_NA_1)
+		}
+
+		ioa, qrp := asduPack.GetResetProcessCmd()
+		if ioa != asdu.InfoObjAddrIrrelevant {
+			_ = asduPack.SendReplyError(sf, asdu.UnknownIOA)
+
+			return fmt.Errorf("error with %s type", asdu.C_RP_NA_1)
+		}
+
+		resp := sf.handler.ResetProcessHandler(sf, asduPack, qrp)
+		if resp.IsNegative {
+			actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, ioa, asdu.QualifierOfCommand{Qual: asdu.QOCNoAdditionalDefinition, InSelect: false}, 0)
+			err := sf.Send(actConRep)
+			if err != nil {
+				return fmt.Errorf("error with %s type, %s", asdu.C_RP_NA_1, err.Error())
+			}
+		}
+
+		return nil
+		/*
+			// Currently unused commands
+
+			case asdu.C_CS_NA_1: // Clock Synchronization Command
+				if asduPack.Identifier.Coa.Cause != asdu.Activation {
+					err := asduPack.SendReplyError(sf, asdu.UnknownCOT)
+
+					return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
+				}
+
+				if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+					err := asduPack.SendReplyError(sf, asdu.UnknownCA)
+
+					return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
+				}
+
+				ioa, tm := asduPack.GetClockSynchronizationCmd()
+				if ioa != asdu.InfoObjAddrIrrelevant {
+					err := asduPack.SendReplyError(sf, asdu.UnknownIOA)
+
+					return fmt.Errorf("error with %s type, %s", asdu.C_CS_NA_1, err)
+				}
+
+				resp := sf.handler.ClockSyncHandler(sf, asduPack, tm)
+				actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, ioa, asdu.QualifierOfCommand{Qual: asdu.QOCNoAdditionalDefinition, InSelect: false}, 0)
+				err := sf.Send(actConRep)
+				if err != nil {
+					return fmt.Errorf("error with %s type, %s", asdu.C_CI_NA_1, err)
+				}
+
+				if !resp.IsNegative {
+					actConRep := asduPack.ReplyCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, ioa, asdu.QualifierOfCommand{Qual: asdu.QOCNoAdditionalDefinition, InSelect: false}, 0)
+
+					err = sf.Send(actConRep)
+					if err != nil {
+						return fmt.Errorf("error with %s type, %s", asdu.C_CS_NA_1, err)
+					}
+				} else {
+					return fmt.Errorf("error with %s type, %s", asdu.C_CS_NA_1, err)
+				}
+
+				return nil
+			case asdu.C_TS_NA_1: // Test Command
+				if asduPack.Identifier.Coa.Cause != asdu.Activation {
+					err := asduPack.SendReplyError(sf, asdu.UnknownCOT)
+
+					return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
+				}
+
+				if asduPack.CommonAddr == asdu.InvalidCommonAddr {
+					err := asduPack.SendReplyError(sf, asdu.UnknownCA)
+
+					return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
+				}
+
+				ioa, _ := asduPack.GetTestCommand()
+				if ioa != asdu.InfoObjAddrIrrelevant {
+					err := asduPack.SendReplyError(sf, asdu.UnknownIOA)
+
+					return fmt.Errorf("error with %s type, %s", asdu.C_TS_NA_1, err)
+				}
+
+				err := asduPack.SendReplyMirror(sf, asdu.ActivationCon)
+				if err != nil {
+					return fmt.Errorf("error with %s type, %s", asdu.C_TS_NA_1, err)
+				}
+
+				return nil
+		*/
 	}
 
 	if err := sf.handler.ASDUHandler(sf, asduPack); err != nil {
-		err := asduPack.SendReplyMirror(sf, asdu.UnknownTypeID)
+		err := asduPack.SendReplyError(sf, asdu.UnknownTypeID)
 
-		return fmt.Errorf("error with %s type, %w", asduPack.Identifier.Type, err)
+		return fmt.Errorf("error with %s type, %s", asduPack.Identifier.Type, err.Error())
 	}
 
 	return nil
@@ -858,12 +730,12 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 func replyError(asduPack *asdu.ASDU, sf *SrvSession) error {
 	if asduPack.Identifier.Coa.Cause != asdu.Activation {
-		err := asduPack.SendReplyMirror(sf, asdu.UnknownCOT)
+		err := asduPack.SendReplyError(sf, asdu.UnknownCOT)
 
 		return fmt.Errorf("error with %s cause of transmission, %w", string(asduPack.Identifier.Coa.Cause), err)
 	}
 	if asduPack.CommonAddr == asdu.InvalidCommonAddr {
-		err := asduPack.SendReplyMirror(sf, asdu.UnknownCA)
+		err := asduPack.SendReplyError(sf, asdu.UnknownCA)
 
 		return fmt.Errorf("error with %s common address, %w", fmt.Sprint(asduPack.CommonAddr), err)
 	}

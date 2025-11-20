@@ -241,6 +241,16 @@ func (sf *ASDU) SendReplyMirror(c Connect, cause Cause) error {
 	return c.Send(r)
 }
 
+// SendReplyError send a reply of the mirror request but cause different and isNegative bit set
+func (sf *ASDU) SendReplyError(c Connect, cause Cause) error {
+	r := NewASDU(sf.Params, sf.Identifier)
+	r.Coa.Cause = cause
+	r.Coa.IsNegative = true
+	r.InfoObj = append(r.InfoObj, sf.InfoObj...)
+
+	return c.Send(r)
+}
+
 //// String returns a full description.
 // func (u *ASDU) String() string {
 //	dataSize, err := GetInfoObjSize(u.Type)
