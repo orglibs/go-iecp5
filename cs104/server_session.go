@@ -863,8 +863,8 @@ func (sf *SrvSession) processQueue() {
 
 					continue
 				} else {
-					if sendData.Identifier.Type == data.Identifier.Type && data.Identifier.Coa.Cause != asdu.Spontaneous &&
-						sendData.Identifier.Coa.Cause == data.Identifier.Coa.Cause {
+					if sendData.Identifier.Type == data.Identifier.Type && sendData.Identifier.Coa.Cause == data.Identifier.Coa.Cause &&
+						data.Identifier.Variable.Number == 1 {
 						combinedASDU, err := combineASDUs(*sendData, data)
 						if err == nil {
 							sendData = combinedASDU
