@@ -59,8 +59,9 @@ type SrvSession struct {
 	cancel context.CancelFunc
 	ctx    context.Context
 
-	isActive     bool // connection is active after startdt activated
-	stopSessions chan struct{}
+	isActive              bool // connection is active after startdt activated
+	stopSessions          chan struct{}
+	stopDtResponseWaiting bool
 }
 
 // RecvLoop feeds t.rcvRaw.
@@ -251,6 +252,13 @@ func (sf *SrvSession) run(ctx context.Context) {
 				sf.ackNoSend++
 
 				slog.Error("fatal transmission timeout t₁")
+				if sf.stopDtResponseWaiting {
+					sendUFrame(UStopDtConfirm)
+					sf.isActive = false
+					sf.stopDtResponseWaiting = false
+					slog.Debug("data transfer stopped by remote")
+					time.Sleep(10 * time.Millisecond)
+				}
 
 				return
 			}
@@ -330,10 +338,13 @@ func (sf *SrvSession) run(ctx context.Context) {
 				// 	isActive = true
 				// 	startDtActiveSendSince = willNotTimeout
 				case UStopDtActive:
-					// TODOCGT: here check if pending is empty before sending confirmation
-					sendUFrame(UStopDtConfirm)
-					sf.isActive = false
-					slog.Debug("data transfer stopped by remote")
+					if len(sf.pending) > 0 {
+						sf.stopDtResponseWaiting = true
+					} else {
+						sendUFrame(UStopDtConfirm)
+						sf.isActive = false
+						slog.Debug("data transfer stopped by remote")
+					}
 				// case uStopDtConfirm:
 				// 	isActive = false
 				// 	stopDtActiveSendSince = willNotTimeout
@@ -437,6 +448,15 @@ func (sf *SrvSession) updateAckNoOut(ackNo uint16) (ok bool) {
 
 			break
 		}
+	}
+
+	if len(sf.pending) == 0 && sf.stopDtResponseWaiting {
+		sf.sendRaw <- NewUFrame(UStopDtConfirm)
+		sf.isActive = false
+		sf.stopDtResponseWaiting = false
+		slog.Debug("data transfer stopped by remote")
+		time.Sleep(10 * time.Millisecond)
+		return false
 	}
 
 	sf.ackNoSend = ackNo
