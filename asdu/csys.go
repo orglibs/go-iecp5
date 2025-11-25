@@ -200,8 +200,6 @@ func ResetProcessCmd(c Connect, coa CauseOfTransmission, ca CommonAddr, qrp Qual
 		return err
 	}
 
-	coa.Cause = Activation
-
 	u := NewASDU(c.Params(), Identifier{
 		C_RP_NA_1,
 		VariableStruct{IsSequence: false, Number: 1},

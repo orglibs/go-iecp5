@@ -33,6 +33,8 @@ var (
 	ParamsNarrow = &Params{CauseSize: 1, CommonAddrSize: 1, InfoObjAddrSize: 1, InfoObjTimeZone: time.UTC}
 	// ParamsWide is the largest configuration.
 	ParamsWide = &Params{CauseSize: 2, CommonAddrSize: 2, InfoObjAddrSize: 3, InfoObjTimeZone: time.UTC}
+	// ParamsWideLocal is the largest configuration with local time zone.
+	ParamsWideLocal = &Params{CauseSize: 2, CommonAddrSize: 2, InfoObjAddrSize: 3, InfoObjTimeZone: time.Local}
 )
 
 // ASDU-specific parameters.

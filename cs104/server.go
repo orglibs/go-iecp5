@@ -44,7 +44,7 @@ type Server struct {
 func NewServer(handler ServerHandlerInterface, queue ServerQueueInterface, useQueue bool) *Server {
 	server104 := &Server{
 		config:       DefaultConfig(),
-		params:       *asdu.ParamsWide,
+		params:       *asdu.ParamsWideLocal,
 		handler:      handler,
 		queue:        queue,
 		useQueue:     useQueue,

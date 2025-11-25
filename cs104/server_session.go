@@ -101,6 +101,7 @@ func (sf *SrvSession) sendLoop() {
 					if err != nil {
 						slog.Error("enqueue unconfirmed asdu failed", "error", err)
 					}
+
 					//sf.pending = sf.pending[1:]
 				}
 			}
@@ -329,6 +330,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 				// 	isActive = true
 				// 	startDtActiveSendSince = willNotTimeout
 				case UStopDtActive:
+					// TODOCGT: here check if pending is empty before sending confirmation
 					sendUFrame(UStopDtConfirm)
 					sf.isActive = false
 					slog.Debug("data transfer stopped by remote")
@@ -832,7 +834,6 @@ func (sf *SrvSession) processQueue() {
 	for {
 		select {
 		case <-sf.ctx.Done():
-			slog.Info("queue process finished!")
 			return
 		default:
 			if sf.isActive {
