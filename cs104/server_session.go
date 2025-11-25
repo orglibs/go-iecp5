@@ -274,9 +274,9 @@ func (sf *SrvSession) run(ctx context.Context) {
 			// Send TestFrActive frame when idle time is up.
 			if now.Sub(idleTimeout3Sine) >= sf.config.IdleTimeout3 {
 				sendUFrame(UTestFrActive)
-				// testFrAliveSendSince = time.Now()
-				// idleTimeout3Sine = testFrAliveSendSince
-				idleTimeout3Sine = time.Now()
+				testFrAliveSendSince = time.Now()
+				idleTimeout3Sine = testFrAliveSendSince
+				// idleTimeout3Sine = time.Now()
 			}
 
 		case apdu := <-sf.rcvRaw:
