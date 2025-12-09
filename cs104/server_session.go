@@ -858,7 +858,7 @@ func (sf *SrvSession) processQueue() {
 		case <-sf.ctx.Done():
 			return
 		default:
-			if sf.isActive {
+			if sf.isActive && sf.queue != nil {
 				data, err := sf.queue.Dequeue()
 				if err != nil {
 					if err.Error() == ErrQueueEmpty && sendData != nil {
