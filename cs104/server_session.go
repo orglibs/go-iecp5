@@ -103,9 +103,10 @@ func (sf *SrvSession) sendLoop() {
 						slog.Error("enqueue unconfirmed asdu failed", "error", err)
 					}
 
-					//sf.pending = sf.pending[1:]
+					// sf.pending = sf.pending[1:]
 				}
 			}
+
 			return
 		case apdu := <-sf.sendRaw:
 			slog.Debug("TX Raw", "tx", apdu)
@@ -253,7 +254,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 
 				slog.Error("fatal transmission timeout t₁")
 				if sf.stopDtResponseWaiting {
-					//sendUFrame(UStopDtConfirm)
+					// sendUFrame(UStopDtConfirm)
 					sf.isActive = false
 					sf.stopDtResponseWaiting = false
 					slog.Debug("data transfer stopped by remote")
@@ -456,6 +457,7 @@ func (sf *SrvSession) updateAckNoOut(ackNo uint16) (ok bool) {
 		sf.stopDtResponseWaiting = false
 		slog.Debug("data transfer stopped by remote")
 		time.Sleep(10 * time.Millisecond)
+
 		return true
 	}
 
@@ -864,7 +866,7 @@ func (sf *SrvSession) processQueue() {
 						if err != nil {
 							slog.Warn("queue data send failed", "error", err)
 							if errors.Is(err, ErrUseClosedConnection) {
-								sf.queue.Enqueue(*sendData)
+								_ = sf.queue.Enqueue(*sendData)
 
 								continue
 							}
@@ -898,7 +900,7 @@ func (sf *SrvSession) processQueue() {
 					if err != nil {
 						slog.Warn("queue data send failed", "error", err)
 						if errors.Is(err, ErrUseClosedConnection) {
-							sf.queue.Enqueue(*sendData)
+							_ = sf.queue.Enqueue(*sendData)
 
 							continue
 						}
