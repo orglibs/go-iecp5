@@ -253,7 +253,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 
 				slog.Error("fatal transmission timeout t₁")
 				if sf.stopDtResponseWaiting {
-					sendUFrame(UStopDtConfirm)
+					//sendUFrame(UStopDtConfirm)
 					sf.isActive = false
 					sf.stopDtResponseWaiting = false
 					slog.Debug("data transfer stopped by remote")
@@ -456,7 +456,7 @@ func (sf *SrvSession) updateAckNoOut(ackNo uint16) (ok bool) {
 		sf.stopDtResponseWaiting = false
 		slog.Debug("data transfer stopped by remote")
 		time.Sleep(10 * time.Millisecond)
-		return false
+		return true
 	}
 
 	sf.ackNoSend = ackNo
