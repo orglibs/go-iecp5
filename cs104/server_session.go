@@ -163,6 +163,10 @@ func (sf *SrvSession) run(ctx context.Context) {
 	go sf.sendLoop()
 	go sf.handlerLoop()
 
+	if sf.useQueue {
+		go sf.processQueue()
+	}
+
 	// default: STOPDT, when connected establish and not enable "data transfer" yet
 	sf.isActive = false
 	checkTicker := time.NewTicker(timeoutResolution)

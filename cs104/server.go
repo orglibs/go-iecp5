@@ -135,7 +135,6 @@ func (sf *Server) ListenAndServer(addr string) {
 
 			if sf.useQueue {
 				sess.queue = sf.queue
-				go sess.processQueue()
 			}
 
 			sf.mux.Lock()
