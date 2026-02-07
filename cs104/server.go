@@ -206,8 +206,9 @@ func (sf *Server) watchActiveSessions() {
 		for sess := range sf.sessions {
 			if sess.isActive {
 				slog.Info("new active session detected, stopping others")
-				sess.sendRaw <- NewUFrame(UStopDtActive)
+				// sess.sendRaw <- NewUFrame(UStopDtActive)
 				sess.isActive = false
+				sess.conn.Close()
 			}
 		}
 	}
