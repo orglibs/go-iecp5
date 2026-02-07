@@ -31,7 +31,7 @@ type Server struct {
 	useQueue       bool
 	TLSConfig      *tls.Config
 	mux            sync.Mutex
-	sessions       map[*SrvSession]struct{}
+	sessions       map[int]*SrvSession
 	listen         net.Listener
 	onConnection   func(asdu.Connect)
 	connectionLost func(asdu.Connect)
@@ -48,7 +48,7 @@ func NewServer(handler ServerHandlerInterface, queue ServerQueueInterface, useQu
 		handler:      handler,
 		queue:        queue,
 		useQueue:     useQueue,
-		sessions:     make(map[*SrvSession]struct{}),
+		sessions:     make(map[int]*SrvSession),
 		stopSessions: make(chan struct{}),
 	}
 
@@ -138,11 +138,12 @@ func (sf *Server) ListenAndServer(addr string) {
 			}
 
 			sf.mux.Lock()
-			sf.sessions[sess] = struct{}{}
+			s := len(sf.sessions)
+			sf.sessions[s] = sess
 			sf.mux.Unlock()
 			sess.run(ctx)
 			sf.mux.Lock()
-			delete(sf.sessions, sess)
+			delete(sf.sessions, s)
 			sf.mux.Unlock()
 			sf.wg.Done()
 		}()
@@ -170,7 +171,7 @@ func (sf *Server) Close() error {
 func (sf *Server) Send(a *asdu.ASDU) error {
 	sf.mux.Lock()
 
-	for k := range sf.sessions {
+	for _, k := range sf.sessions {
 		_ = k.Send(a.Clone())
 	}
 
@@ -203,12 +204,12 @@ func (sf *Server) SetConnectionLostHandler(f func(asdu.Connect)) {
 func (sf *Server) watchActiveSessions() {
 	for {
 		<-sf.stopSessions
-		for sess := range sf.sessions {
+		for s, sess := range sf.sessions {
 			if sess.isActive {
 				slog.Info("new active session detected, stopping others")
-				// sess.sendRaw <- NewUFrame(UStopDtActive)
+				//sess.sendRaw <- NewUFrame(UStopDtActive)
 				sess.isActive = false
-				sess.conn.Close()
+				sf.sessions[s].conn.Close()
 			}
 		}
 	}

@@ -597,19 +597,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		if err != nil {
 			return fmt.Errorf("error with %s type, %s", asdu.C_SE_NC_1, err.Error())
 		}
-
-		if !resp.IsNegative {
-			time.Sleep(timeoutResolution * 2)
-			actConRep := asduPack.ReplySetFloatCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
-
-			err = sf.Send(actConRep)
-			if err != nil {
-				return fmt.Errorf("error with %s type, %s", asdu.C_SE_NB_1, err.Error())
-			}
-		} else {
+		
+		if resp.IsNegative {
 			return fmt.Errorf("error with %s type, negative response", asdu.C_SE_NB_1)
 		}
-
+			
 		return nil
 	case asdu.C_IC_NA_1: // Interrogation Command
 		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
@@ -848,6 +840,14 @@ func (sf *SrvSession) IsActive() bool {
 	return sf.isActive
 }
 
+func (sf *SrvSession) AreAllMessagesConfirmed() bool {
+	if len(sf.pending) > 0 {
+		return false
+	}
+
+	return true
+}
+
 // UnderlyingConn got under net.conn
 func (sf *SrvSession) UnderlyingConn() net.Conn {
 	return sf.conn
@@ -891,7 +891,7 @@ func (sf *SrvSession) processQueue() {
 					continue
 				} else {
 					if sendData.Identifier.Type == data.Identifier.Type && sendData.Identifier.Coa.Cause == data.Identifier.Coa.Cause &&
-						data.Identifier.Variable.Number == 1 {
+						data.Identifier.Variable.Number == 1 && isCombinableCOT(sendData.Identifier.Coa) {
 						combinedASDU, err := combineASDUs(*sendData, data)
 						if err == nil {
 							sendData = combinedASDU
@@ -973,4 +973,13 @@ func combineASDUs(asduCombined asdu.ASDU, newASDU asdu.ASDU) (*asdu.ASDU, error)
 	}
 
 	return a, nil
+}
+
+func isCombinableCOT(cot asdu.CauseOfTransmission) bool {
+	if cot.Cause == asdu.InterrogatedByStation ||
+		cot.Cause == asdu.Spontaneous {
+		return true
+	}
+
+	return false
 }

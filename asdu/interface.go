@@ -15,4 +15,5 @@ type Connect interface {
 	SendQueuedASDU(a *ASDU) error
 	UnderlyingConn() net.Conn
 	IsActive() bool
+	AreAllMessagesConfirmed() bool
 }

@@ -34,7 +34,7 @@ type SingleCommandInfo struct {
 // <45> := Unknown cause of transmission
 // <46> := Unknown application service data unit public address
 // <47> := Unknown information object address
-func SingleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd SingleCommandInfo) error {
+func SingleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, cmd SingleCommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
@@ -64,7 +64,7 @@ func SingleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
 	switch typeID {
 	case C_SC_NA_1:
 	case C_SC_TA_1:
-		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone)...)
+		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone, isValidTime)...)
 	default:
 		return ErrTypeIDNotMatch
 	}
@@ -95,7 +95,7 @@ type DoubleCommandInfo struct {
 // <45> := Unknown cause of transmission
 // <46> := Unknown application service data unit public address
 // <47> := Unknown information object address
-func DoubleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd DoubleCommandInfo) error {
+func DoubleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, cmd DoubleCommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
@@ -121,7 +121,7 @@ func DoubleCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr,
 	switch typeID {
 	case C_DC_NA_1:
 	case C_DC_TA_1:
-		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone)...)
+		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone, isValidTime)...)
 	default:
 		return ErrTypeIDNotMatch
 	}
@@ -154,7 +154,7 @@ type StepCommandInfo struct {
 // <46> := Unknown public address of application service data unit
 // <47> := Unknown address of information object
 
-func StepCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd StepCommandInfo) error {
+func StepCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, cmd StepCommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
@@ -180,7 +180,7 @@ func StepCmd(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, c
 	switch typeID {
 	case C_RC_NA_1:
 	case C_RC_TA_1:
-		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone)...)
+		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone, isValidTime)...)
 	default:
 		return ErrTypeIDNotMatch
 	}
@@ -211,7 +211,7 @@ type SetpointCommandNormalInfo struct {
 // <45>: = Unknown reasons for transmission
 // <46>: = Unknown application service data unit public address
 // <47>: = Unknown information object address
-func SetpointCmdNormal(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd SetpointCommandNormalInfo) error {
+func SetpointCmdNormal(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, cmd SetpointCommandNormalInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
@@ -236,7 +236,7 @@ func SetpointCmdNormal(c Connect, typeID TypeID, coa CauseOfTransmission, ca Com
 	switch typeID {
 	case C_SE_NA_1:
 	case C_SE_TA_1:
-		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone)...)
+		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone, isValidTime)...)
 	default:
 		return ErrTypeIDNotMatch
 	}
@@ -268,7 +268,7 @@ type SetpointCommandScaledInfo struct {
 // <46>: = Unknown application service data unit public address
 // <47>: = Unknown information object address
 
-func SetpointCmdScaled(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd SetpointCommandScaledInfo) error {
+func SetpointCmdScaled(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, cmd SetpointCommandScaledInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
@@ -294,7 +294,7 @@ func SetpointCmdScaled(c Connect, typeID TypeID, coa CauseOfTransmission, ca Com
 	switch typeID {
 	case C_SE_NB_1:
 	case C_SE_TB_1:
-		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone)...)
+		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone, isValidTime)...)
 	default:
 		return ErrTypeIDNotMatch
 	}
@@ -325,8 +325,8 @@ type SetpointCommandFloatInfo struct {
 // <45>: = Unknown reasons for transmission
 // <46>: = Unknown application service data unit public address
 // <47>: = Unknown information object address
-func SetpointCmdFloat(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, cmd SetpointCommandFloatInfo) error {
-	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
+func SetpointCmdFloat(c Connect, typeID TypeID, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, cmd SetpointCommandFloatInfo) error {
+	if !(coa.Cause == Activation || coa.Cause == Deactivation || coa.Cause == ActivationTerm) {
 		return ErrCmdCause
 	}
 
@@ -350,7 +350,7 @@ func SetpointCmdFloat(c Connect, typeID TypeID, coa CauseOfTransmission, ca Comm
 	switch typeID {
 	case C_SE_NC_1:
 	case C_SE_TC_1:
-		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone)...)
+		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone, isValidTime)...)
 	default:
 		return ErrTypeIDNotMatch
 	}
@@ -384,7 +384,7 @@ type BitsString32CommandInfo struct {
 // <45>: = Unknown reasons for transmission
 // <46>: = Unknown application service data unit public address
 // <47>: = Unknown information object address
-func BitsString32Cmd(c Connect, typeID TypeID, coa CauseOfTransmission, commonAddr CommonAddr, cmd BitsString32CommandInfo) error {
+func BitsString32Cmd(c Connect, typeID TypeID, coa CauseOfTransmission, commonAddr CommonAddr, isValidTime bool, cmd BitsString32CommandInfo) error {
 	if !(coa.Cause == Activation || coa.Cause == Deactivation) {
 		return ErrCmdCause
 	}
@@ -409,7 +409,7 @@ func BitsString32Cmd(c Connect, typeID TypeID, coa CauseOfTransmission, commonAd
 	switch typeID {
 	case C_BO_NA_1:
 	case C_BO_TA_1:
-		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone)...)
+		u.AppendBytes(CP56Time2a(cmd.Time, u.InfoObjTimeZone, isValidTime)...)
 	default:
 		return ErrTypeIDNotMatch
 	}

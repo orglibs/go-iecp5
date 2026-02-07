@@ -19,7 +19,7 @@ import (
 // | RES4(D7)            Year(D6--D0)    | Year = 0-99
 
 // CP56Time2a time to CP56Time2a
-func CP56Time2a(t time.Time, loc *time.Location) []byte {
+func CP56Time2a(t time.Time, loc *time.Location, isValid bool) []byte {
 	if loc == nil {
 		loc = time.UTC
 	}
@@ -27,8 +27,8 @@ func CP56Time2a(t time.Time, loc *time.Location) []byte {
 	ts := t.In(loc)
 	msec := ts.Nanosecond()/int(time.Millisecond) + ts.Second()*1000
 
-	return []byte{byte(msec), byte(msec >> 8), byte(ts.Minute()), byte(ts.Hour()),
-		byte(ts.Weekday()<<5) | byte(ts.Day()), byte(ts.Month()), byte(ts.Year() - 2000)}
+	return []byte{byte(msec), byte(msec >> 8), byte(ts.Minute() | (boolToInt(!isValid) << 7)),
+		byte(ts.Hour() | (boolToInt(t.IsDST()) << 7)), byte(ts.Weekday()+1<<5) | byte(ts.Day()), byte(ts.Month()), byte(ts.Year() - 2000)}
 }
 
 // ParseCP56Time2a 7 octets of binary time, UTC recommended for all timescales, reads 7 bytes, returns the time.
@@ -111,4 +111,11 @@ func CP16Time2a(msec uint16) []byte {
 // See companion standard 101, subclass 7.2.6.20.
 func ParseCP16Time2a(b []byte) uint16 {
 	return binary.LittleEndian.Uint16(b)
+}
+
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }

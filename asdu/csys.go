@@ -127,7 +127,7 @@ func ReadCmd(c Connect, coa CauseOfTransmission, ca CommonAddr, ioa InfoObjAddr)
 // <45> := Unknown reason for transmission
 // <46> := Unknown public address of application service data unit
 // <47> := Unknown address of the information object
-func ClockSynchronizationCmd(c Connect, coa CauseOfTransmission, ca CommonAddr, t time.Time) error {
+func ClockSynchronizationCmd(c Connect, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, t time.Time) error {
 	if err := c.Params().Valid(); err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func ClockSynchronizationCmd(c Connect, coa CauseOfTransmission, ca CommonAddr, 
 		return err
 	}
 
-	u.AppendBytes(CP56Time2a(t, u.InfoObjTimeZone)...)
+	u.AppendBytes(CP56Time2a(t, u.InfoObjTimeZone, isValidTime)...)
 
 	return c.Send(u)
 }
@@ -280,7 +280,7 @@ func TestCommandCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, t 
 	}
 
 	u.AppendUint16(FBPTestWord)
-	u.AppendCP56Time2a(t, u.InfoObjTimeZone)
+	u.AppendCP56Time2a(t, u.InfoObjTimeZone, true)
 
 	return c.Send(u)
 }

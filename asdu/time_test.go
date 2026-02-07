@@ -34,7 +34,7 @@ func TestCP56Time2a(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := asdu.CP56Time2a(tt.args.t, tt.args.loc); !reflect.DeepEqual(got, tt.want) {
+			if got := asdu.CP56Time2a(tt.args.t, tt.args.loc, true); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("CP56Time2a() = % x, want % x", got, tt.want)
 			}
 		})

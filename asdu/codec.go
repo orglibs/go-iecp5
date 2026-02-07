@@ -205,8 +205,8 @@ func (sf *ASDU) DecodeBitsString32() uint32 {
 }
 
 // AppendCP56Time2a append a CP56Time2a value to info object
-func (sf *ASDU) AppendCP56Time2a(t time.Time, loc *time.Location) *ASDU {
-	sf.InfoObj = append(sf.InfoObj, CP56Time2a(t, loc)...)
+func (sf *ASDU) AppendCP56Time2a(t time.Time, loc *time.Location, isValid bool) *ASDU {
+	sf.InfoObj = append(sf.InfoObj, CP56Time2a(t, loc, isValid)...)
 
 	return sf
 }

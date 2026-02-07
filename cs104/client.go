@@ -589,6 +589,10 @@ func (sf *Client) IsActive() bool {
 	return true
 }
 
+func (sf *Client) AreAllMessagesConfirmed() bool {
+	return true
+}
+
 // Close close all
 func (sf *Client) Close() error {
 	sf.rwMux.Lock()
@@ -646,7 +650,7 @@ func (sf *Client) ReadCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, ioa 
 
 // ClockSynchronizationCmd wrap asdu.ClockSynchronizationCmd
 func (sf *Client) ClockSynchronizationCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, t time.Time) error {
-	err := asdu.ClockSynchronizationCmd(sf, coa, ca, t)
+	err := asdu.ClockSynchronizationCmd(sf, coa, ca, true, t)
 	if err != nil {
 		return fmt.Errorf("clock synchronization command error: %w", err)
 	}

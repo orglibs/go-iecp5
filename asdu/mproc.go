@@ -56,7 +56,7 @@ type SinglePointInfo struct {
 // [M_SP_NA_1] See companion standard 101,subclass 7.3.1.1
 // [M_SP_TA_1] See companion standard 101,subclass 7.3.1.2
 // [M_SP_TB_1] See companion standard 101,subclass 7.3.1.22
-func SendSingle(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...SinglePointInfo) error {
+func SendSingle(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...SinglePointInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func SendSingle(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmissi
 		case M_SP_TA_1:
 			u.AppendBytes(CP24Time2a(v.Time, u.InfoObjTimeZone)...)
 		case M_SP_TB_1:
-			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone)...)
+			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone, isValidTime)...)
 		default:
 			return ErrTypeIDNotMatch
 		}
@@ -127,7 +127,7 @@ func Single(c Connect, isSequence bool, coa CauseOfTransmission, ca CommonAddr, 
 		return ErrCmdCause
 	}
 
-	return SendSingle(c, M_SP_NA_1, isSequence, coa, ca, infos...)
+	return SendSingle(c, M_SP_NA_1, isSequence, coa, ca, true, infos...)
 }
 
 // SingleCP24Time2a sends a type identification [M_SP_TA_1], single point message with timescale CP24Time2a,
@@ -147,7 +147,7 @@ func SingleCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos .
 		return ErrCmdCause
 	}
 
-	return SendSingle(c, M_SP_TA_1, false, coa, ca, infos...)
+	return SendSingle(c, M_SP_TA_1, false, coa, ca, true, infos...)
 }
 
 // SingleCP56Time2a sends a type identification [M_SP_TB_1].
@@ -159,13 +159,13 @@ func SingleCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos .
 // <5> := requested
 // <11> := Return message caused by remote command
 // <12> := Return message caused by local command
-func SingleCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...SinglePointInfo) error {
+func SingleCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...SinglePointInfo) error {
 	if !(coa.Cause == Spontaneous || coa.Cause == Request ||
 		coa.Cause == ReturnInfoRemote || coa.Cause == ReturnInfoLocal) {
 		return ErrCmdCause
 	}
 
-	return SendSingle(c, M_SP_TB_1, false, coa, ca, infos...)
+	return SendSingle(c, M_SP_TB_1, false, coa, ca, isValidTime, infos...)
 }
 
 // DoublePointInfo the measured value attributes.
@@ -182,7 +182,7 @@ type DoublePointInfo struct {
 // [M_DP_NA_1] See companion standard 101,subclass 7.3.1.3
 // [M_DP_TA_1] See companion standard 101,subclass 7.3.1.4
 // [M_DP_TB_1] See companion standard 101,subclass 7.3.1.23
-func SendDouble(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...DoublePointInfo) error {
+func SendDouble(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...DoublePointInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func SendDouble(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmissi
 		case M_DP_TA_1:
 			u.AppendBytes(CP24Time2a(v.Time, u.InfoObjTimeZone)...)
 		case M_DP_TB_1:
-			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone)...)
+			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone, isValidTime)...)
 		default:
 			return ErrTypeIDNotMatch
 		}
@@ -244,7 +244,7 @@ func Double(c Connect, isSequence bool, coa CauseOfTransmission, ca CommonAddr, 
 		return ErrCmdCause
 	}
 
-	return SendDouble(c, M_DP_NA_1, isSequence, coa, ca, infos...)
+	return SendDouble(c, M_DP_NA_1, isSequence, coa, ca, true, infos...)
 }
 
 // DoubleCP24Time2a sends a type identification [M_DP_TA_1].
@@ -262,7 +262,7 @@ func DoubleCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos .
 		return ErrCmdCause
 	}
 
-	return SendDouble(c, M_DP_TA_1, false, coa, ca, infos...)
+	return SendDouble(c, M_DP_TA_1, false, coa, ca, true, infos...)
 }
 
 // DoubleCP56Time2a sends a type identification [M_DP_TB_1]. A double-point message with CP56Time2a has only (SQ = 0) a single set of message elements.
@@ -273,13 +273,13 @@ func DoubleCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos .
 // <5> := requested
 // <11> := return message caused by remote command
 // <12> := Return message caused by local command
-func DoubleCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...DoublePointInfo) error {
+func DoubleCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...DoublePointInfo) error {
 	if !(coa.Cause == Spontaneous || coa.Cause == Request ||
 		coa.Cause == ReturnInfoRemote || coa.Cause == ReturnInfoLocal) {
 		return ErrCmdCause
 	}
 
-	return SendDouble(c, M_DP_TB_1, false, coa, ca, infos...)
+	return SendDouble(c, M_DP_TB_1, false, coa, ca, isValidTime, infos...)
 }
 
 // StepPositionInfo the measured value attributes.
@@ -296,7 +296,7 @@ type StepPositionInfo struct {
 // [M_ST_NA_1] See companion standard 101, subclass 7.3.1.5
 // [M_ST_TA_1] See companion standard 101, subclass 7.3.1.6
 // [M_ST_TB_1] See companion standard 101, subclass 7.3.1.24
-func SendStep(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...StepPositionInfo) error {
+func SendStep(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...StepPositionInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
@@ -329,7 +329,7 @@ func SendStep(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission
 		case M_ST_TA_1:
 			u.AppendBytes(CP24Time2a(v.Time, u.InfoObjTimeZone)...)
 		case M_ST_TB_1:
-			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone)...)
+			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone, isValidTime)...)
 		default:
 			return ErrTypeIDNotMatch
 		}
@@ -358,7 +358,7 @@ func Step(c Connect, isSequence bool, coa CauseOfTransmission, ca CommonAddr, in
 		return ErrCmdCause
 	}
 
-	return SendStep(c, M_ST_NA_1, isSequence, coa, ca, infos...)
+	return SendStep(c, M_ST_NA_1, isSequence, coa, ca, true, infos...)
 }
 
 // StepCP24Time2a sends a type identification [M_ST_TA_1]. A two-point message with timescale CP24Time2a, with only (SQ = 0) a single set of message elements
@@ -375,7 +375,7 @@ func StepCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...
 		return ErrCmdCause
 	}
 
-	return SendStep(c, M_ST_TA_1, false, coa, ca, infos...)
+	return SendStep(c, M_ST_TA_1, false, coa, ca, true, infos...)
 }
 
 // StepCP56Time2a sends a type identification [M_ST_TB_1]. A two-point message with timescale CP56Time2a has only (SQ = 0) a single set of message elements
@@ -386,13 +386,13 @@ func StepCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...
 // <5> := requested
 // <11> := return message caused by remote command
 // <12> := Return message caused by local command
-func StepCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...StepPositionInfo) error {
+func StepCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...StepPositionInfo) error {
 	if !(coa.Cause == Spontaneous || coa.Cause == Request ||
 		coa.Cause == ReturnInfoRemote || coa.Cause == ReturnInfoLocal) {
 		return ErrCmdCause
 	}
 
-	return SendStep(c, M_ST_TB_1, false, coa, ca, infos...)
+	return SendStep(c, M_ST_TB_1, false, coa, ca, isValidTime, infos...)
 }
 
 // BitString32Info the measured value attributes.
@@ -409,7 +409,7 @@ type BitString32Info struct {
 // [M_ST_NA_1] See companion standard 101, subclass 7.3.1.7
 // [M_ST_TA_1] See companion standard 101, subclass 7.3.1.8
 // [M_ST_TB_1] See companion standard 101, subclass 7.3.1.25
-func SendBitString32(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...BitString32Info) error {
+func SendBitString32(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...BitString32Info) error {
 	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
@@ -442,7 +442,7 @@ func SendBitString32(c Connect, typeID TypeID, isSequence bool, coa CauseOfTrans
 		case M_BO_TA_1:
 			u.AppendBytes(CP24Time2a(v.Time, u.InfoObjTimeZone)...)
 		case M_BO_TB_1:
-			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone)...)
+			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone, isValidTime)...)
 		default:
 			return ErrTypeIDNotMatch
 		}
@@ -468,7 +468,7 @@ func BitString32(c Connect, isSequence bool, coa CauseOfTransmission, ca CommonA
 		return ErrCmdCause
 	}
 
-	return SendBitString32(c, M_BO_NA_1, isSequence, coa, ca, infos...)
+	return SendBitString32(c, M_BO_NA_1, isSequence, coa, ca, true, infos...)
 }
 
 // BitString32CP24Time2a sends a type identification [M_BO_TA_1]. CP24Time2a bitstring with timescale, only (SQ = 0) set of individual information elements
@@ -482,7 +482,7 @@ func BitString32CP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, in
 		return ErrCmdCause
 	}
 
-	return SendBitString32(c, M_BO_TA_1, false, coa, ca, infos...)
+	return SendBitString32(c, M_BO_TA_1, false, coa, ca, true, infos...)
 }
 
 // BitString32CP56Time2a sends a type identification [M_BO_TB_1].
@@ -492,12 +492,12 @@ func BitString32CP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, in
 // Monitoring direction:
 // <3> := burst (spontaneous)
 // <5> := requested
-func BitString32CP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...BitString32Info) error {
+func BitString32CP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...BitString32Info) error {
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
 
-	return SendBitString32(c, M_BO_TB_1, false, coa, ca, infos...)
+	return SendBitString32(c, M_BO_TB_1, false, coa, ca, isValidTime, infos...)
 }
 
 // MeasuredValueNormalInfo the measured value attributes.
@@ -515,7 +515,7 @@ type MeasuredValueNormalInfo struct {
 // [M_ME_TA_1] See companion standard 101, subclass 7.3.1.10
 // [M_ME_TD_1] See companion standard 101, subclass 7.3.1.26
 // [M_ME_ND_1] See companion standard 101, subclass 7.3.1.21， The quality descriptor must default to asdu.GOOD
-func SendMeasuredValueNormal(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, attrs ...MeasuredValueNormalInfo) error {
+func SendMeasuredValueNormal(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, attrs ...MeasuredValueNormalInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(attrs)); err != nil {
 		return err
 	}
@@ -548,8 +548,8 @@ func SendMeasuredValueNormal(c Connect, typeID TypeID, isSequence bool, coa Caus
 		case M_ME_TA_1:
 			u.AppendBytes(byte(v.Qds)).AppendBytes(CP24Time2a(v.Time, u.InfoObjTimeZone)...)
 		case M_ME_TD_1:
-			u.AppendBytes(byte(v.Qds)).AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone)...)
-		case M_ME_ND_1: // 不带品质
+			u.AppendBytes(byte(v.Qds)).AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone, isValidTime)...)
+		case M_ME_ND_1:
 		default:
 			return ErrTypeIDNotMatch
 		}
@@ -577,7 +577,7 @@ func MeasuredValueNormal(c Connect, isSequence bool, coa CauseOfTransmission, ca
 		return ErrCmdCause
 	}
 
-	return SendMeasuredValueNormal(c, M_ME_NA_1, isSequence, coa, ca, infos...)
+	return SendMeasuredValueNormal(c, M_ME_NA_1, isSequence, coa, ca, true, infos...)
 }
 
 // MeasuredValueNormalCP24Time2a sends a type identification [M_ME_TA_1].
@@ -593,7 +593,7 @@ func MeasuredValueNormalCP24Time2a(c Connect, coa CauseOfTransmission,
 		return ErrCmdCause
 	}
 
-	return SendMeasuredValueNormal(c, M_ME_TA_1, false, coa, ca, infos...)
+	return SendMeasuredValueNormal(c, M_ME_TA_1, false, coa, ca, true, infos...)
 }
 
 // MeasuredValueNormalCP56Time2a sends a type identification [ M_ME_TD_1]
@@ -603,12 +603,12 @@ func MeasuredValueNormalCP24Time2a(c Connect, coa CauseOfTransmission,
 // Monitoring direction:
 // <3> := burst (spontaneous)
 // <5> := requested
-func MeasuredValueNormalCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...MeasuredValueNormalInfo) error {
+func MeasuredValueNormalCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...MeasuredValueNormalInfo) error {
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
 
-	return SendMeasuredValueNormal(c, M_ME_TD_1, false, coa, ca, infos...)
+	return SendMeasuredValueNormal(c, M_ME_TD_1, false, coa, ca, isValidTime, infos...)
 }
 
 // MeasuredValueNormalNoQuality sends a type identification [M_ME_ND_1]. MeasuredValueNormalNoQuality sends a type identification [M_ME_ND_1].
@@ -631,7 +631,7 @@ func MeasuredValueNormalNoQuality(c Connect, isSequence bool, coa CauseOfTransmi
 		return ErrCmdCause
 	}
 
-	return SendMeasuredValueNormal(c, M_ME_ND_1, isSequence, coa, ca, infos...)
+	return SendMeasuredValueNormal(c, M_ME_ND_1, isSequence, coa, ca, true, infos...)
 }
 
 // MeasuredValueScaledInfo the measured value attributes.
@@ -648,7 +648,7 @@ type MeasuredValueScaledInfo struct {
 // [M_ME_NB_1] See companion standard 101, subclass 7.3.1.11.
 // [M_ME_TB_1] See companion standard 101, subclass 7.3.1.12.
 // [M_ME_TE_1] See companion standard 101, subclass 7.3.1.27
-func SendMeasuredValueScaled(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...MeasuredValueScaledInfo) error {
+func SendMeasuredValueScaled(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...MeasuredValueScaledInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
@@ -680,7 +680,7 @@ func SendMeasuredValueScaled(c Connect, typeID TypeID, isSequence bool, coa Caus
 		case M_ME_TB_1:
 			u.AppendBytes(CP24Time2a(v.Time, u.InfoObjTimeZone)...)
 		case M_ME_TE_1:
-			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone)...)
+			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone, isValidTime)...)
 		default:
 			return ErrTypeIDNotMatch
 		}
@@ -708,7 +708,7 @@ func MeasuredValueScaled(c Connect, isSequence bool, coa CauseOfTransmission, ca
 		return ErrCmdCause
 	}
 
-	return SendMeasuredValueScaled(c, M_ME_NB_1, isSequence, coa, ca, infos...)
+	return SendMeasuredValueScaled(c, M_ME_NB_1, isSequence, coa, ca, true, infos...)
 }
 
 // MeasuredValueScaledCP24Time2a sends a type identification [M_ME_TB_1]. MeasuredValueScaledCP24Time2a sends a type identification [M_ME_TB_1].
@@ -723,7 +723,7 @@ func MeasuredValueScaledCP24Time2a(c Connect, coa CauseOfTransmission, ca Common
 		return ErrCmdCause
 	}
 
-	return SendMeasuredValueScaled(c, M_ME_TB_1, false, coa, ca, infos...)
+	return SendMeasuredValueScaled(c, M_ME_TB_1, false, coa, ca, true, infos...)
 }
 
 // MeasuredValueScaledCP56Time2a sends a type identification [M_ME_TE_1]. MeasuredValueScaledCP56Time2a sends a type identification [M_ME_TE_1].
@@ -733,12 +733,12 @@ func MeasuredValueScaledCP24Time2a(c Connect, coa CauseOfTransmission, ca Common
 // monitoring direction:
 // <3> := burst (spontaneous)
 // <5> := requested
-func MeasuredValueScaledCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...MeasuredValueScaledInfo) error {
+func MeasuredValueScaledCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...MeasuredValueScaledInfo) error {
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
 
-	return SendMeasuredValueScaled(c, M_ME_TE_1, false, coa, ca, infos...)
+	return SendMeasuredValueScaled(c, M_ME_TE_1, false, coa, ca, isValidTime, infos...)
 }
 
 // MeasuredValueFloatInfo the measured value attributes.
@@ -755,7 +755,7 @@ type MeasuredValueFloatInfo struct {
 // [M_ME_NC_1] See companion standard 101, subclass 7.3.1.13
 // [M_ME_TC_1] See companion standard 101, subclass 7.3.1.14
 // [M_ME_TF_1] See companion standard 101, subclass 7.3.1.28
-func SendMeasuredValueFloat(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...MeasuredValueFloatInfo) error {
+func SendMeasuredValueFloat(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...MeasuredValueFloatInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
@@ -788,7 +788,7 @@ func SendMeasuredValueFloat(c Connect, typeID TypeID, isSequence bool, coa Cause
 		case M_ME_TC_1:
 			u.AppendBytes(CP24Time2a(v.Time, u.InfoObjTimeZone)...)
 		case M_ME_TF_1:
-			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone)...)
+			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone, isValidTime)...)
 		default:
 			return ErrTypeIDNotMatch
 		}
@@ -816,7 +816,7 @@ func MeasuredValueFloat(c Connect, isSequence bool, coa CauseOfTransmission, ca 
 		return ErrCmdCause
 	}
 
-	return SendMeasuredValueFloat(c, M_ME_NC_1, isSequence, coa, ca, infos...)
+	return SendMeasuredValueFloat(c, M_ME_NC_1, isSequence, coa, ca, true, infos...)
 }
 
 // MeasuredValueFloatCP24Time2a sends a type identification [M_ME_TC_1]. MeasuredValueFloatCP24Time2a sends a type identification [M_ME_TC_1].
@@ -831,7 +831,7 @@ func MeasuredValueFloatCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonA
 		return ErrCmdCause
 	}
 
-	return SendMeasuredValueFloat(c, M_ME_TC_1, false, coa, ca, infos...)
+	return SendMeasuredValueFloat(c, M_ME_TC_1, false, coa, ca, true, infos...)
 }
 
 // MeasuredValueFloatCP56Time2a sends a type identification [M_ME_TF_1]. MeasuredValueFloatCP56Time2a sends a type identification [M_ME_TF_1].
@@ -841,12 +841,12 @@ func MeasuredValueFloatCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonA
 // Monitoring direction:
 // <3> := burst (spontaneous)
 // <5> := requested
-func MeasuredValueFloatCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...MeasuredValueFloatInfo) error {
+func MeasuredValueFloatCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...MeasuredValueFloatInfo) error {
 	if !(coa.Cause == Spontaneous || coa.Cause == Request) {
 		return ErrCmdCause
 	}
 
-	return SendMeasuredValueFloat(c, M_ME_TF_1, false, coa, ca, infos...)
+	return SendMeasuredValueFloat(c, M_ME_TF_1, false, coa, ca, isValidTime, infos...)
 }
 
 // BinaryCounterReadingInfo the counter reading attributes. Binary counting readout
@@ -861,7 +861,7 @@ type BinaryCounterReadingInfo struct {
 // [M_IT_NA_1] See companion standard 101, subclass 7.3.1.15
 // [M_IT_TA_1] See companion standard 101, subclass 7.3.1.16
 // [M_IT_TB_1] See companion standard 101, subclass 7.3.1.29
-func integratedTotals(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, infos ...BinaryCounterReadingInfo) error {
+func integratedTotals(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...BinaryCounterReadingInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
@@ -893,7 +893,7 @@ func integratedTotals(c Connect, typeID TypeID, isSequence bool, coa CauseOfTran
 		case M_IT_TA_1:
 			u.AppendBytes(CP24Time2a(v.Time, u.InfoObjTimeZone)...)
 		case M_IT_TB_1:
-			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone)...)
+			u.AppendBytes(CP56Time2a(v.Time, u.InfoObjTimeZone, isValidTime)...)
 		default:
 			return ErrTypeIDNotMatch
 		}
@@ -917,7 +917,7 @@ func IntegratedTotals(c Connect, isSequence bool, coa CauseOfTransmission, ca Co
 		return ErrCmdCause
 	}
 
-	return integratedTotals(c, M_IT_NA_1, isSequence, coa, ca, infos...)
+	return integratedTotals(c, M_IT_NA_1, isSequence, coa, ca, true, infos...)
 }
 
 // IntegratedTotalsCP24Time2a sends a type identification [M_IT_TA_1].
@@ -936,7 +936,7 @@ func IntegratedTotalsCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAdd
 		return ErrCmdCause
 	}
 
-	return integratedTotals(c, M_IT_TA_1, false, coa, ca, infos...)
+	return integratedTotals(c, M_IT_TA_1, false, coa, ca, true, infos...)
 }
 
 // IntegratedTotalsCP56Time2a sends a type identification [M_IT_TB_1].
@@ -950,12 +950,12 @@ func IntegratedTotalsCP24Time2a(c Connect, coa CauseOfTransmission, ca CommonAdd
 // <39> := Respond to group 2 count call
 // <40> := Respond to group 3 quantity call
 // <41> := Response to Group 4 Quantity Call // <39> := Response to Group 3 Quantity Call
-func IntegratedTotalsCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, infos ...BinaryCounterReadingInfo) error {
+func IntegratedTotalsCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...BinaryCounterReadingInfo) error {
 	if !(coa.Cause == Spontaneous || (coa.Cause >= RequestByGeneralCounter && coa.Cause <= RequestByGroup4Counter)) {
 		return ErrCmdCause
 	}
 
-	return integratedTotals(c, M_IT_TB_1, false, coa, ca, infos...)
+	return integratedTotals(c, M_IT_TB_1, false, coa, ca, isValidTime, infos...)
 }
 
 // EventOfProtectionEquipmentInfo the counter reading attributes.
@@ -1003,7 +1003,7 @@ func eventOfProtectionEquipment(c Connect, typeID TypeID, coa CauseOfTransmissio
 		case M_EP_TA_1:
 			u.AppendCP24Time2a(v.Time, u.InfoObjTimeZone)
 		case M_EP_TD_1:
-			u.AppendCP56Time2a(v.Time, u.InfoObjTimeZone)
+			u.AppendCP56Time2a(v.Time, u.InfoObjTimeZone, true)
 		default:
 			return ErrTypeIDNotMatch
 		}
@@ -1071,7 +1071,7 @@ func packedStartEventsOfProtectionEquipment(c Connect, typeID TypeID, coa CauseO
 	case M_EP_TB_1:
 		u.AppendCP24Time2a(info.Time, u.InfoObjTimeZone)
 	case M_EP_TE_1:
-		u.AppendCP56Time2a(info.Time, u.InfoObjTimeZone)
+		u.AppendCP56Time2a(info.Time, u.InfoObjTimeZone, true)
 	default:
 		return ErrTypeIDNotMatch
 	}
@@ -1143,7 +1143,7 @@ func packedOutputCircuitInfo(c Connect, typeID TypeID, coa CauseOfTransmission, 
 	case M_EP_TC_1:
 		u.AppendCP24Time2a(info.Time, u.InfoObjTimeZone)
 	case M_EP_TF_1:
-		u.AppendCP56Time2a(info.Time, u.InfoObjTimeZone)
+		u.AppendCP56Time2a(info.Time, u.InfoObjTimeZone, true)
 	default:
 		return ErrTypeIDNotMatch
 	}
