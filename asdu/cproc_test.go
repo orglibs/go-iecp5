@@ -52,6 +52,10 @@ func (sf *conn) AreAllMessagesConfirmed() bool {
 	return true
 }
 
+func (sf *conn) RemoteClose() error {
+	return nil
+}
+
 func TestSingleCmd(t *testing.T) {
 	type args struct {
 		c      asdu.Connect

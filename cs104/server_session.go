@@ -169,6 +169,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 
 	// default: STOPDT, when connected establish and not enable "data transfer" yet
 	sf.isActive = false
+	sf.pending = make([]seqPending, 0)
 	checkTicker := time.NewTicker(timeoutResolution)
 
 	// transmission timestamps for timeout calculation
@@ -251,9 +252,13 @@ func (sf *SrvSession) run(ctx context.Context) {
 			}
 
 			// check oldest unacknowledged outbound
+			oldestTime, err := sf.peek()
+			if err != nil {
+				slog.Warn("no pending frames found", "error", err)
+			}
+
 			if sf.ackNoSend != sf.seqNoSend &&
-				// now.Sub(sf.peek()) >= sf.SendUnAckTimeout1 {
-				now.Sub(sf.pending[0].sendTime) >= sf.config.SendUnAckTimeout1 {
+				now.Sub(oldestTime) >= sf.config.SendUnAckTimeout1 {
 				sf.ackNoSend++
 
 				slog.Error("fatal transmission timeout t₁")
@@ -597,11 +602,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		if err != nil {
 			return fmt.Errorf("error with %s type, %s", asdu.C_SE_NC_1, err.Error())
 		}
-		
+
 		if resp.IsNegative {
 			return fmt.Errorf("error with %s type, negative response", asdu.C_SE_NB_1)
 		}
-			
+
 		return nil
 	case asdu.C_IC_NA_1: // Interrogation Command
 		if !(asduPack.Identifier.Coa.Cause == asdu.Activation ||
@@ -841,11 +846,16 @@ func (sf *SrvSession) IsActive() bool {
 }
 
 func (sf *SrvSession) AreAllMessagesConfirmed() bool {
+	slog.Debug("checking if all messages are confirmed", "pending count", len(sf.pending))
 	if len(sf.pending) > 0 {
 		return false
 	}
 
 	return true
+}
+
+func (sf *SrvSession) RemoteClose() error {
+	return sf.conn.Close()
 }
 
 // UnderlyingConn got under net.conn
@@ -982,4 +992,12 @@ func isCombinableCOT(cot asdu.CauseOfTransmission) bool {
 	}
 
 	return false
+}
+
+func (sf *SrvSession) peek() (time.Time, error) {
+	if len(sf.pending) > 0 {
+		return sf.pending[0].sendTime, nil
+	}
+
+	return time.Time{}, errors.New("no pending i-frame")
 }

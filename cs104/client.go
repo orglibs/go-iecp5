@@ -312,9 +312,13 @@ func (sf *Client) run(ctx context.Context) {
 			}
 
 			// check oldest unacknowledged outbound
+			oldestTime, err := sf.peek()
+			if err != nil {
+				slog.Warn("no pending frames found", "error", err)
+			}
+
 			if sf.ackNoSend != sf.seqNoSend &&
-				// now.Sub(sf.peek()) >= sf.SendUnAckTimeout1 {
-				now.Sub(sf.pending[0].sendTime) >= sf.option.config.SendUnAckTimeout1 {
+				now.Sub(oldestTime) >= sf.option.config.SendUnAckTimeout1 {
 				sf.ackNoSend++
 
 				slog.Error("fatal transmission timeout t₁")
@@ -593,6 +597,10 @@ func (sf *Client) AreAllMessagesConfirmed() bool {
 	return true
 }
 
+func (sf *Client) RemoteClose() error {
+	return nil
+}
+
 // Close close all
 func (sf *Client) Close() error {
 	sf.rwMux.Lock()
@@ -686,4 +694,12 @@ func (sf *Client) TestCommand(coa asdu.CauseOfTransmission, ca asdu.CommonAddr) 
 	}
 
 	return nil
+}
+
+func (sf *Client) peek() (time.Time, error) {
+	if len(sf.pending) > 0 {
+		return sf.pending[0].sendTime, nil
+	}
+
+	return time.Time{}, errors.New("no pending i-frame")
 }

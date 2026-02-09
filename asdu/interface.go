@@ -16,4 +16,5 @@ type Connect interface {
 	UnderlyingConn() net.Conn
 	IsActive() bool
 	AreAllMessagesConfirmed() bool
+	RemoteClose() error
 }

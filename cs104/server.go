@@ -24,14 +24,15 @@ const ErrQueueEmpty = "queue empty"
 
 // Server struct type for the common server
 type Server struct {
-	config         Config
-	params         asdu.Params
-	handler        ServerHandlerInterface
-	queue          ServerQueueInterface
-	useQueue       bool
-	TLSConfig      *tls.Config
-	mux            sync.Mutex
-	sessions       map[int]*SrvSession
+	config    Config
+	params    asdu.Params
+	handler   ServerHandlerInterface
+	queue     ServerQueueInterface
+	useQueue  bool
+	TLSConfig *tls.Config
+	mux       sync.Mutex
+	sessions  map[*SrvSession]struct{}
+
 	listen         net.Listener
 	onConnection   func(asdu.Connect)
 	connectionLost func(asdu.Connect)
@@ -48,7 +49,7 @@ func NewServer(handler ServerHandlerInterface, queue ServerQueueInterface, useQu
 		handler:      handler,
 		queue:        queue,
 		useQueue:     useQueue,
-		sessions:     make(map[int]*SrvSession),
+		sessions:     make(map[*SrvSession]struct{}),
 		stopSessions: make(chan struct{}),
 	}
 
@@ -138,12 +139,11 @@ func (sf *Server) ListenAndServer(addr string) {
 			}
 
 			sf.mux.Lock()
-			s := len(sf.sessions)
-			sf.sessions[s] = sess
+			sf.sessions[sess] = struct{}{}
 			sf.mux.Unlock()
 			sess.run(ctx)
 			sf.mux.Lock()
-			delete(sf.sessions, s)
+			delete(sf.sessions, sess)
 			sf.mux.Unlock()
 			sf.wg.Done()
 		}()
@@ -171,7 +171,7 @@ func (sf *Server) Close() error {
 func (sf *Server) Send(a *asdu.ASDU) error {
 	sf.mux.Lock()
 
-	for _, k := range sf.sessions {
+	for k := range sf.sessions {
 		_ = k.Send(a.Clone())
 	}
 
@@ -204,12 +204,12 @@ func (sf *Server) SetConnectionLostHandler(f func(asdu.Connect)) {
 func (sf *Server) watchActiveSessions() {
 	for {
 		<-sf.stopSessions
-		for s, sess := range sf.sessions {
+		for sess := range sf.sessions {
 			if sess.isActive {
 				slog.Info("new active session detected, stopping others")
 				//sess.sendRaw <- NewUFrame(UStopDtActive)
 				sess.isActive = false
-				sf.sessions[s].conn.Close()
+				sess.conn.Close()
 			}
 		}
 	}
