@@ -50,7 +50,7 @@ func Test_single(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SendSingle(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendSingle(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("single() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -201,7 +201,7 @@ func TestSingleCP56Time2a(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SingleCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SingleCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("SingleCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -226,7 +226,7 @@ func Test_double(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SendDouble(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendDouble(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("double() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -377,7 +377,7 @@ func TestDoubleCP56Time2a(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.DoubleCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.DoubleCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("DoubleCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -402,7 +402,7 @@ func Test_step(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SendStep(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendStep(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("step() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -553,7 +553,7 @@ func TestStepCP56Time2a(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.StepCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.StepCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("StepCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -578,7 +578,7 @@ func Test_bitString32(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SendBitString32(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendBitString32(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("bitString32() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -729,7 +729,7 @@ func TestBitString32CP56Time2a(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.BitString32CP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.BitString32CP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("BitString32CP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -754,7 +754,7 @@ func Test_measuredValueNormal(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SendMeasuredValueNormal(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.attrs...); (err != nil) != tt.wantErr {
+			if err := asdu.SendMeasuredValueNormal(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, true, tt.args.attrs...); (err != nil) != tt.wantErr {
 				t.Errorf("measuredValueNormal() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -905,7 +905,7 @@ func TestMeasuredValueNormalCP56Time2a(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.MeasuredValueNormalCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueNormalCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueNormalCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -991,7 +991,7 @@ func Test_measuredValueScaled(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SendMeasuredValueScaled(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendMeasuredValueScaled(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("measuredValueScaled() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1142,7 +1142,7 @@ func TestMeasuredValueScaledCP56Time2a(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.MeasuredValueScaledCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueScaledCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueScaledCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1167,7 +1167,7 @@ func Test_measuredValueFloat(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SendMeasuredValueFloat(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.SendMeasuredValueFloat(tt.args.c, tt.args.typeID, tt.args.isSequence, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("measuredValueFloat() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1328,7 +1328,7 @@ func TestMeasuredValueFloatCP56Time2a(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.MeasuredValueFloatCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, tt.args.infos...); (err != nil) != tt.wantErr {
+			if err := asdu.MeasuredValueFloatCP56Time2a(tt.args.c, tt.args.coa, tt.args.ca, true, tt.args.infos...); (err != nil) != tt.wantErr {
 				t.Errorf("MeasuredValueFloatCP56Time2a() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

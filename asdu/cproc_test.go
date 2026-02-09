@@ -48,6 +48,10 @@ func (sf *conn) IsActive() bool {
 	return true
 }
 
+func (sf *conn) AreAllMessagesConfirmed() bool {
+	return true
+}
+
 func TestSingleCmd(t *testing.T) {
 	type args struct {
 		c      asdu.Connect
@@ -109,7 +113,7 @@ func TestSingleCmd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SingleCmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
+			if err := asdu.SingleCmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, true, tt.args.cmd); (err != nil) != tt.wantErr {
 				t.Errorf("SingleCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -179,7 +183,7 @@ func TestDoubleCmd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.DoubleCmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
+			if err := asdu.DoubleCmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, true, tt.args.cmd); (err != nil) != tt.wantErr {
 				t.Errorf("DoubleCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -248,7 +252,7 @@ func TestStepCmd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.StepCmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
+			if err := asdu.StepCmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, true, tt.args.cmd); (err != nil) != tt.wantErr {
 				t.Errorf("StepCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -317,7 +321,7 @@ func TestSetpointCmdNormal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SetpointCmdNormal(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
+			if err := asdu.SetpointCmdNormal(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, true, tt.args.cmd); (err != nil) != tt.wantErr {
 				t.Errorf("SetpointCmdNormal() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -386,7 +390,7 @@ func TestSetpointCmdScaled(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SetpointCmdScaled(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
+			if err := asdu.SetpointCmdScaled(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, true, tt.args.cmd); (err != nil) != tt.wantErr {
 				t.Errorf("SetpointCmdScaled() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -457,7 +461,7 @@ func TestSetpointCmdFloat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.SetpointCmdFloat(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, tt.args.cmd); (err != nil) != tt.wantErr {
+			if err := asdu.SetpointCmdFloat(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.ca, true, tt.args.cmd); (err != nil) != tt.wantErr {
 				t.Errorf("SetpointCmdFloat() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -524,7 +528,7 @@ func TestBitsString32Cmd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.BitsString32Cmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.commonAddr, tt.args.cmd); (err != nil) != tt.wantErr {
+			if err := asdu.BitsString32Cmd(tt.args.c, tt.args.typeID, tt.args.coa, tt.args.commonAddr, true, tt.args.cmd); (err != nil) != tt.wantErr {
 				t.Errorf("BitsString32Cmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

@@ -138,7 +138,7 @@ func TestClockSynchronizationCmd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := asdu.ClockSynchronizationCmd(tt.args.c, tt.args.coa, tt.args.ca, tt.args.t); (err != nil) != tt.wantErr {
+			if err := asdu.ClockSynchronizationCmd(tt.args.c, tt.args.coa, tt.args.ca, true, tt.args.t); (err != nil) != tt.wantErr {
 				t.Errorf("ClockSynchronizationCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
