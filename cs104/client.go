@@ -314,7 +314,7 @@ func (sf *Client) run(ctx context.Context) {
 			// check oldest unacknowledged outbound
 			oldestTime, err := sf.peek()
 			if err != nil {
-				slog.Warn("no pending frames found", "error", err)
+				slog.Debug("no pending frames found", "error", err)
 			}
 
 			if sf.ackNoSend != sf.seqNoSend &&
