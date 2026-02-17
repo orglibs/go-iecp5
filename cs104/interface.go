@@ -26,6 +26,7 @@ type ServerHandlerInterface interface {
 // ServerQueueInterface is the interface of connection queue
 type ServerQueueInterface interface {
 	Enqueue(frame asdu.ASDU) error
+	ReEnqueue(frame asdu.ASDU) error
 	Dequeue() (asdu.ASDU, error)
 }
 

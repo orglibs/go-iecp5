@@ -123,10 +123,10 @@ func (sf *Server) ListenAndServer(addr string) {
 				queue:    nil,
 				useQueue: sf.useQueue,
 				conn:     conn,
-				rcvASDU:  make(chan []byte, sf.config.RecvUnAckLimitW<<4),
-				sendASDU: make(chan []byte, sf.config.SendUnAckLimitK<<4),
-				rcvRaw:   make(chan []byte, sf.config.RecvUnAckLimitW<<5),
-				sendRaw:  make(chan []byte, sf.config.SendUnAckLimitK<<5), // may not block!
+				rcvASDU:  make(chan []byte, sf.config.RecvUnAckLimitW), 
+				sendASDU: make(chan []byte, sf.config.SendUnAckLimitK), //<<4),
+				rcvRaw:   make(chan []byte, sf.config.RecvUnAckLimitW),
+				sendRaw:  make(chan []byte, sf.config.SendUnAckLimitK), //<<5),
 
 				onConnection:   sf.onConnection,
 				connectionLost: sf.connectionLost,

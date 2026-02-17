@@ -89,21 +89,25 @@ func (sf *SrvSession) sendLoop() {
 	for {
 		select {
 		case <-sf.ctx.Done():
-			if len(sf.pending) > 0 {
-				for _, pend := range sf.pending {
-					asduPack := asdu.NewEmptyASDU(sf.params)
-					if err := asduPack.UnmarshalBinary(pend.asduPending); err != nil {
-						slog.Error("trying to resend unconfirmed asdu failed", "error", err)
+			if sf.useQueue {
+				sf.emptyChannel(sf.sendASDU)
+				sf.emptyChannel(sf.sendRaw)
+				if len(sf.pending) > 0 {
+					for _, pend := range sf.pending {
+						asduPack := asdu.NewEmptyASDU(sf.params)
+						if err := asduPack.UnmarshalBinary(pend.asduPending); err != nil {
+							slog.Error("trying to resend unconfirmed asdu failed", "error", err)
 
-						continue
+							continue
+						}
+
+						err := sf.queue.ReEnqueue(*asduPack)
+						if err != nil {
+							slog.Error("enqueue unconfirmed asdu failed", "error", err)
+						}
+
+						// sf.pending = sf.pending[1:]
 					}
-
-					err := sf.queue.Enqueue(*asduPack)
-					if err != nil {
-						slog.Error("enqueue unconfirmed asdu failed", "error", err)
-					}
-
-					// sf.pending = sf.pending[1:]
 				}
 			}
 
@@ -134,7 +138,7 @@ func (sf *SrvSession) sendLoop() {
 								continue
 							}
 
-							err = sf.queue.Enqueue(*asduPack)
+							err = sf.queue.ReEnqueue(*asduPack)
 							if err != nil {
 								slog.Error("enqueue unconfirmed asdu failed", "error", err)
 							}
@@ -253,24 +257,22 @@ func (sf *SrvSession) run(ctx context.Context) {
 
 			// check oldest unacknowledged outbound
 			oldestTime, err := sf.peek()
-			if err != nil {
-				slog.Debug("no pending frames found", "error", err)
-			}
+			if err == nil {
+				if sf.ackNoSend != sf.seqNoSend &&
+					now.Sub(oldestTime) >= sf.config.SendUnAckTimeout1 {
+					sf.ackNoSend++
 
-			if sf.ackNoSend != sf.seqNoSend &&
-				now.Sub(oldestTime) >= sf.config.SendUnAckTimeout1 {
-				sf.ackNoSend++
+					slog.Error("fatal transmission timeout t₁")
+					if sf.stopDtResponseWaiting {
+						// sendUFrame(UStopDtConfirm)
+						sf.isActive = false
+						sf.stopDtResponseWaiting = false
+						slog.Debug("data transfer stopped by remote")
+						time.Sleep(10 * time.Millisecond)
+					}
 
-				slog.Error("fatal transmission timeout t₁")
-				if sf.stopDtResponseWaiting {
-					// sendUFrame(UStopDtConfirm)
-					sf.isActive = false
-					sf.stopDtResponseWaiting = false
-					slog.Debug("data transfer stopped by remote")
-					time.Sleep(10 * time.Millisecond)
+					return
 				}
-
-				return
 			}
 
 			// Determine if the earliest i-Frame sent timed out, and reply to the sFrame if it did.
@@ -879,14 +881,16 @@ func (sf *SrvSession) processQueue() {
 						err = sf.SendQueuedASDU(sendData)
 						if err != nil {
 							slog.Warn("queue data send failed", "error", err)
-							if errors.Is(err, ErrUseClosedConnection) {
-								_ = sf.queue.Enqueue(*sendData)
+							if errors.Is(err, ErrUseClosedConnection) || errors.Is(err, ErrBufferFull) {
+								_ = sf.queue.ReEnqueue(*sendData)
+								sendData = nil
+								time.Sleep(timeoutResolution)
 
 								continue
 							}
 						}
 
-						time.Sleep(1 * time.Millisecond)
+						time.Sleep(timeoutResolution)
 						sendData = nil
 					}
 
@@ -913,8 +917,11 @@ func (sf *SrvSession) processQueue() {
 					err = sf.SendQueuedASDU(sendData)
 					if err != nil {
 						slog.Warn("queue data send failed", "error", err)
-						if errors.Is(err, ErrUseClosedConnection) {
-							_ = sf.queue.Enqueue(*sendData)
+						if errors.Is(err, ErrUseClosedConnection) || errors.Is(err, ErrBufferFull) {
+							_ = sf.queue.ReEnqueue(data)
+							_ = sf.queue.ReEnqueue(*sendData)
+							sendData = nil
+							time.Sleep(timeoutResolution)
 
 							continue
 						}
@@ -1000,4 +1007,26 @@ func (sf *SrvSession) peek() (time.Time, error) {
 	}
 
 	return time.Time{}, errors.New("no pending i-frame")
+}
+
+func (sf *SrvSession) emptyChannel(ch chan []byte) {
+	for {
+		select {
+		case m := <-ch:
+			asduPack := asdu.NewEmptyASDU(sf.params)
+			if err := asduPack.UnmarshalBinary(m); err != nil {
+				slog.Error("trying to resend unconfirmed asdu failed", "error", err)
+
+				continue
+			}
+
+			err := sf.queue.ReEnqueue(*asduPack)
+			if err != nil {
+				slog.Error("enqueue unconfirmed asdu failed", "error", err)
+			}
+		default:
+			return
+		}
+	}
+
 }
