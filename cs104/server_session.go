@@ -93,20 +93,24 @@ func (sf *SrvSession) sendLoop() {
 				sf.emptyChannel(sf.sendASDU)
 				sf.emptyChannel(sf.sendRaw)
 				if len(sf.pending) > 0 {
+					var asduList []asdu.ASDU
 					for _, pend := range sf.pending {
 						asduPack := asdu.NewEmptyASDU(sf.params)
 						if err := asduPack.UnmarshalBinary(pend.asduPending); err != nil {
-							slog.Error("trying to resend unconfirmed asdu failed", "error", err)
+							slog.Error("trying to requeue unconfirmed asdu failed", "error", err)
 
 							continue
 						}
+						
+						asduList = append(asduList, *asduPack)
 
-						err := sf.queue.ReEnqueue(*asduPack)
+					}
+
+					for i := len(asduList) - 1; i >= 0; i-- {
+						err := sf.queue.ReEnqueue(asduList[i])
 						if err != nil {
-							slog.Error("enqueue unconfirmed asdu failed", "error", err)
+							slog.Error("requeue unconfirmed asdu failed", "error", err)
 						}
-
-						// sf.pending = sf.pending[1:]
 					}
 				}
 			}
@@ -1010,23 +1014,26 @@ func (sf *SrvSession) peek() (time.Time, error) {
 }
 
 func (sf *SrvSession) emptyChannel(ch chan []byte) {
+	var asduList []asdu.ASDU
 	for {
 		select {
 		case m := <-ch:
 			asduPack := asdu.NewEmptyASDU(sf.params)
 			if err := asduPack.UnmarshalBinary(m); err != nil {
-				slog.Error("trying to resend unconfirmed asdu failed", "error", err)
-
+				slog.Error("trying to requeue buffered asdu failed", "error", err)
 				continue
 			}
-
-			err := sf.queue.ReEnqueue(*asduPack)
-			if err != nil {
-				slog.Error("enqueue unconfirmed asdu failed", "error", err)
-			}
+			
+			asduList = append(asduList, *asduPack)
 		default:
+			// Reverse and re-enqueue
+			for i := len(asduList) - 1; i >= 0; i-- {
+				err := sf.queue.ReEnqueue(asduList[i])
+				if err != nil {
+					slog.Error("requeue buffered asdu failed", "error", err)
+				}
+			}
 			return
 		}
 	}
-
 }
