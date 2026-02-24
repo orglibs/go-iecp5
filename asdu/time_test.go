@@ -14,7 +14,7 @@ var (
 	tm0CP24Time2aBytes = tm0CP56Time2aBytes[:3]
 
 	Tm1                = time.Date(2019, 12, 15, 14, 13, 3, 83000000, time.UTC)
-	tm1CP56Time2aBytes = []byte{0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x0c, 0x13}
+	tm1CP56Time2aBytes = []byte{0x0b, 0x0c, 0x0d, 0x0e, 0xef, 0x0c, 0x13}
 	tm1CP24Time2aBytes = tm1CP56Time2aBytes[:3]
 )
 
