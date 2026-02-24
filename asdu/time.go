@@ -24,11 +24,16 @@ func CP56Time2a(t time.Time, loc *time.Location, isValid bool) []byte {
 		loc = time.UTC
 	}
 
+	weekday := t.Weekday()
+	if weekday == time.Sunday {
+		weekday = 7
+	}
+
 	ts := t.In(loc)
 	msec := ts.Nanosecond()/int(time.Millisecond) + ts.Second()*1000
 
 	return []byte{byte(msec), byte(msec >> 8), byte(ts.Minute() | (boolToInt(!isValid) << 7)),
-		byte(ts.Hour() | (boolToInt(t.IsDST()) << 7)), byte(ts.Weekday()+1<<5) | byte(ts.Day()), byte(ts.Month()), byte(ts.Year() - 2000)}
+		byte(ts.Hour() | (boolToInt(t.IsDST()) << 7)), byte(weekday<<5) | byte(ts.Day()), byte(ts.Month()), byte(ts.Year() - 2000)}
 }
 
 // ParseCP56Time2a 7 octets of binary time, UTC recommended for all timescales, reads 7 bytes, returns the time.
@@ -117,5 +122,6 @@ func boolToInt(b bool) int {
 	if b {
 		return 1
 	}
+
 	return 0
 }

@@ -515,7 +515,8 @@ type MeasuredValueNormalInfo struct {
 // [M_ME_TA_1] See companion standard 101, subclass 7.3.1.10
 // [M_ME_TD_1] See companion standard 101, subclass 7.3.1.26
 // [M_ME_ND_1] See companion standard 101, subclass 7.3.1.21， The quality descriptor must default to asdu.GOOD
-func SendMeasuredValueNormal(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, attrs ...MeasuredValueNormalInfo) error {
+func SendMeasuredValueNormal(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr,
+	isValidTime bool, attrs ...MeasuredValueNormalInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(attrs)); err != nil {
 		return err
 	}
@@ -648,7 +649,8 @@ type MeasuredValueScaledInfo struct {
 // [M_ME_NB_1] See companion standard 101, subclass 7.3.1.11.
 // [M_ME_TB_1] See companion standard 101, subclass 7.3.1.12.
 // [M_ME_TE_1] See companion standard 101, subclass 7.3.1.27
-func SendMeasuredValueScaled(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...MeasuredValueScaledInfo) error {
+func SendMeasuredValueScaled(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr,
+	isValidTime bool, infos ...MeasuredValueScaledInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
@@ -755,7 +757,8 @@ type MeasuredValueFloatInfo struct {
 // [M_ME_NC_1] See companion standard 101, subclass 7.3.1.13
 // [M_ME_TC_1] See companion standard 101, subclass 7.3.1.14
 // [M_ME_TF_1] See companion standard 101, subclass 7.3.1.28
-func SendMeasuredValueFloat(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...MeasuredValueFloatInfo) error {
+func SendMeasuredValueFloat(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr,
+	isValidTime bool, infos ...MeasuredValueFloatInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}
@@ -861,7 +864,8 @@ type BinaryCounterReadingInfo struct {
 // [M_IT_NA_1] See companion standard 101, subclass 7.3.1.15
 // [M_IT_TA_1] See companion standard 101, subclass 7.3.1.16
 // [M_IT_TB_1] See companion standard 101, subclass 7.3.1.29
-func integratedTotals(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr, isValidTime bool, infos ...BinaryCounterReadingInfo) error {
+func integratedTotals(c Connect, typeID TypeID, isSequence bool, coa CauseOfTransmission, ca CommonAddr,
+	isValidTime bool, infos ...BinaryCounterReadingInfo) error {
 	if err := CheckValid(c, typeID, isSequence, len(infos)); err != nil {
 		return err
 	}

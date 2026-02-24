@@ -101,9 +101,8 @@ func (sf *SrvSession) sendLoop() {
 
 							continue
 						}
-						
-						asduList = append(asduList, *asduPack)
 
+						asduList = append(asduList, *asduPack)
 					}
 
 					for i := len(asduList) - 1; i >= 0; i-- {
@@ -853,11 +852,8 @@ func (sf *SrvSession) IsActive() bool {
 
 func (sf *SrvSession) AreAllMessagesConfirmed() bool {
 	slog.Debug("checking if all messages are confirmed", "pending count", len(sf.pending))
-	if len(sf.pending) > 0 {
-		return false
-	}
 
-	return true
+	return len(sf.pending) == 0
 }
 
 func (sf *SrvSession) RemoteClose() error {
@@ -1021,9 +1017,10 @@ func (sf *SrvSession) emptyChannel(ch chan []byte) {
 			asduPack := asdu.NewEmptyASDU(sf.params)
 			if err := asduPack.UnmarshalBinary(m); err != nil {
 				slog.Error("trying to requeue buffered asdu failed", "error", err)
+
 				continue
 			}
-			
+
 			asduList = append(asduList, *asduPack)
 		default:
 			// Reverse and re-enqueue
@@ -1033,6 +1030,7 @@ func (sf *SrvSession) emptyChannel(ch chan []byte) {
 					slog.Error("requeue buffered asdu failed", "error", err)
 				}
 			}
+
 			return
 		}
 	}

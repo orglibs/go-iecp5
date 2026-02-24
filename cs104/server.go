@@ -123,10 +123,10 @@ func (sf *Server) ListenAndServer(addr string) {
 				queue:    nil,
 				useQueue: sf.useQueue,
 				conn:     conn,
-				rcvASDU:  make(chan []byte, sf.config.RecvUnAckLimitW), 
-				sendASDU: make(chan []byte, sf.config.SendUnAckLimitK), //<<4),
+				rcvASDU:  make(chan []byte, sf.config.RecvUnAckLimitW),
+				sendASDU: make(chan []byte, sf.config.SendUnAckLimitK), // <<4),
 				rcvRaw:   make(chan []byte, sf.config.RecvUnAckLimitW),
-				sendRaw:  make(chan []byte, sf.config.SendUnAckLimitK), //<<5),
+				sendRaw:  make(chan []byte, sf.config.SendUnAckLimitK), // <<5),
 
 				onConnection:   sf.onConnection,
 				connectionLost: sf.connectionLost,
@@ -207,7 +207,7 @@ func (sf *Server) watchActiveSessions() {
 		for sess := range sf.sessions {
 			if sess.isActive {
 				slog.Info("new active session detected, stopping others")
-				//sess.sendRaw <- NewUFrame(UStopDtActive)
+				// sess.sendRaw <- NewUFrame(UStopDtActive)
 				sess.isActive = false
 				sess.conn.Close()
 			}
