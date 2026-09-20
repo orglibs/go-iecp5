@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"github.com/orglibs/go-iecp5/asdu"
 )
 
 // 全部走真实收发循环，使用内存链路而不是直接调用业务处理器；不依赖监听权限。

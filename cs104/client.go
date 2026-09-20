@@ -18,7 +18,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"github.com/orglibs/go-iecp5/asdu"
 )
 
 const (

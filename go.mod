@@ -1,3 +1,3 @@
-module gitlab.com/circutor-library/go-iecp5
+module gitlab.com/orglibs/go-iecp5
 
 go 1.23

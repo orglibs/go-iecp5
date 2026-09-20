@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"gitlab.com/circutor-library/go-iecp5/cs104"
+	"github.com/orglibs/go-iecp5/cs104"
 )
 
 func TestIAPCI_String(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"github.com/orglibs/go-iecp5/asdu"
 )
 
 // waitingConn 只替换一个会话的 Send，其余 circutor Connect 方法委托原连接。

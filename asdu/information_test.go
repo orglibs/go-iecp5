@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"github.com/orglibs/go-iecp5/asdu"
 )
 
 func TestSinglePoint_Value(t *testing.T) {

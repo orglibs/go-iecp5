@@ -7,7 +7,7 @@ package cs104
 import (
 	"fmt"
 
-	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"github.com/orglibs/go-iecp5/asdu"
 )
 
 const StartFrame byte = 0x68 // start frame

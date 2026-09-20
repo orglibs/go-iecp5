@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"github.com/orglibs/go-iecp5/asdu"
 )
 
 // timeoutResolution is seconds according to companion standard 104,

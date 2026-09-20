@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"gitlab.com/circutor-library/go-iecp5/asdu"
+	"github.com/orglibs/go-iecp5/asdu"
 )
 
 func Test_checkValid(t *testing.T) {
