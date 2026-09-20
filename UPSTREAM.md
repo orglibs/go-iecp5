@@ -3,17 +3,15 @@
 ## 基础快照
 
 - 模块：`gitlab.com/circutor-library/go-iecp5`，保留 Go 1.23。
-- 来源：用户提供的 `/home/douqi/zhiguang/workspaces/go-iecp5`（circutor fork）。
+- 来源：`github.com/riclolsen/go-iecp5`（circutor fork）。
 - 提交：`1aee824196cf178b4dca1992d85749b9e7b8d607`。
 - 提交时间：2026-06-25T11:35:12+02:00。
 - 保留目录：`asdu`、`cs101`、`cs104`，以及原始模块定义、README、VERSION、LICENSE。
-- 项目通过 `go.mod replace` 引用本目录；`v0.0.0` 是本地快照占位版本，并非上游发布版本。构建不依赖工作区外目录，也不修改原始 fork。
 
 ## riclolsen 修复来源
 
 本次按 IEC104 主站和未来从站 export 的需求移植修复，没有整体替换为另一套 API。
 
-- 本地来源：`/home/douqi/zhiguang/workspaces/iec104open/go-iecp5`。
 - 上游：`github.com/riclolsen/go-iecp5`。
 - 参考版本：`v0.4.4`，提交 `5fa2d4298baa0fbfaabba51c1e98ebeb6a3e278b`。
 
@@ -32,9 +30,9 @@
 
 - 保留模块路径、Go 版本、`asdu.Connect`、`Client`/`Server` 原有公开方法和 `CP56Time2a(t, loc, isValid)` 签名；保留 IV 无效时间编码。
 - `Parse` 保留双返回值接口，非法帧返回 `nil, nil`；新增 `ParseChecked` 返回具体错误，主从站内部改用严格接口。
-- `Params.AllowTrailingOctets` 默认 `false`。仅在明确需要兼容旧设备尾部填充时设置为 `true`，只影响接收；发送仍严格校验。driver-box 插件配置暂不开放此选项。
+- `Params.AllowTrailingOctets` 默认 `false`。仅在明确需要兼容旧设备尾部填充时设置为 `true`，只影响接收；发送仍严格校验。
 - 保留 circutor `Get*` 消费 `InfoObj` 的行为。服务端在解码前克隆请求，已有命令确认回显原始信息体，保留选择位、值、OA 和时间标签，避免严格编码检查后无法发送确认。
-- 补齐 circutor 已有带时标控制编码器对应的类型 58–64 长度定义，使现有服务端处理器可接收其支持的命令。此项是本地适配，并非 riclolsen 新功能的整体移植；也不扩大 driver-box 主站插件的控制类型范围。
+- 补齐 circutor 已有带时标控制编码器对应的类型 58–64 长度定义，使现有服务端处理器可接收其支持的命令。此项是本地适配，并非 riclolsen 新功能的整体移植。
 - `Waiting(ctx, session)` 包装单个会话的 `Send`，仅对 `ErrBufferFull` 重试。调用方应设置截止时间，并在可阻塞的业务协程使用，不能阻塞协议状态机回调。
 - 广播使用 `Server.SendWait(ctx, a)`，逐个处理调用时的会话快照，只重试尚未入队的会话。不要循环重试整批 `Server.Send`，否则已经成功的会话可能收到重复数据。普通 `Server.Send` 仍逐个尝试发送，通过 `errors.Join` 汇总失败。
 - circutor 的 `Server` 不实现完整 `asdu.Connect`，因此没有移植 `Server.WaitingConn`；现有会话接口保持兼容。无会话时广播仍为空操作。发送成功只代表入队，不代表远端确认。
@@ -51,24 +49,3 @@
 6. 接收循环遇到 EOF、ClosedPipe 或截断帧时退出；主从站收包队列支持取消，协议异常退出也取消本次会话，避免关闭/重连卡住。
 7. 主站 ASDU 回调直接返回处理器的错误，避免用 `%w` 包装 nil 产生伪错误。
 
-## 连接级报文观察器
-
-新增可选 `ClientOption.OnAPDU(outbound bool, apdu []byte)`，供 driver-box 的连接级 `protocolLogEnabled` 配置接入项目日志系统。发送通知发生在整帧写出后，接收通知发生在状态机校验前，覆盖 I/S/U 帧及已组装的畸形帧；不记录截断帧或重同步丢弃字节。参数为独立快照，nil 时不复制。回调可能收发并发，必须线程安全且及时返回，不能等待协议确认或调用阻塞关闭；自动重连保留回调。
-
-此扩展不修改全局 slog 配置；原库开发调试日志保持原行为，driver-box 的协议日志单独按连接控制。回调测试覆盖分段接收、方向、完整帧一次通知，以及修改/保留快照不影响业务处理。
-
-## 验证与维护
-
-在 driver-box 根目录执行：
-
-```bash
-go -C third_party/go-iecp5 test -race -timeout 30s ./...
-go test -race -timeout 30s ./pkg/iec104 ./plugins/iec104/... ./driverbox/... ./plugins
-go build -o /tmp/driver-box-iec104 .
-```
-
-回归覆盖畸形 APCI、尾部 ASDU、编码长度、时间字段与夏令时、序号回绕、发送窗口、队列超时/取消、广播部分失败与防重复，以及真实收发循环中的非法 STARTDT/STOPDT 和带时标选择命令回显。测试使用 `net.Pipe`，不需要监听端口；TLS 监听未进行真实证书握手联调。原有两个测试样本本身包含错误的 VSQ/保留位，已修正为合法输入。
-
-从站底层修复不等于已实现 driver-box IEC104 export；真实厂家互通与完整从站服务仍需后续接入验证。更新快照时应重新核对本文件列出的兼容点。
-
-许可证见同目录 `LICENSE`，原文件中的版权与许可证声明保留。
