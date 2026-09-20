@@ -11,9 +11,14 @@ import (
 
 // error defined
 var (
-	ErrTypeIdentifier = errors.New("asdu: type identification unknown")
-	ErrCauseZero      = errors.New("asdu: cause of transmission 0 is not used")
-	ErrCommonAddrZero = errors.New("asdu: common address 0 is not used")
+	// 以下错误来自 riclolsen 的结构校验修复，支持 errors.Is 精确识别。
+	ErrTrailingOctets      = errors.New("asdu: trailing information object octets")
+	ErrInfoObjSizeMismatch = errors.New("asdu: information object size does not match qualifier")
+	ErrTypeIDZero          = errors.New("asdu: type identification 0 is not used")
+	ErrInfoObjCountZero    = errors.New("asdu: no information objects")
+	ErrTypeIdentifier      = errors.New("asdu: type identification unknown")
+	ErrCauseZero           = errors.New("asdu: cause of transmission 0 is not used")
+	ErrCommonAddrZero      = errors.New("asdu: common address 0 is not used")
 
 	ErrParam           = errors.New("asdu: system parameter out of range")
 	ErrInvalidTimeTag  = errors.New("asdu: invalid time tag")

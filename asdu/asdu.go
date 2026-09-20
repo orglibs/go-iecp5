@@ -59,6 +59,10 @@ type Params struct {
 	// InfoObjTimeZone controls the time tag interpretation.
 	// The standard fails to mention this one.
 	InfoObjTimeZone *time.Location
+	// AllowTrailingOctets 仅供明确会填充报文的旧设备兼容使用，默认 false。
+	// false 时拒绝 VSQ/类型描述之外的尾部字节，避免将混入额外数据的控制命令当成合法命令。
+	// 此选项只影响接收；发送侧始终要求信息体结构完整且长度精确。
+	AllowTrailingOctets bool
 }
 
 // Valid returns the validation result of params.
@@ -305,7 +309,19 @@ func (sf *ASDU) SendReplyError(c Connect, cause Cause) error {
 
 // MarshalBinary honors the encoding.BinaryMarshaler interface.
 func (sf *ASDU) MarshalBinary() (data []byte, err error) {
+	if sf == nil || sf.Params == nil {
+		return nil, ErrParam
+	}
+	if err := sf.Params.Valid(); err != nil {
+		return nil, err
+	}
 	switch {
+	case sf.Type == 0:
+		return nil, ErrTypeIDZero
+	case sf.Variable.Number == 0:
+		return nil, ErrInfoObjCountZero
+	case sf.Variable.Number > 127:
+		return nil, ErrInfoObjIndexFit
 	case sf.Coa.Cause == Unused:
 		return nil, ErrCauseZero
 	case !(sf.CauseSize == 1 || sf.CauseSize == 2):
@@ -320,11 +336,22 @@ func (sf *ASDU) MarshalBinary() (data []byte, err error) {
 		return nil, ErrParam
 	}
 
-	if len(sf.InfoObj) > ASDUSizeMax-sf.IdentifierSize() {
-		return nil, fmt.Errorf("ASDU size exceeded: size=%d, max=%d", len(sf.InfoObj), ASDUSizeMax-sf.IdentifierSize())
+	// 在入队前拒绝超长/畸形报文，不能等到传输层丢弃后仍让 Send 返回成功。
+	if sf.IdentifierSize()+len(sf.InfoObj) > ASDUSizeMax {
+		return nil, ErrLengthOutOfRange
 	}
-
-	raw := sf.Bootstrap[:(sf.IdentifierSize() + len(sf.InfoObj))]
+	if size, err := GetInfoObjSize(sf.Type); err == nil {
+		want := int(sf.Variable.Number) * (sf.InfoObjAddrSize + size)
+		if sf.Variable.IsSequence {
+			want = sf.InfoObjAddrSize + int(sf.Variable.Number)*size
+		}
+		if want != len(sf.InfoObj) {
+			return nil, fmt.Errorf("%w: type %d needs %d bytes, got %d", ErrInfoObjSizeMismatch, sf.Type, want, len(sf.InfoObj))
+		}
+	}
+	// 独立快照防止重复使用 ASDU 时覆盖已排队的数据，也支持外部设置的 InfoObj 切片。
+	raw := make([]byte, sf.IdentifierSize()+len(sf.InfoObj))
+	copy(raw[sf.IdentifierSize():], sf.InfoObj)
 	raw[0] = byte(sf.Type)
 	raw[1] = sf.Variable.Value()
 	raw[2] = sf.Coa.Value()
@@ -351,6 +378,15 @@ func (sf *ASDU) MarshalBinary() (data []byte, err error) {
 // UnmarshalBinary honors the encoding.BinaryUnmarshaler interface.
 // ASDUParams must be set in advance. All other fields are initialized.
 func (sf *ASDU) UnmarshalBinary(rawAsdu []byte) error {
+	if sf == nil || sf.Params == nil {
+		return ErrParam
+	}
+	if err := sf.Params.Valid(); err != nil {
+		return err
+	}
+	if len(rawAsdu) > ASDUSizeMax {
+		return ErrLengthOutOfRange
+	}
 	if !(sf.CauseSize == 1 || sf.CauseSize == 2) ||
 		!(sf.CommonAddrSize == 1 || sf.CommonAddrSize == 2) {
 		return ErrParam
@@ -387,6 +423,9 @@ func (sf *ASDU) UnmarshalBinary(rawAsdu []byte) error {
 
 // fixInfoObjSize fix information object size
 func (sf *ASDU) fixInfoObjSize() error {
+	if sf.Variable.Number == 0 {
+		return ErrInfoObjCountZero
+	}
 	// fixed element size
 	objSize, err := GetInfoObjSize(sf.Type)
 	if err != nil {
@@ -406,7 +445,10 @@ func (sf *ASDU) fixInfoObjSize() error {
 		return ErrInfoObjIndexFit
 	case size > len(sf.InfoObj):
 		return io.EOF
-	case size < len(sf.InfoObj): // not explicitly prohibited
+	case size < len(sf.InfoObj):
+		if !sf.AllowTrailingOctets {
+			return fmt.Errorf("%w: type %d needs %d bytes, got %d", ErrTrailingOctets, sf.Type, size, len(sf.InfoObj))
+		}
 		sf.InfoObj = sf.InfoObj[:size]
 	}
 

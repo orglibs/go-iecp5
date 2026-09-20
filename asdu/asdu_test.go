@@ -241,12 +241,12 @@ func TestASDU_MarshalBinary(t *testing.T) {
 				asdu.ParamsNarrow,
 				asdu.Identifier{
 					asdu.M_SP_NA_1,
-					asdu.VariableStruct{Number: 1},
+					asdu.VariableStruct{Number: 2},
 					asdu.CauseOfTransmission{Cause: asdu.Activation},
 					0,
 					0x80},
 				[]byte{0x00, 0x01, 0x02, 0x03}},
-			[]byte{0x01, 0x01, 0x06, 0x80, 0x00, 0x01, 0x02, 0x03},
+			[]byte{0x01, 0x02, 0x06, 0x80, 0x00, 0x01, 0x02, 0x03},
 			false,
 		},
 		{
@@ -255,12 +255,12 @@ func TestASDU_MarshalBinary(t *testing.T) {
 				asdu.ParamsNarrow,
 				asdu.Identifier{
 					asdu.M_SP_NA_1,
-					asdu.VariableStruct{Number: 1},
+					asdu.VariableStruct{Number: 2},
 					asdu.CauseOfTransmission{Cause: asdu.Activation},
 					0,
 					asdu.GlobalCommonAddr},
 				[]byte{0x00, 0x01, 0x02, 0x03}},
-			[]byte{0x01, 0x01, 0x06, 0xff, 0x00, 0x01, 0x02, 0x03},
+			[]byte{0x01, 0x02, 0x06, 0xff, 0x00, 0x01, 0x02, 0x03},
 			false,
 		},
 		{

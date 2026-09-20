@@ -5,6 +5,7 @@
 package cs104
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -12,7 +13,6 @@ import (
 	"log/slog"
 	"net"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -26,9 +26,13 @@ type seqPending struct {
 }
 
 func openConnection(uri *url.URL, tlsc *tls.Config, timeout time.Duration) (net.Conn, error) {
+	return openConnectionContext(context.Background(), uri, tlsc, timeout)
+}
+
+func openConnectionContext(ctx context.Context, uri *url.URL, tlsc *tls.Config, timeout time.Duration) (net.Conn, error) {
 	switch uri.Scheme {
 	case "tcp":
-		con, err := net.DialTimeout("tcp", uri.Host, timeout)
+		con, err := (&net.Dialer{Timeout: timeout}).DialContext(ctx, "tcp", uri.Host)
 		if err != nil {
 			return nil, fmt.Errorf("tcp error:%w", err)
 		}
@@ -39,7 +43,7 @@ func openConnection(uri *url.URL, tlsc *tls.Config, timeout time.Duration) (net.
 	case "tls":
 		fallthrough
 	case "tcps":
-		cons, err := tls.DialWithDialer(&net.Dialer{Timeout: timeout}, "tcp", uri.Host, tlsc)
+		cons, err := (&tls.Dialer{NetDialer: &net.Dialer{Timeout: timeout}, Config: tlsc}).DialContext(ctx, "tcp", uri.Host)
 		if err != nil {
 			return nil, fmt.Errorf("tcps error:%w", err)
 		}
@@ -51,31 +55,21 @@ func openConnection(uri *url.URL, tlsc *tls.Config, timeout time.Duration) (net.
 }
 
 func receiveLoop(conn net.Conn, rcvRaw chan []byte) {
+	receiveLoopContext(context.Background(), conn, rcvRaw)
+}
+
+// receiveLoopContext 在连接关闭、截断帧或取消时退出；不对 EOF/ClosedPipe 空转。
+// 使用可取消的队列发送，避免接收队列满时阻塞主站关闭。
+func receiveLoopContext(ctx context.Context, conn net.Conn, rcvRaw chan []byte) {
 	for {
 		rawData := make([]byte, APDUSizeMax)
 		for rdCnt, length := 0, 2; rdCnt < length; {
 			byteCount, err := io.ReadFull(conn, rawData[rdCnt:length])
 			if err != nil {
-				// See: https://github.com/golang/go/issues/4373
-				if !errors.Is(err, io.EOF) && !errors.Is(err, io.ErrClosedPipe) ||
-					strings.Contains(err.Error(), "use of closed network connection") {
-					slog.Error("receive failed", "error", err)
-
-					return
+				if ctx.Err() == nil && !errors.Is(err, io.EOF) && !errors.Is(err, net.ErrClosed) && !errors.Is(err, io.ErrClosedPipe) {
+					slog.Debug("receive stopped", "error", err)
 				}
-
-				//nolint:errorlint
-				if e, ok := err.(net.Error); ok && !e.Timeout() {
-					slog.Error("receive failed", "error", err)
-
-					return
-				}
-
-				if rdCnt == 0 && err == io.EOF {
-					slog.Error("remote connect closed", "error", err)
-
-					return
-				}
+				return
 			}
 
 			rdCnt += byteCount
@@ -105,7 +99,11 @@ func receiveLoop(conn net.Conn, rcvRaw chan []byte) {
 				if rdCnt == length {
 					apdu := rawData[:length]
 					slog.Debug("RX Raw", "rx", apdu)
-					rcvRaw <- apdu
+					select {
+					case rcvRaw <- apdu:
+					case <-ctx.Done():
+						return
+					}
 				}
 			}
 		}

@@ -67,7 +67,7 @@ type SrvSession struct {
 // RecvLoop feeds t.rcvRaw.
 func (sf *SrvSession) recvLoop() {
 	slog.Debug("recvLoop started!")
-	receiveLoop(sf.conn, sf.rcvRaw)
+	receiveLoopContext(sf.ctx, sf.conn, sf.rcvRaw)
 
 	sf.cancel()
 	sf.wg.Done()
@@ -220,6 +220,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 	}
 
 	defer func() {
+		sf.cancel()
 		sf.setConnectStatus(disconnected)
 		checkTicker.Stop()
 		_ = sf.conn.Close() // Chain trigger cancel
@@ -295,9 +296,14 @@ func (sf *SrvSession) run(ctx context.Context) {
 			}
 
 		case apdu := <-sf.rcvRaw:
-			idleTimeout3Sine = time.Now() // Every i-frame, S-frame, U-frame received, reset idle timer, t3
 
-			apci, asduVal := Parse(apdu)
+			apci, asduVal, err := ParseChecked(apdu)
+			if err != nil {
+				slog.Warn("discard malformed APCI", "error", err)
+				continue
+			}
+			// 只有结构合法的帧才刷新空闲时间；异常输入不能延长链路寿命。
+			idleTimeout3Sine = time.Now()
 			switch head := apci.(type) {
 			case SAPCI:
 				slog.Debug("RX sFrame", "rx sFrame", head)
@@ -327,7 +333,11 @@ func (sf *SrvSession) run(ctx context.Context) {
 					return
 				}
 
-				sf.rcvASDU <- asduVal
+				select {
+				case sf.rcvASDU <- asduVal:
+				case <-sf.ctx.Done():
+					return
+				}
 
 				if sf.ackNoRcv == sf.seqNoRcv { // first unacked
 					unAckRcvSince = time.Now()
@@ -343,8 +353,19 @@ func (sf *SrvSession) run(ctx context.Context) {
 				switch head.Function {
 				case UStartDtActive:
 					if !sf.isActive {
-						sf.stopSessions <- struct{}{}
-						time.Sleep(500 * time.Millisecond)
+						// 反向连接从站没有共享单活调度器，nil 通道不应阻塞 STARTDT。
+						if sf.stopSessions != nil {
+							select {
+							case sf.stopSessions <- struct{}{}:
+							case <-sf.ctx.Done():
+								return
+							}
+							select {
+							case <-time.After(500 * time.Millisecond):
+							case <-sf.ctx.Done():
+								return
+							}
+						}
 						sf.isActive = true
 					}
 
@@ -458,7 +479,7 @@ func (sf *SrvSession) updateAckNoOut(ackNo uint16) (ok bool) {
 
 	// confirm reception
 	for i, v := range sf.pending {
-		if v.seq == (ackNo - 1) {
+		if v.seq == (ackNo-1)&32767 {
 			sf.pending = sf.pending[i+1:]
 
 			break
@@ -490,6 +511,15 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 	slog.Debug("ASDU", "asdu", asduPack)
 
+	// circutor 的 Get* 会消费 InfoObj，先保存原始载荷再解码。
+	// 确认必须回显选择位、值和时间标签，不能重新构建时丢掉这些字段。
+	original := asduPack.Clone()
+	reply := func(cot asdu.CauseOfTransmission, ca asdu.CommonAddr) *asdu.ASDU {
+		out := original.Clone()
+		out.Coa = cot
+		out.CommonAddr = ca
+		return out
+	}
 	switch asduPack.Identifier.Type {
 	case asdu.C_SC_NA_1: // Single Command without timeStamp
 		err := replyError(asduPack, sf)
@@ -500,7 +530,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		cmd := asduPack.GetSingleCmd()
 
 		resp := sf.handler.SingleCommandHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, boolToByte(cmd.Value))
+		actConRep := reply(resp, asduPack.CommonAddr)
 		err = sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %s", asdu.C_SC_NA_1, err.Error())
@@ -520,7 +550,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		cmd := asduPack.GetSingleCmd()
 
 		resp := sf.handler.SingleCommandHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, boolToByte(cmd.Value))
+		actConRep := reply(resp, asduPack.CommonAddr)
 		err = sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %s", asdu.C_SC_TA_1, err.Error())
@@ -540,7 +570,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		cmd := asduPack.GetDoubleCmd()
 
 		resp := sf.handler.DoubleCommandHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
+		actConRep := reply(resp, asduPack.CommonAddr)
 		err = sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %s", asdu.C_DC_NA_1, err.Error())
@@ -560,7 +590,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		cmd := asduPack.GetDoubleCmd()
 
 		resp := sf.handler.DoubleCommandHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
+		actConRep := reply(resp, asduPack.CommonAddr)
 		err = sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %s", asdu.C_DC_TA_1, err.Error())
@@ -580,7 +610,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		cmd := asduPack.GetStepCmd()
 
 		resp := sf.handler.StepPositionCommandHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qoc, byte(cmd.Value))
+		actConRep := reply(resp, asduPack.CommonAddr)
 		err = sf.Send(actConRep)
 		if err != nil {
 			slog.Warn("error sending C_RC_NA_1 reply", "error", err)
@@ -602,7 +632,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		cmd := asduPack.GetSetpointFloatCmd()
 
 		resp := sf.handler.SetPointCommandFloatHandler(sf, asduPack, cmd, cmd.Ioa)
-		actConRep := asduPack.ReplySetFloatCmd(resp, asduPack.CommonAddr, cmd.Ioa, cmd.Qos, cmd.Value)
+		actConRep := reply(resp, asduPack.CommonAddr)
 		err = sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %s", asdu.C_SE_NC_1, err.Error())
@@ -635,7 +665,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 		}
 
 		resp, ca := sf.handler.InterrogationHandler(sf, asduPack, qoi)
-		actConRep := asduPack.Reply(resp, asdu.CommonAddr(ca), ioa)
+		actConRep := reply(resp, asdu.CommonAddr(ca))
 		err := sf.Send(actConRep)
 		if err != nil {
 			return fmt.Errorf("error with %s type, %s", asdu.C_IC_NA_1, err.Error())
@@ -687,7 +717,7 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 
 		resp := sf.handler.ResetProcessHandler(sf, asduPack, qrp)
 		if resp.IsNegative {
-			actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, ioa, asdu.QualifierOfCommand{Qual: asdu.QOCNoAdditionalDefinition, InSelect: false}, 0)
+			actConRep := reply(resp, asduPack.CommonAddr)
 			err := sf.Send(actConRep)
 			if err != nil {
 				return fmt.Errorf("error with %s type, %s", asdu.C_RP_NA_1, err.Error())
@@ -719,14 +749,14 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 				}
 
 				resp := sf.handler.ClockSyncHandler(sf, asduPack, tm)
-				actConRep := asduPack.ReplyCmd(resp, asduPack.CommonAddr, ioa, asdu.QualifierOfCommand{Qual: asdu.QOCNoAdditionalDefinition, InSelect: false}, 0)
+				actConRep := reply(resp, asduPack.CommonAddr)
 				err := sf.Send(actConRep)
 				if err != nil {
 					return fmt.Errorf("error with %s type, %s", asdu.C_CI_NA_1, err)
 				}
 
 				if !resp.IsNegative {
-					actConRep := asduPack.ReplyCmd(asdu.CauseOfTransmission{IsTest: false, IsNegative: false, Cause: asdu.ActivationTerm}, asduPack.CommonAddr, ioa, asdu.QualifierOfCommand{Qual: asdu.QOCNoAdditionalDefinition, InSelect: false}, 0)
+					actConRep := reply(asdu.CauseOfTransmission{Cause:asdu.ActivationTerm}, asduPack.CommonAddr)
 
 					err = sf.Send(actConRep)
 					if err != nil {
@@ -802,29 +832,26 @@ func (sf *SrvSession) Params() *asdu.Params {
 
 // Send asdu frame
 func (sf *SrvSession) Send(u *asdu.ASDU) error {
-	if !sf.useQueue {
-		if !sf.IsConnected() {
-			return ErrUseClosedConnection
-		}
-
-		data, err := u.MarshalBinary()
-		if err != nil {
-			return fmt.Errorf("error %w", err)
-		}
-
-		select {
-		case sf.sendASDU <- data:
-		default:
-			return ErrBufferFull
-		}
-	} else {
-		err := sf.queue.Enqueue(*u)
-		if err != nil {
-			return fmt.Errorf("error %w", err)
-		}
+	// 外部队列模式也必须先校验报文，不能入队后才发现帧永远无法编码。
+	data, err := u.MarshalBinary()
+	if err != nil {
+		return fmt.Errorf("encode ASDU: %w", err)
 	}
-
-	return nil
+	if sf.useQueue {
+		if sf.queue == nil {
+			return errors.New("missing ASDU queue")
+		}
+		return sf.queue.Enqueue(*u.Clone())
+	}
+	if !sf.IsConnected() {
+		return ErrUseClosedConnection
+	}
+	select {
+	case sf.sendASDU <- data:
+		return nil
+	default:
+		return ErrBufferFull
+	}
 }
 
 func (sf *SrvSession) SendQueuedASDU(u *asdu.ASDU) error {

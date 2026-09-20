@@ -59,6 +59,7 @@ type Client struct {
 	ctx         context.Context
 	cancel      context.CancelFunc
 	closeCancel context.CancelFunc
+	done        chan struct{}
 
 	onConnect        func(c *Client)
 	onConnectionLost func(c *Client)
@@ -102,26 +103,22 @@ func (sf *Client) Start() error {
 		return errors.New("empty remote server")
 	}
 
-	go sf.running()
-
+	sf.rwMux.Lock()
+	if !atomic.CompareAndSwapUint32(&sf.status, initial, disconnected) {
+		sf.rwMux.Unlock()
+		return errors.New("client already started")
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	sf.closeCancel = cancel
+	sf.done = make(chan struct{})
+	sf.rwMux.Unlock()
+	go sf.running(ctx)
 	return nil
 }
 
 // run the client connection
-func (sf *Client) running() {
-	var ctx context.Context
-
-	sf.rwMux.Lock()
-
-	if !atomic.CompareAndSwapUint32(&sf.status, initial, disconnected) {
-		sf.rwMux.Unlock()
-
-		return
-	}
-
-	ctx, sf.closeCancel = context.WithCancel(context.Background())
-	sf.rwMux.Unlock()
-
+func (sf *Client) running(ctx context.Context) {
+	defer close(sf.done)
 	defer sf.setConnectStatus(initial)
 
 	for {
@@ -132,19 +129,35 @@ func (sf *Client) running() {
 		}
 
 		slog.Debug("connecting server", "server", sf.option.server)
-		conn, err := openConnection(sf.option.server, sf.option.TLSConfig, sf.option.config.ConnectTimeout0)
+		var conn net.Conn
+		var err error
+		if sf.option.DialContext != nil {
+			dialCtx, cancel := context.WithTimeout(ctx, sf.option.config.ConnectTimeout0)
+			conn, err = sf.option.DialContext(dialCtx, sf.option.server)
+			cancel()
+		} else {
+			conn, err = openConnectionContext(ctx, sf.option.server, sf.option.TLSConfig, sf.option.config.ConnectTimeout0)
+		}
 		if err != nil {
 			slog.Error("connect failed", "error", err)
 			if !sf.option.autoReconnect {
 				return
 			}
 
-			time.Sleep(sf.option.reconnectInterval)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(sf.option.reconnectInterval):
+			}
 
 			continue
 		}
 
 		slog.Debug("connect success")
+		if ctx.Err() != nil {
+			_ = conn.Close()
+			return
+		}
 		sf.conn = conn
 		sf.run(ctx)
 
@@ -159,14 +172,18 @@ func (sf *Client) running() {
 				rnd = big.NewInt(0)
 			}
 
-			time.Sleep(time.Millisecond * time.Duration(500+rnd.Int64()))
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Millisecond * time.Duration(500+rnd.Int64())):
+			}
 		}
 	}
 }
 
 func (sf *Client) recvLoop() {
 	slog.Debug("recvLoop started!")
-	receiveLoop(sf.conn, sf.rcvRaw)
+	receiveLoopContext(sf.ctx, sf.conn, sf.rcvRaw)
 
 	sf.cancel()
 	sf.wg.Done()
@@ -209,7 +226,15 @@ func (sf *Client) sendLoop() {
 				}
 				wrCnt += byteCount
 			}
+			sf.traceAPDU(true, apdu)
 		}
+	}
+}
+
+// traceAPDU 只在安装观察器时复制，防止日志回调修改接收队列中的原始协议数据。
+func (sf *Client) traceAPDU(outbound bool, apdu []byte) {
+	if sf.option.OnAPDU != nil {
+		sf.option.OnAPDU(outbound, append([]byte(nil), apdu...))
 	}
 }
 
@@ -219,7 +244,9 @@ func (sf *Client) run(ctx context.Context) {
 	// before any thing make sure init
 	sf.cleanUp()
 
+	sf.rwMux.Lock()
 	sf.ctx, sf.cancel = context.WithCancel(ctx)
+	sf.rwMux.Unlock()
 	sf.setConnectStatus(connected)
 	sf.wg.Add(3)
 	go sf.recvLoop()
@@ -260,6 +287,8 @@ func (sf *Client) run(ctx context.Context) {
 	}
 
 	defer func() {
+		// 无论是取消、协议错误还是超时，都先取消本次会话，再等待后台任务退出。
+		sf.cancel()
 		// default: STOPDT, when a connection is established and "data transfer" is not enabled.
 		atomic.StoreUint32(&sf.isActive, inactive)
 		sf.setConnectStatus(disconnected)
@@ -273,7 +302,7 @@ func (sf *Client) run(ctx context.Context) {
 	sf.onConnect(sf)
 
 	for {
-		if atomic.LoadUint32(&sf.isActive) == active && seqNoCount(sf.ackNoSend, sf.seqNoSend) <= sf.option.config.SendUnAckLimitK {
+		if atomic.LoadUint32(&sf.isActive) == active && seqNoCount(sf.ackNoSend, sf.seqNoSend) < sf.option.config.SendUnAckLimitK {
 			select {
 			case o := <-sf.sendASDU:
 				sendIFrame(o)
@@ -342,8 +371,14 @@ func (sf *Client) run(ctx context.Context) {
 			}
 
 		case apdu := <-sf.rcvRaw:
-			idleTimeout3Sine = time.Now() // Every i-frame, S-frame, U-frame received, reset idle timer, t3
-			apci, asduVal := Parse(apdu)
+			sf.traceAPDU(false, apdu)
+			apci, asduVal, err := ParseChecked(apdu)
+			if err != nil {
+				slog.Warn("discard malformed APCI", "error", err)
+				continue
+			}
+			// 只有结构合法的帧才刷新空闲时间；异常输入不能延长链路寿命。
+			idleTimeout3Sine = time.Now()
 			switch head := apci.(type) {
 			case SAPCI:
 				slog.Debug("RX sFrame", "rx sFrame", head)
@@ -367,7 +402,11 @@ func (sf *Client) run(ctx context.Context) {
 					return
 				}
 
-				sf.rcvASDU <- asduVal
+				select {
+				case sf.rcvASDU <- asduVal:
+				case <-sf.ctx.Done():
+					return
+				}
 				if sf.ackNoRcv == sf.seqNoRcv { // first unacked
 					unAckRcvSince = time.Now()
 				}
@@ -482,7 +521,7 @@ func (sf *Client) updateAckNoOut(ackNo uint16) (ok bool) {
 
 	// confirm reception
 	for i, v := range sf.pending {
-		if v.seq == (ackNo - 1) {
+		if v.seq == (ackNo-1)&32767 {
 			sf.pending = sf.pending[i+1:]
 
 			break
@@ -513,41 +552,41 @@ func (sf *Client) clientHandler(asduPack *asdu.ASDU) error {
 	case asdu.C_IC_NA_1: // InterrogationCmd
 		err := sf.handler.InterrogationHandler(sf, asduPack)
 
-		return fmt.Errorf("interrogation command error: %w", err)
+		return err
 
 	case asdu.C_CI_NA_1: // CounterInterrogationCmd
 		err := sf.handler.CounterInterrogationHandler(sf, asduPack)
 
-		return fmt.Errorf("counter interrogation command error: %w", err)
+		return err
 
 	case asdu.C_RD_NA_1: // ReadCmd
 		err := sf.handler.ReadHandler(sf, asduPack)
 
-		return fmt.Errorf("read command error: %w", err)
+		return err
 
 	case asdu.C_CS_NA_1: // ClockSynchronizationCmd
 		err := sf.handler.ClockSyncHandler(sf, asduPack)
 
-		return fmt.Errorf("clock synchronization command error: %w", err)
+		return err
 
 	case asdu.C_TS_NA_1: // TestCommand
 		err := sf.handler.TestCommandHandler(sf, asduPack)
 
-		return fmt.Errorf("test command error: %w", err)
+		return err
 
 	case asdu.C_RP_NA_1: // ResetProcessCmd
 		err := sf.handler.ResetProcessHandler(sf, asduPack)
 
-		return fmt.Errorf("reset process command error: %w", err)
+		return err
 
 	case asdu.C_CD_NA_1: // DelayAcquireCommand
 		err := sf.handler.DelayAcquisitionHandler(sf, asduPack)
 
-		return fmt.Errorf("delay acquire command error: %w", err)
+		return err
 	default:
 		err := sf.handler.ASDUHandler(sf, asduPack)
 
-		return fmt.Errorf("unknown asdu type: %w", err)
+		return err
 	}
 }
 
@@ -590,7 +629,7 @@ func (sf *Client) UnderlyingConn() net.Conn {
 }
 
 func (sf *Client) IsActive() bool {
-	return true
+	return sf.IsConnected() && atomic.LoadUint32(&sf.isActive) == active
 }
 
 func (sf *Client) AreAllMessagesConfirmed() bool {
@@ -614,6 +653,25 @@ func (sf *Client) Close() error {
 	return nil
 }
 
+// Wait waits for shutdown. Do not call from a client callback.
+func (sf *Client) Wait() {
+	sf.rwMux.RLock()
+	done := sf.done
+	sf.rwMux.RUnlock()
+	if done != nil {
+		<-done
+	}
+}
+
+// Disconnect abandons an ambiguous command session, allowing automatic reconnect.
+func (sf *Client) Disconnect() {
+	sf.rwMux.Lock()
+	if sf.cancel != nil {
+		sf.cancel()
+	}
+	sf.rwMux.Unlock()
+}
+
 // SendStartDt start data transmission on this connection
 func (sf *Client) SendStartDt() {
 	sf.startDtActiveSendSince.Store(time.Now())
@@ -630,7 +688,7 @@ func (sf *Client) SendStopDt() {
 func (sf *Client) InterrogationCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, qoi asdu.QualifierOfInterrogation) error {
 	err := asdu.InterrogationCmd(sf, coa, ca, qoi)
 	if err != nil {
-		return fmt.Errorf("interrogation command error: %w", err)
+		return err
 	}
 
 	return nil
@@ -640,7 +698,7 @@ func (sf *Client) InterrogationCmd(coa asdu.CauseOfTransmission, ca asdu.CommonA
 func (sf *Client) CounterInterrogationCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, qcc asdu.QualifierCountCall) error {
 	err := asdu.CounterInterrogationCmd(sf, coa, ca, qcc)
 	if err != nil {
-		return fmt.Errorf("counter interrogation command error: %w", err)
+		return err
 	}
 
 	return nil
@@ -650,7 +708,7 @@ func (sf *Client) CounterInterrogationCmd(coa asdu.CauseOfTransmission, ca asdu.
 func (sf *Client) ReadCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, ioa asdu.InfoObjAddr) error {
 	err := asdu.ReadCmd(sf, coa, ca, ioa)
 	if err != nil {
-		return fmt.Errorf("read command error: %w", err)
+		return err
 	}
 
 	return nil
@@ -660,7 +718,7 @@ func (sf *Client) ReadCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, ioa 
 func (sf *Client) ClockSynchronizationCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, t time.Time) error {
 	err := asdu.ClockSynchronizationCmd(sf, coa, ca, true, t)
 	if err != nil {
-		return fmt.Errorf("clock synchronization command error: %w", err)
+		return err
 	}
 
 	return nil
@@ -670,7 +728,7 @@ func (sf *Client) ClockSynchronizationCmd(coa asdu.CauseOfTransmission, ca asdu.
 func (sf *Client) ResetProcessCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, qrp asdu.QualifierOfResetProcessCmd) error {
 	err := asdu.ResetProcessCmd(sf, coa, ca, qrp)
 	if err != nil {
-		return fmt.Errorf("reset process command error: %w", err)
+		return err
 	}
 
 	return nil
@@ -680,7 +738,7 @@ func (sf *Client) ResetProcessCmd(coa asdu.CauseOfTransmission, ca asdu.CommonAd
 func (sf *Client) DelayAcquireCommand(coa asdu.CauseOfTransmission, ca asdu.CommonAddr, msec uint16) error {
 	err := asdu.DelayAcquireCommand(sf, coa, ca, msec)
 	if err != nil {
-		return fmt.Errorf("delay acquire command error: %w", err)
+		return err
 	}
 
 	return nil
@@ -690,7 +748,7 @@ func (sf *Client) DelayAcquireCommand(coa asdu.CauseOfTransmission, ca asdu.Comm
 func (sf *Client) TestCommand(coa asdu.CauseOfTransmission, ca asdu.CommonAddr) error {
 	err := asdu.TestCommand(sf, coa, ca)
 	if err != nil {
-		return fmt.Errorf("test command error: %w", err)
+		return err
 	}
 
 	return nil

@@ -153,9 +153,10 @@ func Test_parse(t *testing.T) {
 	}{
 		{
 			"iAPCI",
-			args{[]byte{cs104.StartFrame, 0x04, 0x02, 0x00, 0x03, 0x00}},
+			// I 帧须携带载荷，接收序号低位保留位必须为 0。
+			args{[]byte{cs104.StartFrame, 0x05, 0x02, 0x00, 0x02, 0x00, 0xaa}},
 			cs104.IAPCI{SendSN: 0x01, RcvSN: 0x01},
-			[]byte{},
+			[]byte{0xaa},
 		},
 		{
 			"sAPCI",

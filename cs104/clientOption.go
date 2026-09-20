@@ -5,8 +5,10 @@
 package cs104
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
+	"net"
 	"net/url"
 	"strings"
 	"time"
@@ -22,6 +24,16 @@ type ClientOption struct {
 	autoReconnect     bool          // if true, reconnection automatically
 	reconnectInterval time.Duration // Reconnection interval
 	TLSConfig         *tls.Config   // tls configuration
+	// DialContext 可选的传输建立函数；nil 使用内置 TCP/TLS 拨号。
+	// 回调须遵守 ctx 取消，并返回已完成 TLS 等握手的连接；用于代理或内存链路测试。
+	DialContext func(ctx context.Context, remote *url.URL) (net.Conn, error)
+	// OnAPDU 是本客户端独立的可选报文观察器；nil 不生成观察器快照。
+	// outbound=true 表示整帧已写入连接（不代表远端确认），false 表示完整接收帧进入状态机，
+	// 接收通知早于 APCI/ASDU 校验，因此可观察被拒绝的畸形帧；不包含截断帧和重同步丢弃字节。
+	// apdu 是独立副本，回调可保留但不能依赖它修改协议处理；收发回调可能并发执行，
+	// 实现必须并发安全、及时返回，不得阻塞等待本客户端的关闭、发送或业务确认。
+	// 必须在 NewClient 前设置；自动重连沿用该观察器，不改变全局 slog 配置。
+	OnAPDU func(outbound bool, apdu []byte)
 }
 
 // NewOption with default config and default asdu.ParamsWide params

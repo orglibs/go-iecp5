@@ -7,6 +7,7 @@ package cs104
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"log/slog"
 	"net"
 	"sync"
@@ -80,7 +81,14 @@ func (sf *Server) SetParams(p *asdu.Params) *Server {
 
 // ListenAndServer run the server
 func (sf *Server) ListenAndServer(addr string) {
-	listen, err := net.Listen("tcp", addr)
+	// TLSConfig 原有字段现在实际参与监听；nil 保持普通 TCP。
+	var listen net.Listener
+	var err error
+	if sf.TLSConfig != nil {
+		listen, err = tls.Listen("tcp", addr, sf.TLSConfig)
+	} else {
+		listen, err = net.Listen("tcp", addr)
+	}
 	if err != nil {
 		slog.Error("server run failed", "error", err)
 
@@ -167,17 +175,37 @@ func (sf *Server) Close() error {
 	return err
 }
 
-// Send imp interface Connect
-func (sf *Server) Send(a *asdu.ASDU) error {
+// sessionSnapshot 缩短持锁时间：网络发送或外部队列调用期间不持有会话表锁。
+func (sf *Server) sessionSnapshot() []*SrvSession {
 	sf.mux.Lock()
-
-	for k := range sf.sessions {
-		_ = k.Send(a.Clone())
+	defer sf.mux.Unlock()
+	sessions := make([]*SrvSession, 0, len(sf.sessions))
+	for session := range sf.sessions {
+		sessions = append(sessions, session)
 	}
+	return sessions
+}
 
-	sf.mux.Unlock()
-
-	return nil
+// Send 广播到所有会话并汇总错误。一个会话失败不阻止其他会话尝试发送，
+// 但不再静默返回成功；需要等待队列空间时使用 SendWait，避免整批重试产生重复。
+func (sf *Server) Send(a *asdu.ASDU) error {
+	var failures []error
+	sessions := sf.sessionSnapshot()
+	if len(sessions) > 0 {
+		if _, err := a.MarshalBinary(); err != nil {
+			return err
+		}
+	}
+	for _, session := range sessions {
+		var frame *asdu.ASDU
+		if a != nil {
+			frame = a.Clone()
+		}
+		if err := session.Send(frame); err != nil {
+			failures = append(failures, err)
+		}
+	}
+	return errors.Join(failures...)
 }
 
 // Params imp interface Connect

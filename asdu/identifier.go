@@ -195,7 +195,7 @@ var infoObjSize = map[TypeID]int{
 	M_ME_TE_1: 10,
 	M_ME_TF_1: 12,
 	M_IT_TB_1: 12,
-	M_EP_TD_1: 11,
+	M_EP_TD_1: 10, // 单保护事件：SEP 1 字节 + CP16 2 字节 + CP56 7 字节。
 	M_EP_TE_1: 11,
 	M_EP_TF_1: 11,
 
@@ -207,6 +207,16 @@ var infoObjSize = map[TypeID]int{
 	C_SE_NC_1: 5,
 	C_BO_NA_1: 4,
 
+	// 带时标控制在基础信息元素之后附加 7 字节 CP56Time2a。
+	// circutor 已有编码器/处理器；此表必须同步，否则接收路径会误报未知类型。
+	C_SC_TA_1: 8,
+	C_DC_TA_1: 8,
+	C_RC_TA_1: 8,
+	C_SE_TA_1: 10,
+	C_SE_TB_1: 10,
+	C_SE_TC_1: 12,
+	C_BO_TA_1: 11,
+
 	M_EI_NA_1: 1,
 
 	C_IC_NA_1: 1,
@@ -216,6 +226,7 @@ var infoObjSize = map[TypeID]int{
 	C_TS_NA_1: 2,
 	C_RP_NA_1: 1,
 	C_CD_NA_1: 2,
+	C_TS_TA_1: 9, // 测试序号 2 字节 + CP56Time2a 7 字节。
 
 	P_ME_NA_1: 3,
 	P_ME_NB_1: 3,

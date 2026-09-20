@@ -268,6 +268,8 @@ func TestCommandCP56Time2a(c Connect, coa CauseOfTransmission, ca CommonAddr, t 
 		return err
 	}
 
+	// 控制方向测试命令只允许 Activation，不能沿用调用方任意 COT。
+	coa.Cause = Activation
 	u := NewASDU(c.Params(), Identifier{
 		C_TS_TA_1,
 		VariableStruct{IsSequence: false, Number: 1},
