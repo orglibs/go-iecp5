@@ -59,8 +59,8 @@ type SrvSession struct {
 	cancel context.CancelFunc
 	ctx    context.Context
 
-	isActive              bool // connection is active after startdt activated
-	stopSessions          chan struct{}
+	isActive              atomic.Bool // connection is active after startdt activated
+	stopSessions          chan activationRequest
 	stopDtResponseWaiting bool
 }
 
@@ -175,7 +175,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 	}
 
 	// default: STOPDT, when connected establish and not enable "data transfer" yet
-	sf.isActive = false
+	sf.isActive.Store(false)
 	sf.pending = make([]seqPending, 0)
 	checkTicker := time.NewTicker(timeoutResolution)
 
@@ -222,6 +222,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 	defer func() {
 		sf.cancel()
 		sf.setConnectStatus(disconnected)
+		sf.isActive.Store(false)
 		checkTicker.Stop()
 		_ = sf.conn.Close() // Chain trigger cancel
 		sf.wg.Wait()
@@ -233,7 +234,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 	}()
 
 	for {
-		if sf.isActive && seqNoCount(sf.ackNoSend, sf.seqNoSend) < sf.config.SendUnAckLimitK {
+		if sf.isActive.Load() && seqNoCount(sf.ackNoSend, sf.seqNoSend) < sf.config.SendUnAckLimitK {
 			select {
 			case o := <-sf.sendASDU:
 				sendIFrame(o)
@@ -269,7 +270,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 					slog.Error("fatal transmission timeout t₁")
 					if sf.stopDtResponseWaiting {
 						// sendUFrame(UStopDtConfirm)
-						sf.isActive = false
+						sf.isActive.Store(false)
 						sf.stopDtResponseWaiting = false
 						slog.Debug("data transfer stopped by remote")
 						time.Sleep(10 * time.Millisecond)
@@ -307,7 +308,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 			switch head := apci.(type) {
 			case SAPCI:
 				slog.Debug("RX sFrame", "rx sFrame", head)
-				if !sf.isActive {
+				if !sf.isActive.Load() {
 					slog.Warn("station not active")
 
 					return // not active, close connection
@@ -321,7 +322,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 
 			case IAPCI:
 				slog.Debug("RX iFrame", "rx iFrame", head)
-				if !sf.isActive {
+				if !sf.isActive.Load() {
 					slog.Warn("station not active")
 
 					return // not active, close connection
@@ -352,21 +353,23 @@ func (sf *SrvSession) run(ctx context.Context) {
 				slog.Debug("RX uFrame", "rx uFrame", head)
 				switch head.Function {
 				case UStartDtActive:
-					if !sf.isActive {
+					if !sf.isActive.Load() {
 						// 反向连接从站没有共享单活调度器，nil 通道不应阻塞 STARTDT。
 						if sf.stopSessions != nil {
+							activated := make(chan struct{})
 							select {
-							case sf.stopSessions <- struct{}{}:
+							case sf.stopSessions <- activationRequest{session: sf, done: activated}:
 							case <-sf.ctx.Done():
 								return
 							}
 							select {
-							case <-time.After(500 * time.Millisecond):
+							case <-activated:
 							case <-sf.ctx.Done():
 								return
 							}
+						} else {
+							sf.isActive.Store(true)
 						}
-						sf.isActive = true
 					}
 
 					sendUFrame(UStartDtConfirm)
@@ -378,7 +381,7 @@ func (sf *SrvSession) run(ctx context.Context) {
 						sf.stopDtResponseWaiting = true
 					} else {
 						sendUFrame(UStopDtConfirm)
-						sf.isActive = false
+						sf.isActive.Store(false)
 						slog.Debug("data transfer stopped by remote")
 					}
 				// case uStopDtConfirm:
@@ -488,7 +491,7 @@ func (sf *SrvSession) updateAckNoOut(ackNo uint16) (ok bool) {
 
 	if len(sf.pending) == 0 && sf.stopDtResponseWaiting {
 		sf.sendRaw <- NewUFrame(UStopDtConfirm)
-		sf.isActive = false
+		sf.isActive.Store(false)
 		sf.stopDtResponseWaiting = false
 		slog.Debug("data transfer stopped by remote")
 		time.Sleep(10 * time.Millisecond)
@@ -874,7 +877,7 @@ func (sf *SrvSession) SendQueuedASDU(u *asdu.ASDU) error {
 }
 
 func (sf *SrvSession) IsActive() bool {
-	return sf.isActive
+	return sf.IsConnected() && sf.isActive.Load()
 }
 
 func (sf *SrvSession) AreAllMessagesConfirmed() bool {
@@ -901,7 +904,7 @@ func (sf *SrvSession) processQueue() {
 		case <-sf.ctx.Done():
 			return
 		default:
-			if sf.isActive && sf.queue != nil {
+			if sf.isActive.Load() && sf.queue != nil {
 				data, err := sf.queue.Dequeue()
 				if err != nil {
 					if err.Error() == ErrQueueEmpty && sendData != nil {

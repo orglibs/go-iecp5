@@ -156,7 +156,7 @@ func (sf *ASDU) Clone() *ASDU {
 
 // SetVariableNumber See companion standard 101, subclass 7.2.2.
 func (sf *ASDU) SetVariableNumber(n int) error {
-	if n >= 128 {
+	if n < 0 || n >= 128 {
 		return ErrInfoObjIndexFit
 	}
 	sf.Variable.Number = byte(n)

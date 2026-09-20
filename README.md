@@ -1,23 +1,46 @@
 # go-iecp5
 
-go-iecp5 library for IEC 60870-5 based protocols in pure go.
-The current implementation contains code for IEC 60870-5-104 (protocool over TCP/IP) specifications.
+A pure Go library for IEC 60870-5-104 communication over TCP/IP.
+Requires Go 1.23 or later.
 
-
-[![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white)](https://pkg.go.dev/github.com/orglibs/go-iecp5?tab=doc)
+[![Go Reference](https://pkg.go.dev/badge/github.com/orglibs/go-iecp5.svg)](https://pkg.go.dev/github.com/orglibs/go-iecp5)
 [![Go Report Card](https://goreportcard.com/badge/github.com/orglibs/go-iecp5)](https://goreportcard.com/report/github.com/orglibs/go-iecp5)
-[![License](https://img.shields.io/gitlab/license/orglibs/go-iecp5)](https://github.com/orglibs/go-iecp5/raw/master/LICENSE)
+[![Tests](https://github.com/orglibs/go-iecp5/actions/workflows/go.yml/badge.svg)](https://github.com/orglibs/go-iecp5/actions/workflows/go.yml)
 
+## Installation
 
-asdu package: [![GoDoc](https://godoc.org/github.com/thinkgos/go-iecp5/asdu?status.svg)](https://godoc.org/github.com/orglibs/go-iecp5/asdu)  
-cs104 package: [![GoDoc](https://godoc.org/github.com/thinkgos/go-iecp5/cs104?status.svg)](https://godoc.org/github.com/orglibs/go-iecp5/cs104)  
+```sh
+go get github.com/orglibs/go-iecp5@latest
+```
 
-## Feature:
+Import the packages you need:
 
-- client/server for CS 104 TCP/IP communication
-- support for much application layer(except file object) message types,
+```go
+import (
+    "github.com/orglibs/go-iecp5/asdu"
+    "github.com/orglibs/go-iecp5/cs104"
+)
+```
 
-# Reference:
+The module root groups the packages; it is not an importable Go package.
 
-lib60870 c library [lib60870](https://github.com/mz-automation/lib60870)  
-lib60870 c library doc [lib60870 doc](https://support.mz-automation.de/doc/lib60870/latest/group__CS104__MASTER.html)
+## Packages
+
+- [asdu](https://pkg.go.dev/github.com/orglibs/go-iecp5/asdu): application messages, information objects and time encoding.
+- [cs104](https://pkg.go.dev/github.com/orglibs/go-iecp5/cs104): IEC 60870-5-104 client/server communication, including TLS.
+- [cs101](https://pkg.go.dev/github.com/orglibs/go-iecp5/cs101): frame constants and types only; a complete IEC 60870-5-101 transport is not implemented.
+
+Most application message types are supported. File transfer is not implemented.
+See [UPSTREAM.md](UPSTREAM.md) for upstream provenance and compatibility details.
+
+## Development and publishing
+
+Run `make test` for tests with the race detector, coverage, vet and formatting checks.
+See [RELEASING.md](RELEASING.md) for publishing and verifying pkg.go.dev indexing.
+See [REVIEW.md](REVIEW.md) for the latest review and remaining limitations.
+
+## References
+
+- [lib60870 C library](https://github.com/mz-automation/lib60870)
+- [lib60870 documentation](https://support.mz-automation.de/doc/lib60870/latest/group__CS104__MASTER.html)
+- [License text](LICENSE)

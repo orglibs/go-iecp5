@@ -6,9 +6,8 @@ lint:
 	golangci-lint run
 
 test:
-	go test -coverprofile=profile.cov ./...
+	go test -race -coverprofile=profile.cov ./...
 	go tool cover -func profile.cov
 	rm profile.cov
 	go vet ./...
-	gofmt -l .
-
+	@test -z "$$(gofmt -l .)" || (gofmt -l .; exit 1)

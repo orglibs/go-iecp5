@@ -1,5 +1,8 @@
 # go-iecp5 来源与本地修复
 
+当前 fork 的模块路径为 `github.com/orglibs/go-iecp5`。下文记录导入时的基础快照和兼容适配，
+后续检查与修复见 [REVIEW.md](REVIEW.md)，发布步骤见 [RELEASING.md](RELEASING.md)。
+
 ## 基础快照
 
 - 模块：`gitlab.com/circutor-library/go-iecp5`，保留 Go 1.23。
@@ -48,4 +51,3 @@
 5. `ClientOption.DialContext` 可替换传输建立过程，回调需遵守取消并返回已完成握手的连接；测试用 `net.Pipe` 验证真实 APCI/ASDU 状态机。
 6. 接收循环遇到 EOF、ClosedPipe 或截断帧时退出；主从站收包队列支持取消，协议异常退出也取消本次会话，避免关闭/重连卡住。
 7. 主站 ASDU 回调直接返回处理器的错误，避免用 `%w` 包装 nil 产生伪错误。
-

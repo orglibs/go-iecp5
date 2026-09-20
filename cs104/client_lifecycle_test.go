@@ -5,9 +5,50 @@ import (
 	"io"
 	"net"
 	"net/url"
+	"sync/atomic"
 	"testing"
 	"time"
 )
+
+func TestClientLargeWindowBuffers(t *testing.T) {
+	option := NewOption()
+	cfg := DefaultConfig()
+	cfg.SendUnAckLimitK, cfg.RecvUnAckLimitW = 4096, 4096
+	option.SetConfig(cfg)
+	client := NewClient(nil, option)
+	if cap(client.sendASDU) != 65536 || cap(client.rcvASDU) != 65536 ||
+		cap(client.sendRaw) != 131072 || cap(client.rcvRaw) != 131072 {
+		t.Fatal("valid window size overflowed channel capacity")
+	}
+}
+
+func TestDisabledReconnectAfterPeerCloses(t *testing.T) {
+	transport, peer := net.Pipe()
+	defer peer.Close()
+	option := NewOption().SetAutoReconnect(false)
+	_ = option.AddRemoteServer("tcp://memory:2404")
+	var calls atomic.Int32
+	option.DialContext = func(context.Context, *url.URL) (net.Conn, error) {
+		calls.Add(1)
+		return transport, nil
+	}
+	client := NewClient(nil, option)
+	client.SetOnConnectHandler(func(*Client) { _ = peer.Close() })
+	if err := client.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = client.Close(); client.Wait() }()
+	done := make(chan struct{})
+	go func() { client.Wait(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("client kept reconnecting after the peer closed")
+	}
+	if calls.Load() != 1 {
+		t.Fatalf("dialed %d times with reconnect disabled", calls.Load())
+	}
+}
 
 // TestImmediateClose 验证 Start/Close 不依赖后台 goroutine 的调度先后顺序。
 func TestImmediateClose(t *testing.T) {

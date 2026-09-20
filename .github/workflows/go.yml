@@ -1,0 +1,82 @@
+name: Go
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v1.*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ['1.23.x', 'stable']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: false
+      - name: Check module identity and dependencies
+        run: |
+          test "$(go list -m)" = github.com/orglibs/go-iecp5
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+      - name: Test, vet and check formatting
+        run: make test
+
+  pkg-go-dev:
+    if: startsWith(github.ref, 'refs/tags/v1.')
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      MODULE: github.com/orglibs/go-iecp5
+      VERSION: ${{ github.ref_name }}
+      GOPROXY: https://proxy.golang.org
+      GOSUMDB: sum.golang.org
+      GOPRIVATE: ''
+      GONOPROXY: ''
+      GONOSUMDB: ''
+    steps:
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+      - name: Verify public module download
+        shell: bash
+        run: |
+          for attempt in {1..10}; do
+            if go mod download -json "$MODULE@$VERSION"; then
+              exit 0
+            fi
+            sleep 30
+          done
+          exit 1
+      - name: Request indexing and verify documentation pages
+        shell: bash
+        run: |
+          curl --fail --silent --show-error --connect-timeout 10 --max-time 60 \
+            -X POST "https://pkg.go.dev/fetch/$MODULE@$VERSION"
+          for attempt in {1..10}; do
+            ready=true
+            for package in '' /asdu /cs104 /cs101; do
+              if ! curl --fail --silent --show-error --location \
+                --connect-timeout 10 --max-time 30 \
+                "https://pkg.go.dev/$MODULE@$VERSION$package" -o /dev/null; then
+                ready=false
+              fi
+            done
+            if "$ready"; then
+              echo "Verified https://pkg.go.dev/$MODULE@$VERSION"
+              exit 0
+            fi
+            sleep 30
+          done
+          echo 'Indexing is still pending; inspect pkg.go.dev and rerun this job.' >&2
+          exit 1

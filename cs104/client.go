@@ -70,10 +70,10 @@ func NewClient(handler ClientHandlerInterface, o *ClientOption) *Client {
 	return &Client{
 		option:           *o,
 		handler:          handler,
-		rcvASDU:          make(chan []byte, o.config.RecvUnAckLimitW<<4),
-		sendASDU:         make(chan []byte, o.config.SendUnAckLimitK<<4),
-		rcvRaw:           make(chan []byte, o.config.RecvUnAckLimitW<<5),
-		sendRaw:          make(chan []byte, o.config.SendUnAckLimitK<<5), // may not block!
+		rcvASDU:          make(chan []byte, int(o.config.RecvUnAckLimitW)<<4),
+		sendASDU:         make(chan []byte, int(o.config.SendUnAckLimitK)<<4),
+		rcvRaw:           make(chan []byte, int(o.config.RecvUnAckLimitW)<<5),
+		sendRaw:          make(chan []byte, int(o.config.SendUnAckLimitK)<<5), // may not block!
 		onConnect:        func(*Client) {},
 		onConnectionLost: func(*Client) {},
 	}
@@ -162,6 +162,9 @@ func (sf *Client) running(ctx context.Context) {
 		sf.run(ctx)
 
 		slog.Debug("disconnected server", "server", sf.option.server)
+		if !sf.option.autoReconnect {
+			return
+		}
 		select {
 		case <-ctx.Done():
 			return

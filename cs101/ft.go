@@ -26,7 +26,9 @@ const (
 	// PRM = 1, transmit message from initiator to slave
 	RPM     = 1 << 6
 	RES_DIR = 1 << 7 // Unbalanced hold, balanced for direction
+)
 
+const (
 	// Function code for the control field in the message transmitted from the initiating station to the slave station (PRM = 1)
 	FccResetRemoteLink                 = iota // Reset remote link
 	FccResetUserProcess                       // Reset the user process
@@ -42,7 +44,9 @@ const (
 	FccUnbalanceLevel2UserData                // Request Level 2 user data
 	// 12-13: Alternative
 	// 14-15: Definition by agreement between manufacturer and user
+)
 
+const (
 	// Function code for the control field in the message transmitted from the slave to the initiating station (PRM = 0)
 	FcsConfirmed                 = iota // Endorsement: Affirmation of endorsement
 	FcsNConfirmed                       // Negative acknowledgement: No message received, link is busy.
