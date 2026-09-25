@@ -39,6 +39,9 @@ type Server struct {
 	mux       sync.Mutex
 	sessions  map[*SrvSession]struct{}
 
+	cancel         context.CancelFunc
+	done           chan struct{}
+	closed         bool
 	listen         net.Listener
 	onConnection   func(asdu.Connect)
 	connectionLost func(asdu.Connect)
@@ -100,16 +103,33 @@ func (sf *Server) ListenAndServer(addr string) {
 		return
 	}
 
-	sf.mux.Lock()
-	sf.listen = listen
-	sf.mux.Unlock()
+	if err := sf.Serve(listen); err != nil {
+		slog.Error("server run failed", "error", err)
+	}
+}
 
+// Serve takes ownership of an already-bound listener. A Server is single-use.
+func (sf *Server) Serve(listen net.Listener) error {
+	sf.mux.Lock()
+	if sf.closed || sf.done != nil {
+		sf.mux.Unlock()
+		_ = listen.Close()
+		return net.ErrClosed
+	}
 	ctx, cancel := context.WithCancel(context.Background())
+	sf.listen, sf.cancel, sf.done = listen, cancel, make(chan struct{})
+	sf.mux.Unlock()
 	defer func() {
 		cancel()
-		_ = sf.Close()
-
-		slog.Debug("server stop")
+		_ = listen.Close()
+		for _, sess := range sf.sessionSnapshot() {
+			_ = sess.conn.Close()
+		}
+		sf.wg.Wait()
+		sf.mux.Lock()
+		sf.closed = true
+		close(sf.done)
+		sf.mux.Unlock()
 	}()
 
 	slog.Debug("server run")
@@ -123,9 +143,10 @@ func (sf *Server) ListenAndServer(addr string) {
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
-			slog.Error("server run failed", "error", err)
-
-			return
+			if errors.Is(err, net.ErrClosed) || ctx.Err() != nil {
+				return nil
+			}
+			return err
 		}
 
 		sf.wg.Add(1)
@@ -169,19 +190,23 @@ func (sf *Server) ListenAndServer(addr string) {
 
 // Close close the server
 func (sf *Server) Close() error {
-	var err error
-
 	sf.mux.Lock()
-
-	if sf.listen != nil {
-		err = sf.listen.Close()
-		sf.listen = nil
+	sf.closed = true
+	if sf.cancel != nil {
+		sf.cancel()
 	}
-
+	if sf.listen != nil {
+		_ = sf.listen.Close()
+	}
+	done := sf.done
 	sf.mux.Unlock()
-	sf.wg.Wait()
-
-	return err
+	for _, sess := range sf.sessionSnapshot() {
+		_ = sess.conn.Close()
+	}
+	if done != nil {
+		<-done
+	}
+	return nil
 }
 
 // sessionSnapshot 缩短持锁时间：网络发送或外部队列调用期间不持有会话表锁。
@@ -200,6 +225,9 @@ func (sf *Server) sessionSnapshot() []*SrvSession {
 func (sf *Server) Send(a *asdu.ASDU) error {
 	var failures []error
 	sessions := sf.sessionSnapshot()
+	if len(sessions) == 0 {
+		return errors.New("no active IEC104 session")
+	}
 	if len(sessions) > 0 {
 		if _, err := a.MarshalBinary(); err != nil {
 			return err

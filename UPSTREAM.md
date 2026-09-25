@@ -38,9 +38,16 @@
 - 补齐 circutor 已有带时标控制编码器对应的类型 58–64 长度定义，使现有服务端处理器可接收其支持的命令。此项是本地适配，并非 riclolsen 新功能的整体移植。
 - `Waiting(ctx, session)` 包装单个会话的 `Send`，仅对 `ErrBufferFull` 重试。调用方应设置截止时间，并在可阻塞的业务协程使用，不能阻塞协议状态机回调。
 - 广播使用 `Server.SendWait(ctx, a)`，逐个处理调用时的会话快照，只重试尚未入队的会话。不要循环重试整批 `Server.Send`，否则已经成功的会话可能收到重复数据。普通 `Server.Send` 仍逐个尝试发送，通过 `errors.Join` 汇总失败。
-- circutor 的 `Server` 不实现完整 `asdu.Connect`，因此没有移植 `Server.WaitingConn`；现有会话接口保持兼容。无会话时广播仍为空操作。发送成功只代表入队，不代表远端确认。
+- circutor 的 `Server` 不实现完整 `asdu.Connect`，因此没有移植 `Server.WaitingConn`；现有会话接口保持兼容。发送成功只代表入队，不代表远端确认。无活跃会话时 `Server.Send` 显式返回 `no active IEC104 session` 错误。
 - 服务端 STARTDT 在没有 `stopSessions` 通道时跳过单活动会话协调；有通道时保留 circutor 的原有策略，等待支持取消。尚未重构多主站策略与外部持久队列的全部并发语义。
 - 保留未知私有类型的发送能力，但不增加通用私有类型接收支持。不移植 CS101/CS103 专属修复、文件传输、浏览器工具或其他新 API。
+
+## 服务端生命周期与从站导出适配
+
+1. `Server.Serve(net.Listener) error`：支持直接接管已绑定的外部网络监听器（单次使用）。同步接管生命周期并返回 `Accept` 异常，避免后台异步监听时漏报启动与接收故障。
+2. `Server.Close` 优雅关闭：原子标记关闭状态并触发 `cancel` 上下文，主动关闭底层 Listener 与所有已连接会话，并等待 `Serve` 协程安全退出，防止并发启动/退出竞争与资源泄漏。
+3. `Server.Send` 无会话保护：当会话列表为空时返回 `no active IEC104 session` 错误，保证导出镜像等上层调用不会误判发送状态。
+4. `AfterInterrogationHandler` 顺序保障：总召唤处理（`C_IC_NA_1`）在成功将 `ACT_CON` 确认入队后，若服务端 handler 实现了 `AfterInterrogationHandler(asdu.Connect, *asdu.ASDU, asdu.QualifierOfInterrogation) error` 接口，则按顺序触发后续总召数据推送，确保确认帧严格先于数据帧发出。
 
 ## 原有主站生命周期适配
 

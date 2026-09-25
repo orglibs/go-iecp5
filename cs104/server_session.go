@@ -678,6 +678,11 @@ func (sf *SrvSession) serverHandler(asduPack *asdu.ASDU) error {
 			return fmt.Errorf("error with %s type, negative response", asdu.C_IC_NA_1)
 		}
 
+		if after, ok := sf.handler.(interface {
+			AfterInterrogationHandler(asdu.Connect, *asdu.ASDU, asdu.QualifierOfInterrogation) error
+		}); ok {
+			return after.AfterInterrogationHandler(sf, asduPack, qoi)
+		}
 		return nil
 	case asdu.C_RD_NA_1: // Read Command
 		if asduPack.Identifier.Coa.Cause != asdu.Request {

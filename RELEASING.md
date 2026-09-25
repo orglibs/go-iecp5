@@ -3,9 +3,9 @@
 模块路径为 `github.com/orglibs/go-iecp5`，GitHub 仓库必须公开且无需认证即可读取。
 pkg.go.dev 从公开的 Go 模块下载和生成文档，不读取本地尚未推送的修改。
 
-## 首次修复发布
+## 新版本发布
 
-新版本 `v1.7.1`；
+新版本建议 `v1.7.2`（包含服务端 `Serve`/`Close` 生命周期、`Send` 报错与总召回调钩子）；
 发布前先确认远端没有这个版本，如已存在则递增补丁号。
 
 1. 确认仓库公开，在 GitHub 启用 Actions；检查并提交本次修复。
@@ -15,8 +15,8 @@ pkg.go.dev 从公开的 Go 模块下载和生成文档，不读取本地尚未�
    ```sh
    git ls-remote --tags origin
    git push origin master
-   git tag -a v1.7.1 -m 'Fix module path and protocol regressions'
-   git push origin v1.7.1
+   git tag -a v1.7.2 -m 'Support owned listener Serve, graceful shutdown and GI hook'
+   git push origin v1.7.2
    ```
 
 4. 查看 GitHub Actions 的 `Go` 工作流。测试在最低 Go 版本和当前稳定版上执行；
@@ -28,17 +28,17 @@ pkg.go.dev 从公开的 Go 模块下载和生成文档，不读取本地尚未�
    mkdir /tmp/go-iecp5-release-check
    cd /tmp/go-iecp5-release-check
    go mod init example.com/iecp5-release-check
-   GOPROXY=https://proxy.golang.org go get github.com/orglibs/go-iecp5@v1.7.1
+   GOPROXY=https://proxy.golang.org go get github.com/orglibs/go-iecp5@v1.7.2
    go doc github.com/orglibs/go-iecp5/cs104
    ```
 
 ## 最终验收地址
 
 - https://pkg.go.dev/github.com/orglibs/go-iecp5
-- https://pkg.go.dev/github.com/orglibs/go-iecp5@v1.7.1
-- https://pkg.go.dev/github.com/orglibs/go-iecp5@v1.7.1/asdu
-- https://pkg.go.dev/github.com/orglibs/go-iecp5@v1.7.1/cs104
-- https://pkg.go.dev/github.com/orglibs/go-iecp5@v1.7.1/cs101
+- https://pkg.go.dev/github.com/orglibs/go-iecp5@v1.7.2
+- https://pkg.go.dev/github.com/orglibs/go-iecp5@v1.7.2/asdu
+- https://pkg.go.dev/github.com/orglibs/go-iecp5@v1.7.2/cs104
+- https://pkg.go.dev/github.com/orglibs/go-iecp5@v1.7.2/cs101
 
 如果暂未收录，打开版本页面并使用页面提供的索引请求入口，然后等待重试。
 成功下载模块并不等于文档已完成索引；需要确认上述页面实际可访问。

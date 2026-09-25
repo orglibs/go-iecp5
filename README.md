@@ -27,7 +27,7 @@ The module root groups the packages; it is not an importable Go package.
 ## Packages
 
 - [asdu](https://pkg.go.dev/github.com/orglibs/go-iecp5/asdu): application messages, information objects and time encoding.
-- [cs104](https://pkg.go.dev/github.com/orglibs/go-iecp5/cs104): IEC 60870-5-104 client/server communication, including TLS.
+- [cs104](https://pkg.go.dev/github.com/orglibs/go-iecp5/cs104): IEC 60870-5-104 client/server communication, including TLS, listener ownership (`Serve`) and graceful shutdown.
 - [cs101](https://pkg.go.dev/github.com/orglibs/go-iecp5/cs101): frame constants and types only; a complete IEC 60870-5-101 transport is not implemented.
 
 Most application message types are supported. File transfer is not implemented.
